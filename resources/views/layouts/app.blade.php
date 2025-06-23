@@ -32,5 +32,33 @@
                 {{ $slot }}
             </main>
         </div>
+        {{-- SCRIPT LIBS --}}
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
+        {{-- SCRIPT PARA APLICAR AS MÁSCARAS (VERSÃO MAIS ROBUSTA) --}}
+ <script type="text/javascript">
+            window.onload = function() {
+                try {
+                    // Máscara de CNPJ
+                    $('#cnpj').mask('00.000.000/0000-00', {reverse: true});
+
+                    // Máscara dinâmica para Telefone/Celular
+                    var SPMaskBehavior = function (val) {
+                      return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+                    },
+                    spOptions = {
+                      onKeyPress: function(val, e, field, options) {
+                          field.mask(SPMaskBehavior.apply({}, arguments), options);
+                        }
+                    };
+
+                    $('#telefone_contato').mask(SPMaskBehavior, spOptions);
+
+                } catch (e) {
+                    console.error("Erro ao aplicar máscara: ", e);
+                }
+            };
+        </script>
     </body>
 </html>

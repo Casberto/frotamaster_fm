@@ -2,15 +2,25 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EmpresaController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
 
 // Rota para a página inicial
 Route::get('/', function () {
     return view('welcome');
 });
 
-// A ROTA PRINCIPAL DO DASHBOARD QUE ESTAVA FALTANDO
-// Esta rota vai checar o tipo de usuário e redirecionar para o painel correto.
+// A ROTA PRINCIPAL DO DASHBOARD
 Route::get('/dashboard', function () {
     if (auth()->user()->role === 'super-admin') {
         return redirect()->route('admin.dashboard');
@@ -29,7 +39,6 @@ Route::middleware('auth')->group(function () {
 
 
 // GRUPO DE ROTAS DO SUPER ADMINISTRADOR
-// Protegido para que apenas usuários com a role 'super-admin' possam acessar.
 Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // Rota para o Dashboard do Admin
@@ -37,7 +46,24 @@ Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->gro
         return view('admin.dashboard');
     })->name('dashboard');
 
-    // Aqui dentro virão as rotas para gerenciar empresas, usuários, etc.
+    // --- CRUD COMPLETO DE EMPRESAS (MANUAL) ---
+    // Listagem (Index)
+    Route::get('empresas', [EmpresaController::class, 'index'])->name('empresas.index');
+    
+    // Formulário de Criação (Create)
+    Route::get('empresas/create', [EmpresaController::class, 'create'])->name('empresas.create');
+    
+    // Salvar Nova Empresa (Store)
+    Route::post('empresas', [EmpresaController::class, 'store'])->name('empresas.store');
+    
+    // Formulário de Edição (Edit)
+    Route::get('empresas/{empresa}/edit', [EmpresaController::class, 'edit'])->name('empresas.edit');
+    
+    // Atualizar Empresa (Update)
+    Route::put('empresas/{empresa}', [EmpresaController::class, 'update'])->name('empresas.update');
+    
+    // Deletar Empresa (Destroy)
+    Route::delete('empresas/{empresa}', [EmpresaController::class, 'destroy'])->name('empresas.destroy');
 
 });
 
