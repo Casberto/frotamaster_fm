@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_empresa')->constrained('empresas')->onDelete('cascade');
+            $table->foreignId('id_empresa')->nullable()->constrained('empresas')->onDelete('cascade');
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['master', 'usuario', 'leitura'])->default('usuario');
+            $table->enum('role', ['master', 'usuario', 'leitura', 'super-admin'])->default('usuario');
             $table->boolean('status')->default(true); // true = Ativo, false = Inativo
             $table->rememberToken();
             $table->timestamps();
