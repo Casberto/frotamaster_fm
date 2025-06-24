@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 // Importações dos Controllers - A linha do VeiculoController provavelmente estava faltando
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\VeiculoController;
+use App\Http\Controllers\ManutencaoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,9 @@ Route::middleware('auth')->group(function () {
 
     // CRUD de Veículos para o usuário da empresa
     Route::resource('veiculos', VeiculoController::class);
+
+    // CRUD de Manutenções
+    Route::resource('manutencoes', ManutencaoController::class);
 });
 
 
