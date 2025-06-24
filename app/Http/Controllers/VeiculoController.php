@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Veiculo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class VeiculoController extends Controller
 {
@@ -12,7 +14,13 @@ class VeiculoController extends Controller
      */
     public function index()
     {
-        //
+        if (!Auth::user()->id_empresa) {
+            return redirect()->route('dashboard')->with('error', 'Você não tem permissão para acessar esta área.');
+        }
+        
+        $idEmpresa = Auth::user()->id_empresa;
+        $veiculos = Veiculo::where('id_empresa', $idEmpresa)->latest()->paginate(10);
+        return view('veiculos.index', compact('veiculos'));
     }
 
     /**
@@ -20,7 +28,10 @@ class VeiculoController extends Controller
      */
     public function create()
     {
-        //
+        if (!Auth::user()->id_empresa) {
+            return redirect()->route('dashboard')->with('error', 'Apenas usuários de empresas podem cadastrar veículos.');
+        }
+        return view('veiculos.create');
     }
 
     /**
@@ -28,15 +39,37 @@ class VeiculoController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        if (!Auth::user()->id_empresa) {
+            return back()->with('error', 'Apenas usuários vinculados a uma empresa podem cadastrar veículos.')->withInput();
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Veiculo $veiculo)
-    {
-        //
+        $idEmpresa = Auth::user()->id_empresa;
+
+        // --- CORREÇÃO APLICADA AQUI ---
+        // A validação 'unique' agora é escopada pelo id_empresa
+        $validatedData = $request->validate([
+            'placa' => ['required', 'string', 'size:7', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)],
+            'marca' => ['required', 'string', 'max:255'],
+            'modelo' => ['required', 'string', 'max:255'],
+            'ano_fabricacao' => ['required', 'integer', 'digits:4'],
+            'ano_modelo' => ['required', 'integer', 'digits:4'],
+            'quilometragem_atual' => ['required', 'integer'],
+            'cor' => ['nullable', 'string', 'max:255'],
+            'chassi' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)],
+            'renavam' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)],
+            'tipo_veiculo' => ['required', Rule::in(['carro', 'moto', 'caminhao', 'van', 'outro'])],
+            'tipo_combustivel' => ['required', Rule::in(['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico'])],
+            'data_aquisicao' => ['nullable', 'date'],
+            'status' => ['required', Rule::in(['ativo', 'inativo', 'em_manutencao', 'vendido'])],
+            'observacoes' => ['nullable', 'string'],
+        ]);
+
+        $veiculo = new Veiculo($validatedData);
+        $veiculo->id_empresa = $idEmpresa;
+        $veiculo->save();
+
+        return redirect()->route('veiculos.index')
+                         ->with('success', 'Veículo cadastrado com sucesso!');
     }
 
     /**
@@ -44,7 +77,10 @@ class VeiculoController extends Controller
      */
     public function edit(Veiculo $veiculo)
     {
-        //
+        if ($veiculo->id_empresa !== Auth::user()->id_empresa) {
+            abort(403);
+        }
+        return view('veiculos.edit', compact('veiculo'));
     }
 
     /**
@@ -52,7 +88,34 @@ class VeiculoController extends Controller
      */
     public function update(Request $request, Veiculo $veiculo)
     {
-        //
+        if ($veiculo->id_empresa !== Auth::user()->id_empresa) {
+            abort(403);
+        }
+
+        $idEmpresa = Auth::user()->id_empresa;
+
+        // --- CORREÇÃO APLICADA AQUI ---
+        // A validação 'unique' agora ignora o próprio veículo durante a edição
+        $validatedData = $request->validate([
+            'placa' => ['required', 'string', 'size:7', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
+            'marca' => ['required', 'string', 'max:255'],
+            'modelo' => ['required', 'string', 'max:255'],
+            'ano_fabricacao' => ['required', 'integer', 'digits:4'],
+            'ano_modelo' => ['required', 'integer', 'digits:4'],
+            'quilometragem_atual' => ['required', 'integer'],
+            'cor' => ['nullable', 'string', 'max:255'],
+            'chassi' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
+            'renavam' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
+            'tipo_veiculo' => ['required', Rule::in(['carro', 'moto', 'caminhao', 'van', 'outro'])],
+            'tipo_combustivel' => ['required', Rule::in(['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico'])],
+            'data_aquisicao' => ['nullable', 'date'],
+            'status' => ['required', Rule::in(['ativo', 'inativo', 'em_manutencao', 'vendido'])],
+            'observacoes' => ['nullable', 'string'],
+        ]);
+        
+        $veiculo->update($validatedData);
+        return redirect()->route('veiculos.index')
+                         ->with('success', 'Veículo atualizado com sucesso!');
     }
 
     /**
@@ -60,6 +123,11 @@ class VeiculoController extends Controller
      */
     public function destroy(Veiculo $veiculo)
     {
-        //
+        if ($veiculo->id_empresa !== Auth::user()->id_empresa) {
+            abort(403);
+        }
+        $veiculo->delete();
+        return redirect()->route('veiculos.index')
+                         ->with('success', 'Veículo removido com sucesso!');
     }
 }

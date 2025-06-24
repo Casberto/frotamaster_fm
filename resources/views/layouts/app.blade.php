@@ -10,40 +10,61 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        
+        <!-- AlpineJS -->
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <!-- Nosso CSS Customizado -->
+        <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            @include('layouts.navigation')
+        <div x-data="{ sidebarOpen: false }" class="min-h-screen flex">
+            <!-- Sidebar -->
+            <aside 
+                class="w-64 flex-shrink-0 fixed inset-y-0 left-0 z-40 transform lg:translate-x-0 transition-transform duration-200 ease-in-out"
+                :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}"
+            >
+                @include('layouts.navigation')
+            </aside>
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+            <!-- Overlay para fechar o menu no mobile -->
+            <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black opacity-50 z-30 lg:hidden"></div>
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+            <!-- Conteúdo Principal -->
+            <div class="flex-1 main-content lg:ml-64">
+                <!-- Page Heading -->
+                @if (isset($header))
+                    <header class="bg-white border-b border-gray-200">
+                        <div class="max-w-full mx-auto py-4 px-4 sm:px-6 lg:px-8 flex items-center">
+                            <!-- Botão Sanduíche para Mobile -->
+                            <button @click.stop="sidebarOpen = !sidebarOpen" class="lg:hidden mr-4 text-gray-500 focus:outline-none">
+                                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endif
+
+                <!-- Page Content -->
+                <main class="p-6 sm:p-8">
+                    {{ $slot }}
+                </main>
+            </div>
         </div>
+
         {{-- SCRIPT LIBS --}}
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
-        {{-- SCRIPT PARA APLICAR AS MÁSCARAS (VERSÃO MAIS ROBUSTA) --}}
- <script type="text/javascript">
+        <script type="text/javascript">
             window.onload = function() {
                 try {
-                    // Máscara de CNPJ
                     $('#cnpj').mask('00.000.000/0000-00', {reverse: true});
-
-                    // Máscara dinâmica para Telefone/Celular
                     var SPMaskBehavior = function (val) {
                       return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
                     },
@@ -52,9 +73,7 @@
                           field.mask(SPMaskBehavior.apply({}, arguments), options);
                         }
                     };
-
                     $('#telefone_contato').mask(SPMaskBehavior, spOptions);
-
                 } catch (e) {
                     console.error("Erro ao aplicar máscara: ", e);
                 }

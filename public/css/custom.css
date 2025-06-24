@@ -1,0 +1,93 @@
+/* Definição da Paleta de Cores do Frotamaster */
+:root {
+    --cor-principal: #1A202C; /* Azul Escuro (Textos Principais, Sidebar) */
+    --cor-secundaria: #2D3748; /* Cinza Chumbo (Hover da Sidebar) */
+    --cor-fundo: #EDF2F7;     /* Cinza mais escuro para melhor contraste */
+    --cor-branca: #FFFFFF;    /* Branco (Texto da Sidebar, Fundo de Cards) */
+    --cor-acao: #3182CE;      /* Azul Ação (Botões, Links, Item Ativo) */
+    --cor-borda: #E2E8F0;     /* Cinza para Bordas */
+    --cor-texto-principal: #1A202C;
+    --cor-texto-secundario: #4A5568;
+}
+
+/* --- Estilos da Sidebar --- */
+.sidebar {
+    background-color: var(--cor-principal);
+}
+
+.sidebar a, .sidebar button {
+    color: var(--cor-branca);
+    transition: background-color 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    width: 100%;
+}
+
+.sidebar a:hover, .sidebar button:hover {
+    background-color: var(--cor-secundaria);
+}
+
+.sidebar a.active {
+    background-color: var(--cor-acao);
+    color: var(--cor-branca);
+    font-weight: bold;
+}
+
+/* --- Estilos da Área de Conteúdo Principal --- */
+.main-content {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-principal);
+}
+
+.main-content .header-title {
+    color: var(--cor-texto-principal);
+    font-weight: 600;
+}
+
+/* Padronização de Tabelas */
+.main-content table thead {
+    background-color: #F7FAFC; /* Um cinza bem claro para o cabeçalho */
+    color: var(--cor-texto-secundario);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+.main-content table tbody tr {
+    background-color: var(--cor-branca);
+    border-bottom-width: 1px;
+    border-color: var(--cor-borda);
+}
+
+.main-content table tbody tr:hover {
+    background-color: #F7FAFC; /* Um cinza ainda mais claro para o hover */
+}
+
+/* Padronização de Inputs e Formulários */
+.main-content .form-section {
+    background-color: var(--cor-branca);
+    padding: 1.5rem; /* 24px */
+    border-radius: 0.5rem; /* 8px */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.main-content .form-section-title {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+    color: var(--cor-texto-principal);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: 1.5rem;
+}
+
+.main-content input, .main-content select, .main-content textarea {
+    background-color: #F7FAFC !important; /* Fundo cinza claro para inputs */
+    color: var(--cor-texto-principal) !important;
+    border-color: var(--cor-borda) !important;
+}
+
+.main-content input:focus, .main-content select:focus, .main-content textarea:focus {
+    border-color: var(--cor-acao) !important;
+    box-shadow: 0 0 0 1px var(--cor-acao) !important;
+    background-color: var(--cor-branca) !important;
+}

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Empresa;
+use App\Models\User; // Certifique-se de que o Model User está a ser importado
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use App\Models\User;
 
 class EmpresaController extends Controller
 {
@@ -36,25 +36,34 @@ class EmpresaController extends Controller
             'nome_fantasia' => 'required|string|max:255',
             'razao_social' => 'required|string|max:255',
             'cnpj' => 'required|string|unique:empresas,cnpj',
-            'email_contato' => 'required|email|max:255',
+            // Garante que o email da empresa também seja único na tabela de usuários
+            'email_contato' => 'required|email|max:255|unique:users,email',
             'telefone_contato' => 'required|string|max:20',
         ]);
 
+        // Cria a empresa primeiro
         $empresa = Empresa::create($request->all());
 
         // LÓGICA PARA CRIAR O USUÁRIO MASTER DA EMPRESA
         $password = Str::random(8); // Gera uma senha aleatória de 8 caracteres
 
-        $user = User::create([
-            'name' => 'Usuário Master ' . $empresa->nome_fantasia,
-            'email' => 'master@' . preg_replace('/[^a-zA-Z0-9]/', '', strtolower($empresa->nome_fantasia)) . '.com',
-            'password' => Hash::make($password),
-            'id_empresa' => $empresa->id,
-            'role' => 'master',
-            'email_verified_at' => now(),
-        ]);
+        $user = new User();
+        $user->name = 'Master ' . $empresa->nome_fantasia;
+        
+        // --- CORREÇÃO APLICADA AQUI ---
+        // O email do usuário master agora é o mesmo email de contato da empresa
+        $user->email = $request->email_contato;
+        
+        $user->password = Hash::make($password);
+        $user->role = 'master';
+        $user->email_verified_at = now();
+        
+        // Associa o ID da empresa recém-criada ao novo usuário
+        $user->id_empresa = $empresa->id;
+        
+        $user->save();
 
-        // Guardamos as credenciais para exibir ao admin
+        // Guarda as credenciais para exibir ao admin
         $credentials = [
             'email' => $user->email,
             'password' => $password,

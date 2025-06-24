@@ -19,16 +19,22 @@ return new class extends Migration
             $table->string('modelo');
             $table->year('ano_fabricacao');
             $table->year('ano_modelo');
-            $table->string('cor');
-            $table->string('chassi')->unique();
-            $table->string('renavam')->unique();
+            $table->string('cor')->nullable();
+            $table->string('chassi')->nullable();
+            $table->string('renavam')->nullable();
             $table->enum('tipo_veiculo', ['carro', 'moto', 'caminhao', 'van', 'outro']);
             $table->enum('tipo_combustivel', ['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico']);
             $table->integer('quilometragem_atual');
-            $table->date('data_aquisicao');
+            $table->date('data_aquisicao')->nullable();
             $table->enum('status', ['ativo', 'inativo', 'em_manutencao', 'vendido'])->default('ativo');
             $table->text('observacoes')->nullable();
             $table->timestamps();
+
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Define que a combinação de empresa + campo deve ser única.
+            $table->unique(['id_empresa', 'placa']);
+            $table->unique(['id_empresa', 'chassi']);
+            $table->unique(['id_empresa', 'renavam']);
         });
     }
 
