@@ -9,11 +9,6 @@ class Veiculo extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'id_empresa',
         'placa',
@@ -28,6 +23,7 @@ class Veiculo extends Model
         'tipo_combustivel',
         'quilometragem_atual',
         'data_aquisicao',
+        'capacidade_tanque',
         'status',
         'observacoes',
     ];

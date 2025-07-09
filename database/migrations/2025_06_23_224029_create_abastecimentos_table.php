@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('abastecimentos', function (Blueprint $table) {
@@ -17,19 +14,18 @@ return new class extends Migration
             $table->foreignId('id_empresa')->constrained('empresas')->onDelete('cascade');
             $table->date('data_abastecimento');
             $table->integer('quilometragem');
-            $table->enum('tipo_combustivel', ['gasolina', 'etanol', 'diesel', 'gnv']);
-            $table->decimal('litros', 8, 3);
-            $table->decimal('valor_por_litro', 8, 3);
+            $table->string('unidade_medida')->default('litros'); // Litros, kWh, etc.
+            $table->decimal('quantidade', 8, 3); // Nome genérico para litros ou kWh
+            $table->decimal('valor_por_unidade', 8, 3);
             $table->decimal('custo_total', 10, 2);
             $table->string('nome_posto')->nullable();
+            $table->string('tipo_combustivel')->nullable();
+            $table->string('nivel_tanque_inicio')->nullable(); // Ex: '1/4', '1/2', etc.
             $table->boolean('tanque_cheio')->default(false);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('abastecimentos');

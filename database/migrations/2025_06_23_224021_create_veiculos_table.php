@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('veiculos', function (Blueprint $table) {
@@ -26,21 +23,20 @@ return new class extends Migration
             $table->enum('tipo_combustivel', ['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico']);
             $table->integer('quilometragem_atual');
             $table->date('data_aquisicao')->nullable();
+            
+            // NOVO CAMPO
+            $table->decimal('capacidade_tanque', 8, 2)->nullable()->comment('Capacidade em Litros ou kWh');
+
             $table->enum('status', ['ativo', 'inativo', 'em_manutencao', 'vendido'])->default('ativo');
             $table->text('observacoes')->nullable();
             $table->timestamps();
 
-            // --- CORREÇÃO APLICADA AQUI ---
-            // Define que a combinação de empresa + campo deve ser única.
             $table->unique(['id_empresa', 'placa']);
             $table->unique(['id_empresa', 'chassi']);
             $table->unique(['id_empresa', 'renavam']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('veiculos');

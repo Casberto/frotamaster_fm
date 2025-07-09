@@ -79,8 +79,9 @@
                 </select>
             </div>
             <div>
-                <label for="data_aquisicao" class="block font-medium text-sm text-gray-700">Data de Aquisição</label>
-                <input type="date" name="data_aquisicao" id="data_aquisicao" class="mt-1 block w-full" value="{{ old('data_aquisicao', isset($veiculo->data_aquisicao) ? \Carbon\Carbon::parse($veiculo->data_aquisicao)->format('Y-m-d') : '') }}">
+                {{-- CAMPO ADICIONADO --}}
+                <label for="capacidade_tanque" class="block font-medium text-sm text-gray-700">Capacidade Tanque/Bateria (Litros/kWh)</label>
+                <input type="text" name="capacidade_tanque" id="capacidade_tanque" class="mt-1 block w-full" value="{{ old('capacidade_tanque', $veiculo->capacidade_tanque ?? '') }}">
             </div>
         </div>
     </div>
@@ -90,6 +91,10 @@
         <h3 class="form-section-title">Detalhes Operacionais</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
+                <label for="data_aquisicao" class="block font-medium text-sm text-gray-700">Data de Aquisição</label>
+                <input type="date" name="data_aquisicao" id="data_aquisicao" class="mt-1 block w-full" value="{{ old('data_aquisicao', isset($veiculo->data_aquisicao) ? \Carbon\Carbon::parse($veiculo->data_aquisicao)->format('Y-m-d') : '') }}">
+            </div>
+            <div>
                 <label for="status" class="block font-medium text-sm text-gray-700">Status*</label>
                 <select name="status" id="status" class="mt-1 block w-full" required>
                     <option value="ativo" @selected(old('status', $veiculo->status ?? 'ativo') == 'ativo')>Ativo</option>
@@ -98,7 +103,7 @@
                     <option value="vendido" @selected(old('status', $veiculo->status ?? '') == 'vendido')>Vendido</option>
                 </select>
             </div>
-            <div>
+             <div class="md:col-span-2">
                 <label for="observacoes" class="block font-medium text-sm text-gray-700">Observações</label>
                 <textarea name="observacoes" id="observacoes" rows="3" class="mt-1 block w-full">{{ old('observacoes', $veiculo->observacoes ?? '') }}</textarea>
             </div>
