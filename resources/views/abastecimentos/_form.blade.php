@@ -18,7 +18,7 @@
                 <select name="id_veiculo" id="id_veiculo" class="mt-1 block w-full" required>
                     <option value="">Selecione um veículo</option>
                     @foreach($veiculos as $veiculo)
-                        <option value="{{ $veiculo->id }}" @selected(old('id_veiculo', $abastecimento->id_veiculo ?? '') == $veiculo->id)>
+                        <option value="{{ $veiculo->id }}" data-tipo-combustivel="{{ $veiculo->tipo_combustivel }}" @selected(old('id_veiculo', $abastecimento->id_veiculo ?? '') == $veiculo->id)>
                             {{ $veiculo->placa }} - {{ $veiculo->marca }} {{ $veiculo->modelo }}
                         </option>
                     @endforeach
@@ -32,7 +32,11 @@
             <div id="tipo_combustivel_wrapper" class="hidden md:col-span-2">
                 <label for="tipo_combustivel" class="block font-medium text-sm text-gray-700">Tipo de Combustível*</label>
                 <select name="tipo_combustivel" id="tipo_combustivel" class="mt-1 block w-full">
-                    {{-- As opções serão preenchidas dinamicamente pelo JavaScript --}}
+                    <option value="">Selecione o combustível</option>
+                    <option value="gasolina" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'gasolina')>Gasolina</option>
+                    <option value="etanol" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'etanol')>Etanol</option>
+                    <option value="diesel" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'diesel')>Diesel</option>
+                    <option value="gnv" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'gnv')>GNV</option>
                 </select>
             </div>
 
@@ -96,126 +100,71 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Seletores de Elementos ---
     const idVeiculoSelect = document.getElementById('id_veiculo');
     const tipoCombustivelWrapper = document.getElementById('tipo_combustivel_wrapper');
-    const tipoCombustivelSelect = document.getElementById('tipo_combustivel');
     const labelUnidade = document.getElementById('label_unidade');
     const labelValorUnidade = document.getElementById('label_valor_unidade');
-    const avisoCapacidade = document.getElementById('avisoCapacidade');
-    const inputsCalculadora = document.querySelectorAll('.calculator-input');
-    let capacidadeTanque = null;
+    const custoTotalInput = document.getElementById('custo_total');
+    const quantidadeInput = document.getElementById('quantidade');
+    const valorUnidadeInput = document.getElementById('valor_por_unidade');
+    const inputsCalculadora = [custoTotalInput, quantidadeInput, valorUnidadeInput];
 
-    // --- Máscaras ---
-    $('#custo_total').mask('000.000.000,00', {reverse: true});
-    $('#quantidade').mask('000.000,000', {reverse: true});
-    $('#valor_por_unidade').mask('000.000,000', {reverse: true});
-
-    // --- Função Principal de Atualização ---
-    async function updateFormForVehicle(veiculoId) {
-        if (!veiculoId) {
-            resetFormState();
+    // --- LÓGICA DE EXIBIÇÃO DO CAMPO DE COMBUSTÍVEL ---
+    function toggleCombustivelField() {
+        const selectedOption = idVeiculoSelect.options[idVeiculoSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.dataset.tipoCombustivel) {
+            tipoCombustivelWrapper.classList.add('hidden');
             return;
-        }
-
-        try {
-            const response = await fetch(`/api/veiculo/${veiculoId}`);
-            if (!response.ok) throw new Error('Falha ao buscar dados do veículo.');
-            
-            const veiculo = await response.json();
-            
-            capacidadeTanque = parseFloat(veiculo.capacidade_tanque);
-            updateUnidadeMedida(veiculo.tipo_combustivel);
-            updateTipoCombustivel(veiculo.tipo_combustivel);
-
-        } catch (error) {
-            console.error('Erro no updateFormForVehicle:', error);
-            resetFormState();
-        }
-    }
-
-    // --- Funções Auxiliares ---
-    function updateUnidadeMedida(tipo) {
-        if (tipo === 'eletrico') {
-            labelUnidade.textContent = 'kWh';
-            labelValorUnidade.textContent = 'kWh';
-        } else {
-            labelUnidade.textContent = 'Litros';
-            labelValorUnidade.textContent = 'Litro';
-        }
-    }
-
-    function updateTipoCombustivel(tipo) {
-        tipoCombustivelSelect.innerHTML = '';
-        let options = [];
-
-        const combustivelMap = {
-            'gasolina': 'Gasolina',
-            'etanol': 'Etanol',
-            'diesel': 'Diesel',
-            'gnv': 'GNV'
         };
 
-        if (tipo === 'flex') {
-            options.push({ value: 'gasolina', text: 'Gasolina' });
-            options.push({ value: 'etanol', text: 'Etanol' });
-        } else if (combustivelMap[tipo]) {
-            options.push({ value: tipo, text: combustivelMap[tipo] });
-        }
+        const tipoCombustivel = selectedOption.dataset.tipoCombustivel;
 
-        if (options.length > 0) {
-            options.forEach(opt => tipoCombustivelSelect.add(new Option(opt.text, opt.value)));
-            
-            const oldCombustivel = "{{ old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') }}";
-            if (oldCombustivel) {
-                tipoCombustivelSelect.value = oldCombustivel;
-            }
-
+        if (tipoCombustivel && tipoCombustivel !== 'eletrico') {
             tipoCombustivelWrapper.classList.remove('hidden');
-            tipoCombustivelSelect.setAttribute('required', 'required');
+            labelUnidade.textContent = 'Litros';
+            labelValorUnidade.textContent = 'Litro';
         } else {
             tipoCombustivelWrapper.classList.add('hidden');
-            tipoCombustivelSelect.removeAttribute('required');
+            if (tipoCombustivel === 'eletrico') {
+                labelUnidade.textContent = 'kWh';
+                labelValorUnidade.textContent = 'kWh';
+            }
         }
     }
 
-    function resetFormState() {
-        labelUnidade.textContent = 'Litros';
-        labelValorUnidade.textContent = 'Litro';
-        capacidadeTanque = null;
-        avisoCapacidade.classList.add('hidden');
-        tipoCombustivelWrapper.classList.add('hidden');
-        tipoCombustivelSelect.innerHTML = '';
-        tipoCombustivelSelect.removeAttribute('required');
-    }
+    idVeiculoSelect.addEventListener('change', toggleCombustivelField);
+    toggleCombustivelField(); // Executa na carga da página
 
-    // --- Lógica da Calculadora ---
+    // --- LÓGICA DA CALCULADORA AUTOMÁTICA (VERSÃO CORRIGIDA) ---
     let lastEdited = null;
+
     inputsCalculadora.forEach(input => {
-        input.addEventListener('focus', () => lastEdited = input.id);
-        input.addEventListener('keyup', calcularValores);
+        // Usamos 'mousedown' para saber qual campo foi o último a ser focado
+        input.addEventListener('mousedown', () => {
+            lastEdited = input.id;
+        });
+
+        input.addEventListener('keyup', () => {
+            // Converte os valores dos inputs para números, tratando vírgula e ponto
+            const custoTotal = parseFloat($(custoTotalInput).val().replace(/\./g, '').replace(',', '.')) || 0;
+            const quantidade = parseFloat($(quantidadeInput).val().replace(/\./g, '').replace(',', '.')) || 0;
+            const valorUnidade = parseFloat($(valorUnidadeInput).val().replace(/\./g, '').replace(',', '.')) || 0;
+
+            // Evita calcular o campo que acabou de ser editado
+            // Calcula o Valor por Unidade
+            if (lastEdited !== 'valor_por_unidade' && custoTotal > 0 && quantidade > 0) {
+                const novoValor = (custoTotal / quantidade).toFixed(3).replace('.', ',');
+                $(valorUnidadeInput).val(novoValor);
+            } 
+            // Calcula o Custo Total
+            else if (lastEdited !== 'custo_total' && quantidade > 0 && valorUnidade > 0) {
+                const novoValor = (quantidade * valorUnidade).toFixed(2).replace('.', ',');
+                $(custoTotalInput).val(novoValor);
+            } 
+            // Calcula a Quantidade
+            else if (lastEdited !== 'quantidade' && custoTotal > 0 && valorUnidade > 0) {
+                const novoValor = (custoTotal / valorUnidade).toFixed(3).replace('.', ',');
+                $(quantidadeInput).val(novoValor);
+            }
+        });
     });
-
-    function calcularValores() {
-        const custoTotal = parseFloat($('#custo_total').val().replace(/\./g, '').replace(',', '.')) || 0;
-        const quantidade = parseFloat($('#quantidade').val().replace(/\./g, '').replace(',', '.')) || 0;
-        const valorUnidade = parseFloat($('#valor_por_unidade').val().replace(/\./g, '').replace(',', '.')) || 0;
-
-        if (lastEdited !== 'valor_por_unidade' && custoTotal > 0 && quantidade > 0) {
-            $('#valor_por_unidade').val((custoTotal / quantidade).toFixed(3).replace('.', ',')).trigger('input');
-        } else if (lastEdited !== 'custo_total' && quantidade > 0 && valorUnidade > 0) {
-            $('#custo_total').val((quantidade * valorUnidade).toFixed(2).replace('.', ',')).trigger('input');
-        }
-        
-        if (capacidadeTanque && quantidade > capacidadeTanque) {
-            avisoCapacidade.classList.remove('hidden');
-        } else {
-            avisoCapacidade.classList.add('hidden');
-        }
-    }
-    
-    // --- Inicialização ---
-    idVeiculoSelect.addEventListener('change', () => updateFormForVehicle(idVeiculoSelect.value));
-    
-    if (idVeiculoSelect.value) {
-        updateFormForVehicle(idVeiculoSelect.value);
-    }
 });
 </script>
