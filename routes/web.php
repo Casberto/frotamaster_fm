@@ -5,18 +5,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\VeiculoController;
 use App\Http\Controllers\ManutencaoController;
-use App\Http\Controllers\AbastecimentoController; // Esta é a linha que faltava
+use App\Http\Controllers\AbastecimentoController;
+use App\Http\Controllers\DashboardController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Aqui pode registar as rotas web para a sua aplicação. Estas
-| rotas são carregadas pelo RouteServiceProvider e todas elas serão
-| atribuídas ao grupo de middleware "web". Faça algo fantástico!
-|
-*/
 
 // Rota para a página inicial
 Route::get('/', function () {
@@ -24,13 +15,8 @@ Route::get('/', function () {
 });
 
 // ROTA DE REDIRECIONAMENTO APÓS LOGIN
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    if ($user->role === 'super-admin') {
-        return redirect()->route('admin.dashboard');
-    }
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])->name('dashboard');
 
 
 // ROTAS DO USUÁRIO AUTENTICADO (CLIENTE DA EMPRESA)
