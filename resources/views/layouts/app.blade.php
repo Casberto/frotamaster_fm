@@ -61,23 +61,36 @@
         {{-- SCRIPT LIBS --}}
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-        <script type="text/javascript">
-            window.onload = function() {
-                try {
-                    $('#cnpj').mask('00.000.000/0000-00', {reverse: true});
-                    var SPMaskBehavior = function (val) {
-                      return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+<script type="text/javascript">
+            $(document).ready(function(){
+                // Máscaras de Contato e Empresa
+                $('#cnpj').mask('00.000.000/0000-00', {reverse: true});
+                var SPMaskBehavior = function (val) {
+                  return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+                },
+                spOptions = {
+                  onKeyPress: function(val, e, field, options) {
+                      field.mask(SPMaskBehavior.apply({}, arguments), options);
+                    }
+                };
+                $('#telefone_contato').mask(SPMaskBehavior, spOptions);
+
+                // Máscaras do Formulário de Veículos
+                $('#placa').mask('SSS-AAAA', {
+                    'translation': {
+                        S: {pattern: /[A-Za-z]/},
+                        A: {pattern: /[A-Za-z0-9]/}
                     },
-                    spOptions = {
-                      onKeyPress: function(val, e, field, options) {
-                          field.mask(SPMaskBehavior.apply({}, arguments), options);
-                        }
-                    };
-                    $('#telefone_contato').mask(SPMaskBehavior, spOptions);
-                } catch (e) {
-                    console.error("Erro ao aplicar máscara: ", e);
-                }
-            };
+                    onKeyPress: function(val, e, field, options) {
+                        field.val(val.toUpperCase());
+                    }
+                });
+                $('#renavam').mask('00000000000');
+                $('#quilometragem_atual').mask('000.000', {reverse: true}); // Máscara adicionada
+                $('#chassi').on('input', function() {
+                    $(this).val($(this).val().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, ''));
+                });
+            });
         </script>
     </body>
 </html>

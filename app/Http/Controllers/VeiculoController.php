@@ -9,9 +9,6 @@ use Illuminate\Validation\Rule;
 
 class VeiculoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         if (!Auth::user()->id_empresa) {
@@ -23,9 +20,6 @@ class VeiculoController extends Controller
         return view('veiculos.index', compact('veiculos'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         if (!Auth::user()->id_empresa) {
@@ -34,10 +28,7 @@ class VeiculoController extends Controller
         return view('veiculos.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+     public function store(Request $request)
     {
         if (!Auth::user()->id_empresa) {
             return back()->with('error', 'Apenas usuários vinculados a uma empresa podem cadastrar veículos.')->withInput();
@@ -45,24 +36,29 @@ class VeiculoController extends Controller
 
         $idEmpresa = Auth::user()->id_empresa;
 
-        // --- CORREÇÃO APLICADA AQUI ---
         $validatedData = $request->validate([
-            'placa' => ['required', 'string', 'size:7', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)],
+            'placa' => ['required', 'string', 'min:7', 'max:7', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)],
             'marca' => ['required', 'string', 'max:255'],
             'modelo' => ['required', 'string', 'max:255'],
-            'ano_fabricacao' => ['required', 'integer', 'digits:4'],
-            'ano_modelo' => ['required', 'integer', 'digits:4'],
-            'quilometragem_atual' => ['required', 'integer'],
+            'ano_fabricacao' => ['required', 'integer', 'digits:4', 'gte:1940'],
+            'ano_modelo' => ['required', 'integer', 'digits:4', 'gte:ano_fabricacao'],
+            'quilometragem_atual' => ['required', 'integer', 'min:0', 'max:999999'],
             'cor' => ['nullable', 'string', 'max:255'],
-            'chassi' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($request->id)],
-            'renavam' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($request->id)],
+            'chassi' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]{17}$/i', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)],
+            'renavam' => ['nullable', 'string', 'min:9', 'max:11', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)],
             'tipo_veiculo' => ['required', Rule::in(['carro', 'moto', 'caminhao', 'van', 'outro'])],
             'tipo_combustivel' => ['required', Rule::in(['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico'])],
-            'capacidade_tanque' => ['nullable', 'numeric'], // Campo adicionado na validação
+            'capacidade_tanque' => ['nullable', 'numeric'],
             'data_aquisicao' => ['nullable', 'date'],
             'status' => ['required', Rule::in(['ativo', 'inativo', 'em_manutencao', 'vendido'])],
             'observacoes' => ['nullable', 'string'],
         ]);
+
+        // Formata os dados antes de salvar
+        $validatedData['placa'] = strtoupper($validatedData['placa']);
+        if (isset($validatedData['chassi'])) {
+            $validatedData['chassi'] = strtoupper($validatedData['chassi']);
+        }
 
         $veiculo = new Veiculo($validatedData);
         $veiculo->id_empresa = $idEmpresa;
@@ -72,9 +68,6 @@ class VeiculoController extends Controller
                          ->with('success', 'Veículo cadastrado com sucesso!');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Veiculo $veiculo)
     {
         if ((int)$veiculo->id_empresa !== (int)Auth::user()->id_empresa) {
@@ -83,44 +76,46 @@ class VeiculoController extends Controller
         return view('veiculos.edit', compact('veiculo'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Veiculo $veiculo)
     {
         if ((int)$veiculo->id_empresa !== (int)Auth::user()->id_empresa) {
             abort(403);
         }
 
+        $request->merge([
+            'quilometragem_atual' => str_replace('.', '', $request->quilometragem_atual)
+        ]);
+
         $idEmpresa = Auth::user()->id_empresa;
 
-        // --- CORREÇÃO APLICADA AQUI ---
         $validatedData = $request->validate([
-            'placa' => ['required', 'string', 'size:7', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
+            'placa' => ['required', 'string', 'min:7', 'max:7', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
             'marca' => ['required', 'string', 'max:255'],
             'modelo' => ['required', 'string', 'max:255'],
-            'ano_fabricacao' => ['required', 'integer', 'digits:4'],
-            'ano_modelo' => ['required', 'integer', 'digits:4'],
-            'quilometragem_atual' => ['required', 'integer'],
+            'ano_fabricacao' => ['required', 'integer', 'digits:4', 'gte:1940'],
+            'ano_modelo' => ['required', 'integer', 'digits:4', 'gte:ano_fabricacao'],
+            'quilometragem_atual' => ['required', 'integer', 'min:0', 'max:999999'],
             'cor' => ['nullable', 'string', 'max:255'],
-            'chassi' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
-            'renavam' => ['nullable', 'string', 'max:255', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
+            'chassi' => ['nullable', 'string', 'size:17', 'regex:/^[A-HJ-NPR-Z0-9]{17}$/i', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
+            'renavam' => ['nullable', 'string', 'min:9', 'max:11', Rule::unique('veiculos')->where('id_empresa', $idEmpresa)->ignore($veiculo->id)],
             'tipo_veiculo' => ['required', Rule::in(['carro', 'moto', 'caminhao', 'van', 'outro'])],
             'tipo_combustivel' => ['required', Rule::in(['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico'])],
-            'capacidade_tanque' => ['nullable', 'numeric'], // Campo adicionado na validação
+            'capacidade_tanque' => ['nullable', 'numeric'],
             'data_aquisicao' => ['nullable', 'date'],
             'status' => ['required', Rule::in(['ativo', 'inativo', 'em_manutencao', 'vendido'])],
             'observacoes' => ['nullable', 'string'],
         ]);
+
+        $validatedData['placa'] = strtoupper($validatedData['placa']);
+        if (isset($validatedData['chassi'])) {
+            $validatedData['chassi'] = strtoupper($validatedData['chassi']);
+        }
         
         $veiculo->update($validatedData);
         return redirect()->route('veiculos.index')
                          ->with('success', 'Veículo atualizado com sucesso!');
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
+    
     public function destroy(Veiculo $veiculo)
     {
         if ((int)$veiculo->id_empresa !== (int)Auth::user()->id_empresa) {

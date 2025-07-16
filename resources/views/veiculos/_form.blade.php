@@ -16,7 +16,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <label for="placa" class="block font-medium text-sm text-gray-700">Placa*</label>
-                <input type="text" name="placa" id="placa" class="mt-1 block w-full" value="{{ old('placa', $veiculo->placa ?? '') }}" required>
+                <input type="text" name="placa" id="placa" class="mt-1 block w-full uppercase" value="{{ old('placa', $veiculo->placa ?? '') }}" required maxlength="7">
             </div>
             <div>
                 <label for="marca" class="block font-medium text-sm text-gray-700">Marca*</label>
@@ -28,15 +28,15 @@
             </div>
             <div>
                 <label for="ano_fabricacao" class="block font-medium text-sm text-gray-700">Ano Fabricação*</label>
-                <input type="number" name="ano_fabricacao" id="ano_fabricacao" class="mt-1 block w-full" value="{{ old('ano_fabricacao', $veiculo->ano_fabricacao ?? '') }}" required>
+                <input type="number" name="ano_fabricacao" id="ano_fabricacao" class="mt-1 block w-full" value="{{ old('ano_fabricacao', $veiculo->ano_fabricacao ?? '') }}" required min="1940" max="{{ date('Y') + 1 }}">
             </div>
             <div>
                 <label for="ano_modelo" class="block font-medium text-sm text-gray-700">Ano Modelo*</label>
-                <input type="number" name="ano_modelo" id="ano_modelo" class="mt-1 block w-full" value="{{ old('ano_modelo', $veiculo->ano_modelo ?? '') }}" required>
+                <input type="number" name="ano_modelo" id="ano_modelo" class="mt-1 block w-full" value="{{ old('ano_modelo', $veiculo->ano_modelo ?? '') }}" required min="1940" max="{{ date('Y') + 1 }}">
             </div>
             <div>
                 <label for="quilometragem_atual" class="block font-medium text-sm text-gray-700">Quilometragem*</label>
-                <input type="number" name="quilometragem_atual" id="quilometragem_atual" class="mt-1 block w-full" value="{{ old('quilometragem_atual', $veiculo->quilometragem_atual ?? '') }}" required>
+                <input type="number" name="quilometragem_atual" id="quilometragem_atual" class="mt-1 block w-full" value="{{ old('quilometragem_atual', $veiculo->quilometragem_atual ?? '') }}" required max="999999">
             </div>
         </div>
     </div>
@@ -47,15 +47,23 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
              <div>
                 <label for="cor" class="block font-medium text-sm text-gray-700">Cor</label>
-                <input type="text" name="cor" id="cor" class="mt-1 block w-full" value="{{ old('cor', $veiculo->cor ?? '') }}">
+                <select name="cor" id="cor" class="mt-1 block w-full">
+                    @php
+                        $cores = ['Amarelo', 'Azul', 'Bege', 'Branco', 'Cinza', 'Dourado', 'Laranja', 'Marrom', 'Prata', 'Preto', 'Roxo', 'Verde', 'Vermelho', 'Outra'];
+                    @endphp
+                    <option value="">Selecione a cor</option>
+                    @foreach($cores as $cor)
+                        <option value="{{ $cor }}" @selected(old('cor', $veiculo->cor ?? '') == $cor)>{{ $cor }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label for="chassi" class="block font-medium text-sm text-gray-700">Chassi</label>
-                <input type="text" name="chassi" id="chassi" class="mt-1 block w-full" value="{{ old('chassi', $veiculo->chassi ?? '') }}">
+                <input type="text" name="chassi" id="chassi" class="mt-1 block w-full uppercase" value="{{ old('chassi', $veiculo->chassi ?? '') }}" maxlength="17">
             </div>
              <div>
                 <label for="renavam" class="block font-medium text-sm text-gray-700">Renavam</label>
-                <input type="text" name="renavam" id="renavam" class="mt-1 block w-full" value="{{ old('renavam', $veiculo->renavam ?? '') }}">
+                <input type="text" name="renavam" id="renavam" class="mt-1 block w-full" value="{{ old('renavam', $veiculo->renavam ?? '') }}" maxlength="11">
             </div>
             <div>
                 <label for="tipo_veiculo" class="block font-medium text-sm text-gray-700">Tipo de Veículo*</label>
@@ -79,14 +87,12 @@
                 </select>
             </div>
             <div>
-                {{-- CAMPO ADICIONADO --}}
                 <label for="capacidade_tanque" class="block font-medium text-sm text-gray-700">Capacidade Tanque/Bateria (Litros/kWh)</label>
                 <input type="text" name="capacidade_tanque" id="capacidade_tanque" class="mt-1 block w-full" value="{{ old('capacidade_tanque', $veiculo->capacidade_tanque ?? '') }}">
             </div>
         </div>
     </div>
 
-    {{-- Seção de Detalhes Operacionais --}}
     <div class="form-section">
         <h3 class="form-section-title">Detalhes Operacionais</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
