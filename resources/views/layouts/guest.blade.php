@@ -13,18 +13,26 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        {{-- Estilos customizados para a tela de login --}}
+        <style>
+            .login-bg {
+                /* Cor de fundo escura para mobile, a mesma do card de login */
+                background-color: #1f2937; /* Equivalente a bg-gray-800 */
+            }
+            @media (min-width: 640px) { /* sm: breakpoint de Tailwind */
+                /* Degradê para desktop */
+                .login-bg {
+                    background: linear-gradient(135deg, #1A202C 0%, #3182CE 100%);
+                }
+            }
+        </style>
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
-            </div>
-
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
-            </div>
+        {{-- As classes 'pt-6 sm:pt-0' foram removidas para eliminar a borda branca no mobile --}}
+        <div class="min-h-screen flex flex-col sm:justify-center items-center login-bg">
+            {{-- O slot irá conter o card de login --}}
+            {{ $slot }}
         </div>
     </body>
 </html>
