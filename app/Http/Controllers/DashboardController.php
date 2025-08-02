@@ -13,67 +13,70 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Se o usuário não pertence a uma empresa, exibe a view padrão do Breeze.
-        if (!Auth::user()->id_empresa) {
-            return view('dashboard'); // View padrão para usuários sem empresa (ex: super-admin)
+        $user = Auth::user();
+        $id_empresa = $user->id_empresa;
+
+        if (!$id_empresa) {
+            return view('dashboard');
         }
 
-        $idEmpresa = Auth::user()->id_empresa;
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth = Carbon::now()->endOfMonth();
 
-        // 1. Cards de Resumo
-        $veiculosAtivos = Veiculo::where('id_empresa', $idEmpresa)->where('status', 'ativo')->count();
-        
-        // Exemplo de como calcular manutenções vencidas
-        $manutencoesVencidas = Manutencao::where('id_empresa', $idEmpresa)
-            ->where('data_manutencao', '<', Carbon::now())
-            ->where('status', 'pendente')
+        $veiculosAtivos = Veiculo::where('id_empresa', $id_empresa)->where('status', 'ativo')->count();
+
+        $manutencoesVencidas = Manutencao::where('id_empresa', $id_empresa)
+            ->where('data_manutencao', '<', now())
+            ->where('status', '!=', 'concluida')
             ->count();
             
-        // Exemplo de como calcular custo mensal (soma de manutenções e abastecimentos no mês atual)
-        $custoManutencoes = Manutencao::where('id_empresa', $idEmpresa)
-            ->whereMonth('data_manutencao', Carbon::now()->month)
-            ->whereYear('data_manutencao', Carbon::now()->year)
-            ->sum('custo_total');
-            
-        $custoAbastecimentos = Abastecimento::where('id_empresa', $idEmpresa)
-            ->whereMonth('data_abastecimento', Carbon::now()->month)
-            ->whereYear('data_abastecimento', Carbon::now()->year)
-            ->sum('custo_total');
-            
-        $custoMensal = $custoManutencoes + $custoAbastecimentos;
+        $alertasProximos = Manutencao::where('id_empresa', $id_empresa)
+            ->whereBetween('data_manutencao', [now(), now()->addDays(7)])
+            ->where('status', '!=', 'concluida')
+            ->count();
 
-        // 2. Lista da Frota para o Dropdown Interativo
-        // Carregando os veículos com suas manutenções pendentes para otimizar a consulta.
-        $frota = Veiculo::where('id_empresa', $idEmpresa)
-                        ->where('status', 'ativo')
-                        ->with(['manutencoes' => function ($query) {
-                            $query->where('status', 'pendente')->orderBy('data_manutencao', 'asc');
-                        }])
-                        ->orderBy('marca')
-                        ->orderBy('modelo')
-                        ->get();
+        $frota = Veiculo::where('id_empresa', $id_empresa)
+            ->where('status', 'ativo')
+            ->with(['ultimoAbastecimento']) // essa não precisa de filtro
+            ->get();
 
-        // 3. Próximos Lembretes (exemplo)
-        $proximosLembretes = Manutencao::where('id_empresa', $idEmpresa)
-            ->where('data_manutencao', '>', Carbon::now())
-            ->where('data_manutencao', '<=', Carbon::now()->addDays(30)) // Lembretes para os próximos 30 dias
-            ->where('status', 'pendente')
+        $custoTotalMes = 0;
+
+        foreach ($frota as $veiculo) {
+            // Somar abastecimentos do mês atual
+            $custoAbastecimento = Abastecimento::where('id_veiculo', $veiculo->id)
+                ->whereBetween('data_abastecimento', [$startOfMonth, $endOfMonth])
+                ->sum('custo_total');
+
+            // Somar manutenções do mês atual
+            $custoManutencao = Manutencao::where('id_veiculo', $veiculo->id)
+                ->whereBetween('data_manutencao', [$startOfMonth, $endOfMonth])
+                ->sum('custo_total');
+
+            $veiculo->custo_mensal_abastecimento = $custoAbastecimento;
+            $veiculo->custo_mensal_manutencao = $custoManutencao;
+            $veiculo->custo_total_mensal = $custoAbastecimento + $custoManutencao;
+
+            $custoTotalMes += $veiculo->custo_total_mensal;
+        }
+
+        $proximosLembretes = Manutencao::where('id_empresa', $id_empresa)
+            ->where('data_manutencao', '>', now())
+            ->where('data_manutencao', '<=', now()->addDays(30))
+            ->where('status', '!=', 'concluida')
             ->with('veiculo')
             ->orderBy('data_manutencao', 'asc')
             ->take(5)
             ->get();
-            
-        // O campo 'alertasProximos' pode ser a contagem de $proximosLembretes
-        $alertasProximos = $proximosLembretes->count();
 
-
-        return view('dashboard', compact(
-            'veiculosAtivos',
-            'manutencoesVencidas',
-            'custoMensal',
-            'alertasProximos',
-            'frota',
-            'proximosLembretes'
-        ));
+        return view('dashboard', [
+            'veiculosAtivos' => $veiculosAtivos,
+            'manutencoesVencidas' => $manutencoesVencidas,
+            'alertasProximos' => $alertasProximos,
+            'custoMensal' => $custoTotalMes,
+            'frota' => $frota,
+            'proximosLembretes' => $proximosLembretes,
+        ]);
     }
+
 }

@@ -60,4 +60,33 @@ class Veiculo extends Model
     {
         return $this->hasMany(Abastecimento::class, 'id_veiculo');
     }
+
+    /**
+     * Obtém o registro de abastecimento mais recente para o veículo.
+     */
+    public function ultimoAbastecimento()
+    {
+        return $this->hasOne(Abastecimento::class, 'id_veiculo')->latestOfMany('data_abastecimento');
+    }
+
+    public function getCustoTotalMensalAttribute()
+    {
+        return $this->custo_mensal_abastecimento + $this->custo_mensal_manutencao;
+    }
+
+    public function getCustoMensalAbastecimentoFormatadoAttribute()
+    {
+        return number_format($this->custo_mensal_abastecimento, 2, ',', '.');
+    }
+
+    public function getCustoMensalManutencaoFormatadoAttribute()
+    {
+        return number_format($this->custo_mensal_manutencao, 2, ',', '.');
+    }
+
+    public function getCustoTotalMensalFormatadoAttribute()
+    {
+        return number_format($this->custo_total_mensal, 2, ',', '.');
+    }
+
 }

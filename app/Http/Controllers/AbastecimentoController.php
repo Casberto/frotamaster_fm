@@ -67,6 +67,7 @@ class AbastecimentoController extends Controller
                     }
                 }
             }],
+            'tipo_combustivel' => ['required'],
             'custo_total' => ['required', 'string'],
             'quantidade' => ['required', 'string'],
             'valor_por_unidade' => ['required', 'string'],
@@ -96,7 +97,7 @@ class AbastecimentoController extends Controller
         $abastecimento->quilometragem = $validatedData['quilometragem'];
         
         $abastecimento->unidade_medida = $veiculo->tipo_combustivel === 'eletrico' ? 'kWh' : 'Litros';
-        $abastecimento->tipo_combustivel = $veiculo->tipo_combustivel; // Simplificado: usa sempre o tipo do veículo
+        $abastecimento->tipo_combustivel = $validatedData['tipo_combustivel'];
 
         $abastecimento->quantidade = $limparValor($validatedData['quantidade']);
         $abastecimento->valor_por_unidade = $limparValor($validatedData['valor_por_unidade']);
