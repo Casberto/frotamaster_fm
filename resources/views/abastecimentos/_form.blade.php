@@ -1,3 +1,8 @@
+{{--
+Este é o código para o formulário de cadastro/edição de abastecimento.
+Ele contém a correção para o checkbox e a nova lógica de exibição do tipo de combustível.
+--}}
+
 @if ($errors->any())
     <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6" role="alert">
         <p class="font-bold">Atenção</p>
@@ -18,7 +23,7 @@
                 <select name="id_veiculo" id="id_veiculo" class="mt-1 block w-full" required>
                     <option value="">Selecione um veículo</option>
                     @foreach($veiculos as $veiculo)
-                        <option value="{{ $veiculo->id }}" data-tipo-combustivel="{{ $veiculo->tipo_combustivel }}" @selected(old('id_veiculo', $abastecimento->id_veiculo ?? '') == $veiculo->id)>
+                        <option value="{{ $veiculo->id }}" data-tipo-combustivel="{{ $veiculo->tipo_combustivel }}" @selected(old('id_veiculo', $abastecimento->id_veiculo ?? request()->get('id_veiculo')) == $veiculo->id)>
                             {{ $veiculo->placa }} - {{ $veiculo->marca }} {{ $veiculo->modelo }}
                         </option>
                     @endforeach
@@ -35,13 +40,14 @@
                     <option value="">Selecione o combustível</option>
                     <option value="gasolina" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'gasolina')>Gasolina</option>
                     <option value="etanol" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'etanol')>Etanol</option>
-                    <option value="diesel" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'diesel')>Diesel</option>
                     <option value="gnv" @selected(old('tipo_combustivel', $abastecimento->tipo_combustivel ?? '') == 'gnv')>GNV</option>
                 </select>
             </div>
 
             <div class="md:col-span-1">
-                <label for="quilometragem" class="block font-medium text-sm text-gray-700">Quilometragem*</label>
+                <label for="quilometragem" class="block font-medium text-sm text-gray-700">
+                    Quilometragem* <span id="km_atual_veiculo" class="text-xs text-gray-500 font-normal"></span>
+                </label>
                 <input type="number" name="quilometragem" id="quilometragem" class="mt-1 block w-full" value="{{ old('quilometragem', $abastecimento->quilometragem ?? '') }}" required>
             </div>
             <div class="md:col-span-1">
@@ -73,18 +79,25 @@
         <h3 class="form-section-title">Nível do Tanque</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label for="nivel_tanque_inicio" class="block font-medium text-sm text-gray-700">Nível na Chegada</label>
-                <select name="nivel_tanque_inicio" id="nivel_tanque_inicio" class="mt-1 block w-full">
+                <label for="nivel_tanque_chegada" class="block font-medium text-sm text-gray-700">Nível na Chegada</label>
+                <select name="nivel_tanque_chegada" id="nivel_tanque_chegada" class="mt-1 block w-full">
                     <option value="">Não informado</option>
-                    <option value="reserva" @selected(old('nivel_tanque_inicio', $abastecimento->nivel_tanque_inicio ?? '') == 'reserva')>Na reserva</option>
-                    <option value="1/4" @selected(old('nivel_tanque_inicio', $abastecimento->nivel_tanque_inicio ?? '') == '1/4')>1/4</option>
-                    <option value="1/2" @selected(old('nivel_tanque_inicio', $abastecimento->nivel_tanque_inicio ?? '') == '1/2')>1/2 (Meio tanque)</option>
-                    <option value="3/4" @selected(old('nivel_tanque_inicio', $abastecimento->nivel_tanque_inicio ?? '') == '3/4')>3/4</option>
+                    <option value="reserva" @selected(old('nivel_tanque_chegada', $abastecimento->nivel_tanque_chegada ?? '') == 'reserva')>Na reserva</option>
+                    <option value="1/4" @selected(old('nivel_tanque_chegada', $abastecimento->nivel_tanque_chegada ?? '') == '1/4')>1/4</option>
+                    <option value="1/2" @selected(old('nivel_tanque_chegada', $abastecimento->nivel_tanque_chegada ?? '') == '1/2')>1/2 (Meio tanque)</option>
+                    <option value="3/4" @selected(old('nivel_tanque_chegada', $abastecimento->nivel_tanque_chegada ?? '') == '3/4')>3/4</option>
                 </select>
             </div>
-            <div class="flex items-center pt-6">
-                 <input type="checkbox" name="tanque_cheio" id="tanque_cheio" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" @checked(old('tanque_cheio', $abastecimento->tanque_cheio ?? false))>
-                <label for="tanque_cheio" class="ml-2 block text-sm text-gray-900">Completou o tanque?</label>
+            <div>
+                <label for="nivel_tanque_saida" class="block font-medium text-sm text-gray-700">Nível na Saída</label>
+                <select name="nivel_tanque_saida" id="nivel_tanque_saida" class="mt-1 block w-full">
+                    <option value="">Não informado</option>
+                    <option value="reserva" @selected(old('nivel_tanque_saida', $abastecimento->nivel_tanque_saida ?? '') == 'reserva')>Na reserva</option>
+                    <option value="1/4" @selected(old('nivel_tanque_saida', $abastecimento->nivel_tanque_saida ?? '') == '1/4')>1/4</option>
+                    <option value="1/2" @selected(old('nivel_tanque_saida', $abastecimento->nivel_tanque_saida ?? '') == '1/2')>1/2 (Meio tanque)</option>
+                    <option value="3/4" @selected(old('nivel_tanque_saida', $abastecimento->nivel_tanque_saida ?? '') == '3/4')>3/4</option>
+                    <option value="cheio" @selected(old('nivel_tanque_saida', $abastecimento->nivel_tanque_saida ?? '') == 'cheio')>Tanque Cheio</option>
+                </select>
             </div>
         </div>
     </div>
@@ -96,75 +109,89 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // --- Seletores de Elementos ---
-    const idVeiculoSelect = document.getElementById('id_veiculo');
-    const tipoCombustivelWrapper = document.getElementById('tipo_combustivel_wrapper');
-    const labelUnidade = document.getElementById('label_unidade');
-    const labelValorUnidade = document.getElementById('label_valor_unidade');
-    const custoTotalInput = document.getElementById('custo_total');
-    const quantidadeInput = document.getElementById('quantidade');
-    const valorUnidadeInput = document.getElementById('valor_por_unidade');
-    const inputsCalculadora = [custoTotalInput, quantidadeInput, valorUnidadeInput];
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Seletores de Elementos ---
+        const idVeiculoSelect = document.getElementById('id_veiculo');
+        const tipoCombustivelWrapper = document.getElementById('tipo_combustivel_wrapper');
+        const labelUnidade = document.getElementById('label_unidade');
+        const labelValorUnidade = document.getElementById('label_valor_unidade');
+        const custoTotalInput = document.getElementById('custo_total');
+        const quantidadeInput = document.getElementById('quantidade');
+        const valorUnidadeInput = document.getElementById('valor_por_unidade');
+        const inputsCalculadora = [custoTotalInput, quantidadeInput, valorUnidadeInput];
 
-    // --- LÓGICA DE EXIBIÇÃO DO CAMPO DE COMBUSTÍVEL ---
-    function toggleCombustivelField() {
-        const selectedOption = idVeiculoSelect.options[idVeiculoSelect.selectedIndex];
-        if (!selectedOption || !selectedOption.dataset.tipoCombustivel) {
-            tipoCombustivelWrapper.classList.add('hidden');
-            return;
-        };
+        // --- LÓGICA DE EXIBIÇÃO DO CAMPO DE COMBUSTÍVEL ---
+        function toggleCombustivelField() {
+            const selectedOption = idVeiculoSelect.options[idVeiculoSelect.selectedIndex];
+            if (!selectedOption || !selectedOption.dataset.tipoCombustivel) {
+                tipoCombustivelWrapper.classList.add('hidden');
+                return;
+            };
 
-        const tipoCombustivel = selectedOption.dataset.tipoCombustivel;
+            const tipoCombustivelVeiculo = selectedOption.dataset.tipoCombustivel;
+            const tiposQueExigemSelecao = ['flex', 'gnv'];
 
-        if (tipoCombustivel && tipoCombustivel !== 'eletrico') {
-            tipoCombustivelWrapper.classList.remove('hidden');
-            labelUnidade.textContent = 'Litros';
-            labelValorUnidade.textContent = 'Litro';
-        } else {
-            tipoCombustivelWrapper.classList.add('hidden');
-            if (tipoCombustivel === 'eletrico') {
+            if (tiposQueExigemSelecao.includes(tipoCombustivelVeiculo)) {
+                tipoCombustivelWrapper.classList.remove('hidden');
+            } else {
+                tipoCombustivelWrapper.classList.add('hidden');
+            }
+
+            if (tipoCombustivelVeiculo === 'eletrico') {
                 labelUnidade.textContent = 'kWh';
                 labelValorUnidade.textContent = 'kWh';
+            } else {
+                labelUnidade.textContent = 'Litros';
+                labelValorUnidade.textContent = 'Litro';
             }
         }
-    }
 
-    idVeiculoSelect.addEventListener('change', toggleCombustivelField);
-    toggleCombustivelField(); // Executa na carga da página
+        idVeiculoSelect.addEventListener('change', toggleCombustivelField);
+        toggleCombustivelField(); // Executa na carga da página
 
-    // --- LÓGICA DA CALCULADORA AUTOMÁTICA (VERSÃO CORRIGIDA) ---
-    let lastEdited = null;
+        // --- LÓGICA DA CALCULADORA AUTOMÁTICA ---
+        let lastEdited = null;
+        inputsCalculadora.forEach(input => {
+            input.addEventListener('mousedown', () => { lastEdited = input.id; });
+            input.addEventListener('keyup', () => {
+                const custoTotal = parseFloat($(custoTotalInput).val().replace(/\./g, '').replace(',', '.')) || 0;
+                const quantidade = parseFloat($(quantidadeInput).val().replace(/\./g, '').replace(',', '.')) || 0;
+                const valorUnidade = parseFloat($(valorUnidadeInput).val().replace(/\./g, '').replace(',', '.')) || 0;
 
-    inputsCalculadora.forEach(input => {
-        // Usamos 'mousedown' para saber qual campo foi o último a ser focado
-        input.addEventListener('mousedown', () => {
-            lastEdited = input.id;
-        });
-
-        input.addEventListener('keyup', () => {
-            // Converte os valores dos inputs para números, tratando vírgula e ponto
-            const custoTotal = parseFloat($(custoTotalInput).val().replace(/\./g, '').replace(',', '.')) || 0;
-            const quantidade = parseFloat($(quantidadeInput).val().replace(/\./g, '').replace(',', '.')) || 0;
-            const valorUnidade = parseFloat($(valorUnidadeInput).val().replace(/\./g, '').replace(',', '.')) || 0;
-
-            // Evita calcular o campo que acabou de ser editado
-            // Calcula o Valor por Unidade
-            if (lastEdited !== 'valor_por_unidade' && custoTotal > 0 && quantidade > 0) {
-                const novoValor = (custoTotal / quantidade).toFixed(3).replace('.', ',');
-                $(valorUnidadeInput).val(novoValor);
-            } 
-            // Calcula o Custo Total
-            else if (lastEdited !== 'custo_total' && quantidade > 0 && valorUnidade > 0) {
-                const novoValor = (quantidade * valorUnidade).toFixed(2).replace('.', ',');
-                $(custoTotalInput).val(novoValor);
-            } 
-            // Calcula a Quantidade
-            else if (lastEdited !== 'quantidade' && custoTotal > 0 && valorUnidade > 0) {
-                const novoValor = (custoTotal / valorUnidade).toFixed(3).replace('.', ',');
-                $(quantidadeInput).val(novoValor);
-            }
+                if (lastEdited !== 'valor_por_unidade' && custoTotal > 0 && quantidade > 0) {
+                    const novoValor = (custoTotal / quantidade).toFixed(3).replace('.', ',');
+                    $(valorUnidadeInput).val(novoValor);
+                } 
+                else if (lastEdited !== 'custo_total' && quantidade > 0 && valorUnidade > 0) {
+                    const novoValor = (quantidade * valorUnidade).toFixed(2).replace('.', ',');
+                    $(custoTotalInput).val(novoValor);
+                } 
+                else if (lastEdited !== 'quantidade' && custoTotal > 0 && valorUnidade > 0) {
+                    const novoValor = (custoTotal / valorUnidade).toFixed(3).replace('.', ',');
+                    $(quantidadeInput).val(novoValor);
+                }
+            });
         });
     });
-});
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // O mapa de KMs é injetado aqui pelo Blade
+        const veiculosKmMap = {!! json_encode($veiculosKmMap ?? []) !!};
+        
+        const idVeiculoSelect = document.getElementById('id_veiculo');
+        const kmAtualVeiculoSpan = document.getElementById('km_atual_veiculo');
+
+        function updateKmDisplay() {
+            const veiculoId = idVeiculoSelect.value;
+            if (veiculoId && veiculosKmMap[veiculoId] !== undefined) {
+                kmAtualVeiculoSpan.textContent = `(Atual: ${veiculosKmMap[veiculoId]} km)`;
+            } else {
+                kmAtualVeiculoSpan.textContent = '';
+            }
+        }
+
+        // Adiciona o listener e executa na carga da página para o caso de um formulário de edição
+        idVeiculoSelect.addEventListener('change', updateKmDisplay);
+        updateKmDisplay(); 
+    });
 </script>

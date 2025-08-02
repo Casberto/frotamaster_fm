@@ -11,29 +11,40 @@ return new class extends Migration
         Schema::create('veiculos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_empresa')->constrained('empresas')->onDelete('cascade');
-            $table->string('placa', 7);
+            
+            // Dados Principais
+            $table->string('placa', 10);
             $table->string('marca');
             $table->string('modelo');
-            $table->year('ano_fabricacao');
-            $table->year('ano_modelo');
-            $table->string('cor')->nullable();
-            $table->string('chassi')->nullable();
-            $table->string('renavam')->nullable();
-            $table->enum('tipo_veiculo', ['carro', 'moto', 'caminhao', 'van', 'outro']);
-            $table->enum('tipo_combustivel', ['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico']);
-            $table->integer('quilometragem_atual');
-            $table->date('data_aquisicao')->nullable();
+            $table->string('ano_fabricacao', 4);
+            $table->string('ano_modelo', 4);
+            $table->string('cor');
             
-            // NOVO CAMPO
-            $table->decimal('capacidade_tanque', 8, 2)->nullable()->comment('Capacidade em Litros ou kWh');
-
-            $table->enum('status', ['ativo', 'inativo', 'em_manutencao', 'vendido'])->default('ativo');
+            // Documentação
+            $table->string('chassi')->unique();
+            $table->string('renavam')->unique();
+            
+            // Detalhes Operacionais
+            $table->string('tipo_veiculo'); // Ex: Carro, Moto, Caminhão
+            $table->string('tipo_combustivel'); // Ex: Gasolina, Diesel, Flex, Elétrico
+            $table->date('data_aquisicao')->nullable();
+            $table->integer('quilometragem_inicial');
+            $table->integer('quilometragem_atual');
+            $table->decimal('capacidade_tanque', 8, 2)->nullable()->comment('Em litros ou kWh para elétricos');
+            
+            // --- Campos Relacionados a Consumo Médio ---
+            $table->decimal('consumo_medio_fabricante', 8, 2)->nullable()->comment('Consumo em KM/L ou KM/kWh informado pela fabricante.');
+            $table->decimal('consumo_medio_atual', 8, 2)->nullable()->comment('Consumo médio calculado pelo sistema com base nos abastecimentos.');
+            $table->boolean('alerta_consumo_ativo')->default(false)->comment('Flag que indica se o consumo está anormal.');
+            
+            // --- Campos gerenciais ---
+            $table->string('status'); // Ex: Ativo, Inativo, Em Manutenção
             $table->text('observacoes')->nullable();
+            
             $table->timestamps();
 
-            $table->unique(['id_empresa', 'placa']);
-            $table->unique(['id_empresa', 'chassi']);
-            $table->unique(['id_empresa', 'renavam']);
+            // Garantir que a placa seja única por empresa
+            $table->unique(['placa', 'id_empresa']);
         });
     }
 

@@ -34,9 +34,22 @@
                 <label for="ano_modelo" class="block font-medium text-sm text-gray-700">Ano Modelo*</label>
                 <input type="number" name="ano_modelo" id="ano_modelo" class="mt-1 block w-full" value="{{ old('ano_modelo', $veiculo->ano_modelo ?? '') }}" required min="1940" max="{{ date('Y') + 1 }}">
             </div>
+        </div>
+    </div>
+
+    {{-- Sessçai Detalhes Operacionais --}}
+    <div class="form-section">
+        <h3 class="form-section-title">Detalhes Operacionais</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-                <label for="quilometragem_atual" class="block font-medium text-sm text-gray-700">Quilometragem*</label>
+                <label for="quilometragem_inicial" class="block font-medium text-sm text-gray-700">Quilometragem Inicial*</label>
+                <input type="number" name="quilometragem_inicial" id="quilometragem_inicial" class="mt-1 block w-full" value="{{ old('quilometragem_inicial', $veiculo->quilometragem_inicial ?? '') }}" required max="999999">
+                <p class="mt-1 text-xs text-gray-500">KM do veículo na aquisição</p>
+            </div>
+            <div>
+                <label for="quilometragem_atual" class="block font-medium text-sm text-gray-700">Quilometragem Atual</label>
                 <input type="number" name="quilometragem_atual" id="quilometragem_atual" class="mt-1 block w-full" value="{{ old('quilometragem_atual', $veiculo->quilometragem_atual ?? '') }}" required max="999999">
+                <p class="mt-1 text-xs text-gray-500">KM mais recente do odômetro</p>
             </div>
         </div>
     </div>
@@ -89,6 +102,12 @@
             <div>
                 <label for="capacidade_tanque" class="block font-medium text-sm text-gray-700">Capacidade Tanque/Bateria (Litros/kWh)</label>
                 <input type="text" name="capacidade_tanque" id="capacidade_tanque" class="mt-1 block w-full" value="{{ old('capacidade_tanque', $veiculo->capacidade_tanque ?? '') }}">
+                <p class="mt-1 text-xs text-gray-500">Em litros ou kW/h (elétricos).</p>
+            </div>
+            <div>
+                <label for="consumo_medio_fabricante" class="block font-medium text-sm text-gray-700">Consumo Médio - Km/L (Circuito Misto)</label>
+                <input type="text" name="consumo_medio_fabricante" id="consumo_medio_fabricante" class="mt-1 block w-full" value="{{ old('consumo_medio_fabricante', $veiculo->consumo_medio_fabricante ?? '') }}">
+                <p class="mt-1 text-xs text-gray-500">Em litros ou kW/h (elétricos).</p>
             </div>
         </div>
     </div>
