@@ -24,12 +24,15 @@ class Manutencao extends Model
     protected $fillable = [
         'id_veiculo',
         'id_empresa',
+        'id_user',
         'tipo_manutencao',
         'descricao_servico',
         'data_manutencao',
         'quilometragem',
         'custo_total',
+        'custo_previsto',
         'nome_fornecedor',
+        'responsavel',
         'observacoes',
         'proxima_revisao_data',
         'proxima_revisao_km',
@@ -42,5 +45,21 @@ class Manutencao extends Model
     public function veiculo()
     {
         return $this->belongsTo(Veiculo::class, 'id_veiculo');
+    }
+
+    /**
+     * Define a relação com a Empresas.
+     */
+    public function empresa()
+    {
+        return $this->belongsTo(Veiculo::class, 'id_empresa');
+    }
+
+    /**
+     * Define a relação com o Usuário.
+     */
+    public function user()
+    {
+        return $this->belongsTo(Veiculo::class, 'id_user');
     }
 }

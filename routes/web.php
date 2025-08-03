@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
 
     // CRUDs da Aplicação
     Route::resource('veiculos', VeiculoController::class);
-    Route::resource('manutencoes', ManutencaoController::class);
+     Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao']);
     Route::resource('abastecimentos', AbastecimentoController::class);
 });
 
