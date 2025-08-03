@@ -12,9 +12,6 @@ use Carbon\Carbon;
 
 class ManutencaoController extends Controller
 {
-    /**
-     * Exibe uma lista de todas as manutenções da empresa do usuário logado.
-     */
     public function index()
     {
         $idEmpresa = Auth::user()->id_empresa;
@@ -26,9 +23,6 @@ class ManutencaoController extends Controller
         return view('manutencoes.index', compact('manutencoes'));
     }
 
-    /**
-     * Mostra o formulário para criar um novo registro de manutenção.
-     */
     public function create()
     {
         $veiculos = Veiculo::where('id_empresa', Auth::user()->id_empresa)->where('status', 'ativo')->orderBy('placa')->get();
@@ -36,9 +30,6 @@ class ManutencaoController extends Controller
         return view('manutencoes.create', compact('veiculos', 'manutencao'));
     }
 
-    /**
-     * Salva um novo registro de manutenção no banco de dados.
-     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -85,21 +76,18 @@ class ManutencaoController extends Controller
                          ->with('warning', $warning);
     }
 
-    /**
-     * Mostra o formulário para editar uma manutenção existente.
-     */
     public function edit(Manutencao $manutencao)
     {
+        if ((int)$manutencao->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         $veiculos = Veiculo::where('id_empresa', Auth::user()->id_empresa)->get();
         return view('manutencoes.edit', compact('manutencao', 'veiculos'));
     }
     
-    /**
-     * Atualiza uma manutenção existente no banco de dados.
-     */
     public function update(Request $request, Manutencao $manutencao)
     {
-        // Validação de segurança manual
         if ((int)$manutencao->id_empresa !== (int)Auth::user()->id_empresa) {
             abort(403, 'Acesso não autorizado.');
         }
@@ -144,19 +132,17 @@ class ManutencaoController extends Controller
                          ->with('warning', $warning);
     }
 
-    /**
-     * Remove uma manutenção do banco de dados.
-     */
     public function destroy(Manutencao $manutencao)
     {
+        if ((int)$manutencao->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         $manutencao->delete();
         return redirect()->route('manutencoes.index')
                          ->with('success', 'Registro de manutenção removido com sucesso!');
     }
 
-    /**
-     * Aplica as regras de negócio após salvar uma manutenção, com base no seu status.
-     */
     private function handleStatusChange(Manutencao $manutencao)
     {
         if ($manutencao->status === 'concluida') {
@@ -184,9 +170,6 @@ class ManutencaoController extends Controller
         }
     }
 
-    /**
-     * Verifica se já existem manutenções agendadas em datas ou quilometragens próximas.
-     */
     private function checkForDuplicates($veiculoId, $data, $km, $excludeId = null)
     {
         $dataCarbon = Carbon::parse($data);

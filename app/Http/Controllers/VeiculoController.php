@@ -72,6 +72,10 @@ class VeiculoController extends Controller
 
     public function edit(Veiculo $veiculo)
     {
+        if ((int)$veiculo->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         return view('veiculos.edit', compact('veiculo'));
     }
 
@@ -119,6 +123,10 @@ class VeiculoController extends Controller
     
     public function destroy(Veiculo $veiculo)
     {
+        if ((int)$veiculo->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         $veiculo->delete();
         return redirect()->route('veiculos.index')
                          ->with('success', 'Veículo removido com sucesso!');

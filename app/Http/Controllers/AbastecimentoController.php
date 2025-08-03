@@ -123,6 +123,10 @@ class AbastecimentoController extends Controller
 
     public function edit(Abastecimento $abastecimento)
     {
+        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         $idEmpresa = Auth::user()->id_empresa;
         $veiculos = Veiculo::where('id_empresa', $idEmpresa)
             ->where('status', 'ativo')
@@ -137,6 +141,10 @@ class AbastecimentoController extends Controller
 
     public function update(Request $request, Abastecimento $abastecimento)
     {
+        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         $idEmpresa = Auth::user()->id_empresa;
 
         $limparValor = function ($valor) {
@@ -188,6 +196,10 @@ class AbastecimentoController extends Controller
 
     public function getVeiculoData($id)
     {
+        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+        
         $veiculo = Veiculo::where('id', $id)
             ->where('id_empresa', Auth::user()->id_empresa)
             ->firstOrFail();

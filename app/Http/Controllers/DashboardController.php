@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Veiculo;
-use App\Models\Manutencao; // Certifique-se de que o modelo Manutencao está importado
-use App\Models\Abastecimento; // Certifique-se de que o modelo Abastecimento está importado
+use App\Models\Manutencao;
+use App\Models\Abastecimento;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
