@@ -86,7 +86,7 @@
                     }
                 });
                 $('#renavam').mask('00000000000');
-                $('#quilometragem_atual').mask('000.000', {reverse: true}); // Máscara adicionada
+                $('#quilometragem_atual').mask('000000', {reverse: true}); // Máscara adicionada
                 $('#chassi').on('input', function() {
                     $(this).val($(this).val().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, ''));
                 });

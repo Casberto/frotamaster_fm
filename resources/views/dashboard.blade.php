@@ -47,28 +47,45 @@
                             {{-- Lógica para definir ícone e cor com base no tipo de veículo --}}
                             @php
                                 $iconConfig = [
-                                    'carro' => ['icon' => 'heroicon-s-truck', 'bg' => 'bg-blue-100', 'text' => 'text-blue-600'],
-                                    'caminhao' => ['icon' => 'heroicon-s-truck', 'bg' => 'bg-yellow-100', 'text' => 'text-yellow-600'],
-                                    'van' => ['icon' => 'heroicon-s-truck', 'bg' => 'bg-amber-100', 'text' => 'text-amber-700'],
-                                    'moto' => ['icon' => 'heroicon-s-fire', 'bg' => 'bg-green-100', 'text' => 'text-green-600'],
-                                    'outro' => ['icon' => 'heroicon-s-question-mark-circle', 'bg' => 'bg-gray-100', 'text' => 'text-gray-600'],
+                                    'carro' => [
+                                        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0-4 0m10 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M5 17H3v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0H9m-6-6h15m-6 0V6"/></g></svg>',
+                                        'bg' => 'bg-blue-100',
+                                        'text' => 'text-blue-600'
+                                    ],
+                                    'caminhao' => [
+                                        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 512 448"><path fill="currentColor" d="M405 85h-42V43q0-18-13-30.5T320 0H43Q25 0 12.5 12.5T0 43v256q0 17 12.5 29.5T43 341h4q6 19 22.5 31t37.5 12q20 0 36.5-12t22.5-31h180q6 19 22.5 31t36.5 12q21 0 37.5-12t22.5-31h4q18 0 30.5-12.5T512 299v-77q0-17-13-30zM107 341q-8 0-15-6.5T85 320t7-14.5t15-6.5t14.5 6.5T128 320t-6.5 14.5T107 341zm213-42H166q-6-19-22.5-31T107 256q-21 0-37.5 12T47 299h-4v-86h277v86zm0-214v86H43V43h277v42zm85 256q-8 0-14.5-6.5T384 320t6.5-14.5T405 299t15 6.5t7 14.5t-7 14.5t-15 6.5zm64-42h-4q-6-19-22.5-31T405 256q-27 0-42 17V128h12l94 94v77z"/></svg>',
+                                        'bg' => 'bg-yellow-100',
+                                        'text' => 'text-yellow-600'
+                                    ],
+                                    'van' => [
+                                        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 256 256"><path fill="currentColor" d="m254.07 114.79l-45.54-53.06A16 16 0 0 0 196.26 56H32a16 16 0 0 0-16 16v112a16 16 0 0 0 16 16h17a32 32 0 0 0 62 0h50a32 32 0 0 0 62 0h17a16 16 0 0 0 16-16v-64a8 8 0 0 0-1.93-5.21ZM230.59 112H176V72h20.26ZM104 112V72h56v40ZM88 72v40H32V72Zm-8 136a16 16 0 1 1 16-16a16 16 0 0 1-16 16Zm112 0a16 16 0 1 1 16-16a16 16 0 0 1-16 16Zm31-24a32 32 0 0 0-62 0h-50a32 32 0 0 0-62 0H32v-56h208v56Z"/></svg>',
+                                        'bg' => 'bg-amber-100',
+                                        'text' => 'text-amber-700'
+                                    ],
+                                    'moto' => [
+                                        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" color="currentColor"><circle cx="19.5" cy="16.5" r="2.5"/><circle cx="4.5" cy="16.5" r="2.5"/><path d="M20.235 7.87c1.281 1.559 1.727 3.042 1.764 3.826a5.3 5.3 0 0 0-2.217-.479c-2.445 0-4.64 1.626-5.164 3.792c-.126.518-.188.777-.324.884s-.356.107-.795.107h-2.878c-.443 0-.664 0-.8-.108c-.137-.11-.197-.367-.316-.883c-.496-2.138-2.508-3.997-4.603-3.84c-.211.017-.317.025-.39.008c-.071-.016-.144-.057-.29-.14c-.421-.237-.851-.463-1.264-.714A2 2 0 0 1 2 8.683c-.013-.384.207-.764.652-.66l6.42 1.511c.483.114.724.17.931.132s.462-.212.97-.56c1.288-.88 3.33-1.713 5.365-.978c.557.201.836.302.994.307c.16.005.392-.063.857-.198a9.5 9.5 0 0 1 2.045-.367m0 0c-.802-.978-1.934-1.985-3.5-2.87"/></g></svg>',
+                                        'bg' => 'bg-green-100',
+                                        'text' => 'text-green-600'
+                                    ],
+                                    'outro' => [
+                                        'svg' => '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>',
+                                        'bg' => 'bg-gray-100',
+                                        'text' => 'text-gray-600'
+                                    ],
                                 ];
-                                $config = $iconConfig[strtolower($veiculo->tipo_veiculo)] ?? $iconConfig['outro'];
+                                $tipo = strtolower($veiculo->tipo_veiculo);
+                                $config = $iconConfig[$tipo] ?? $iconConfig['outro'];
                             @endphp
+
 
                             <div x-data="{ open: false }" class="bg-white rounded-lg border border-gray-200 overflow-hidden transition-shadow hover:shadow-md">
                                 {{-- Cabeçalho Clicável --}}
                                 <div @click="open = !open" class="flex items-center justify-between p-3 cursor-pointer">
                                     <div class="flex items-center space-x-4">
                                         <div class="p-2 rounded-full {{ $config['bg'] }}">
-                                            {{-- SVG do Heroicons. Adapte os ícones se necessário. --}}
-                                            @if($veiculo->tipo_veiculo == 'moto')
-                                                <svg class="h-6 w-6 {{ $config['text'] }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 7.5A2.25 2.25 0 0 0 3 9.75v2.5A2.25 2.25 0 0 0 5.25 14.5h.5a2.25 2.25 0 0 0 2.25-2.25v-2.5A2.25 2.25 0 0 0 5.75 7.5h-.5Zm8.5 0A2.25 2.25 0 0 0 11.5 9.75v2.5a2.25 2.25 0 0 0 2.25 2.25h.5a2.25 2.25 0 0 0 2.25-2.25v-2.5a2.25 2.25 0 0 0-2.25-2.25h-.5Z" /><path fill-rule="evenodd" d="M6.161 3.694a.75.75 0 0 1 .656.24l1.36 1.633a.75.75 0 0 1-1.152.96l-1.36-1.633a.75.75 0 0 1 .496-1.2Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M14.339 3.694a.75.75 0 0 0-.656.24l-1.36 1.633a.75.75 0 0 0 1.152.96l1.36-1.633a.75.75 0 0 0-.496-1.2Z" clip-rule="evenodd" /></svg>
-                                            @elseif($veiculo->tipo_veiculo == 'caminhao')
-                                                <svg class="h-6 w-6 {{ $config['text'] }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.707 2.293a1 1 0 0 0-1.414 0l-7 7a1 1 0 0 0 1.414 1.414L4 10.414V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6.586l.293.293a1 1 0 0 0 1.414-1.414l-7-7Z" clip-rule="evenodd" /></svg>
-                                            @else {{-- Carro, Van, Outro --}}
-                                                <svg class="h-6 w-6 {{ $config['text'] }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-17.25 4.5v-1.875a3.375 3.375 0 003.375-3.375h1.5a1.125 1.125 0 011.125 1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375m15.75 0v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125 1.125v-1.5c0-.621.504-1.125 1.125-1.125h1.5a3.375 3.375 0 003.375-3.375V6.375c0-1.036-.84-1.875-1.875-1.875H3.375A1.875 1.875 0 001.5 6.375v1.5c0 1.036.84 1.875 1.875 1.875h1.5c.621 0 1.125.504 1.125 1.125v1.5a1.125 1.125 0 01-1.125 1.125h-1.5a3.375 3.375 0 00-3.375 3.375V18.75c0 .621.504 1.125 1.125 1.125h1.5a1.125 1.125 0 011.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 003.375 3.375h3.375a3.375 3.375 0 003.375-3.375h1.5c.621 0 1.125-.504 1.125-1.125v-1.5a1.125 1.125 0 011.125-1.125h1.5Z" /></svg>
-                                            @endif
+                                            <span class="{{ $config['text'] }}">
+                                                {!! $config['svg'] !!}
+                                            </span>
                                         </div>
                                         <div>
                                             <p class="font-semibold text-gray-800">{{ $veiculo->marca }} {{ $veiculo->modelo }}</p>
