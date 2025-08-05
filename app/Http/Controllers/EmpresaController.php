@@ -7,9 +7,16 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Services\LogService;
 
 class EmpresaController extends Controller
 {
+    protected $logService;
+
+    public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
 
     public function index()
     {
@@ -55,6 +62,8 @@ class EmpresaController extends Controller
         
         $user->save();
 
+        $this->logService->registrar('Criação de Empresa', 'Empresas', $empresa);
+
         // Guarda as credenciais para exibir ao admin
         $credentials = [
             'email' => $user->email,
@@ -81,7 +90,11 @@ class EmpresaController extends Controller
             'telefone_contato' => 'required|string|max:20',
         ]);
 
+        $dadosAntigos = $empresa->getOriginal();
+        
         $empresa->update($request->all());
+
+        $this->logService->registrar('Atualização de Empresa', 'Empresas', $empresa, $dadosAntigos);
 
         return redirect()->route('admin.empresas.index')
                          ->with('success', 'Empresa atualizada com sucesso!');
@@ -89,7 +102,12 @@ class EmpresaController extends Controller
 
     public function destroy(Empresa $empresa)
     {
+        $dadosAntigos = $empresa->getOriginal();
+
         $empresa->delete();
+
+        $this->logService->registrar('Exclusão de Empresa', 'Empresas', (new Empresa())->forceFill($dadosAntigos));
+        
         return redirect()->route('admin.empresas.index')
                          ->with('success', 'Empresa removida com sucesso!');
     }

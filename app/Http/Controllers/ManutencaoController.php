@@ -9,9 +9,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use App\Services\LogService;
 
 class ManutencaoController extends Controller
 {
+    protected $logService;
+
+     public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
+
     public function index()
     {
         $idEmpresa = Auth::user()->id_empresa;
@@ -57,7 +65,10 @@ class ManutencaoController extends Controller
         ]);
 
         $warning = $this->checkForDuplicates($validatedData['id_veiculo'], $validatedData['data_manutencao'], $limparValor($validatedData['quilometragem']));
-        
+
+        $veiculo = Veiculo::find($validatedData['id_veiculo']);
+        $dadosAntigosVeiculo = $veiculo->getOriginal();
+
         $manutencao = new Manutencao($validatedData);
         $manutencao->id_empresa = $idEmpresa;
         $manutencao->id_user = $user->id;
@@ -68,8 +79,16 @@ class ManutencaoController extends Controller
         
         $manutencao->save();
 
+        $this->logService->registrar('Criação de Manutenção', 'Manutenções', $manutencao);
+
         // Processa as regras de negócio baseadas no status
         $this->handleStatusChange($manutencao);
+
+        $veiculo->refresh();
+
+        if ($dadosAntigosVeiculo['quilometragem_atual'] != $veiculo->quilometragem_atual) {
+            $this->logService->registrar('Atualização do KM do Veículo', 'Veículos (via Manutenção)', $veiculo, $dadosAntigosVeiculo);
+        }
 
         return redirect()->route('manutencoes.index')
                          ->with('success', 'Manutenção registrada com sucesso!')
@@ -79,19 +98,25 @@ class ManutencaoController extends Controller
     public function edit(Manutencao $manutencao)
     {
         if ((int)$manutencao->id_empresa !== (int)Auth::user()->id_empresa) {
-            abort(403, 'Acesso não autorizado.');
+            abort(403, 'Acesso não autorizado: Edição');
         }
 
         $veiculos = Veiculo::where('id_empresa', Auth::user()->id_empresa)->get();
-        return view('manutencoes.edit', compact('manutencao', 'veiculos'));
+        return view('manutencoes.edit', ['manutencao' => $manutencao, 'veiculos' => $veiculos]);
     }
     
     public function update(Request $request, Manutencao $manutencao)
     {
+        // Esta verificação de segurança está CORRETA e deve ser mantida.
         if ((int)$manutencao->id_empresa !== (int)Auth::user()->id_empresa) {
-            abort(403, 'Acesso não autorizado.');
+            abort(403, 'Acesso não autorizado: Atualização');
         }
 
+        if ((int)$manutencao->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403);
+        }
+
+        // ... (seu método update permanece inalterado)
         $idEmpresa = Auth::user()->id_empresa;
         $limparValor = function ($valor) {
             if (empty($valor)) return null;
@@ -116,6 +141,10 @@ class ManutencaoController extends Controller
 
         $warning = $this->checkForDuplicates($validatedData['id_veiculo'], $validatedData['data_manutencao'], $limparValor($validatedData['quilometragem']), $manutencao->id);
 
+        $dadosAntigosManutencao = $manutencao->getOriginal();
+        $veiculo = $manutencao->veiculo;
+        $dadosAntigosVeiculo = $veiculo->getOriginal();
+
         $manutencao->fill($validatedData);
         $manutencao->quilometragem = $limparValor($validatedData['quilometragem']);
         $manutencao->proxima_revisao_km = $limparValor($validatedData['proxima_revisao_km']);
@@ -124,8 +153,14 @@ class ManutencaoController extends Controller
         
         $manutencao->save();
 
-        // Processa as regras de negócio baseadas no status
+        $this->logService->registrar('Atualização de Manutenção', 'Manutenções', $manutencao, $dadosAntigosManutencao);
+
         $this->handleStatusChange($manutencao);
+
+        $veiculo->refresh(); 
+        if ($dadosAntigosVeiculo['quilometragem_atual'] != $veiculo->quilometragem_atual) {
+            $this->logService->registrar('Atualização de KM do Veículo', 'Veículos (via Manutenção)', $veiculo, $dadosAntigosVeiculo);
+        }
 
         return redirect()->route('manutencoes.index')
                          ->with('success', 'Manutenção atualizada com sucesso!')
@@ -134,11 +169,19 @@ class ManutencaoController extends Controller
 
     public function destroy(Manutencao $manutencao)
     {
+        // Esta verificação de segurança está CORRETA e deve ser mantida.
         if ((int)$manutencao->id_empresa !== (int)Auth::user()->id_empresa) {
             abort(403, 'Acesso não autorizado.');
         }
 
+        $dadosAntigosManutencao = $manutencao->getOriginal();
+        
         $manutencao->delete();
+
+        // CORREÇÃO APLICADA AQUI: O log agora registra a exclusão de uma 'Manutenção' corretamente.
+        $this->logService->registrar('Exclusão de Manutenção', 'Manutenções', (new Manutencao())->forceFill($dadosAntigosManutencao));
+
+        // Este redirecionamento está CORRETO e irá funcionar com as rotas simplificadas.
         return redirect()->route('manutencoes.index')
                          ->with('success', 'Registro de manutenção removido com sucesso!');
     }

@@ -6,9 +6,17 @@ use App\Models\Veiculo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Services\LogService;
 
 class VeiculoController extends Controller
 {
+    protected $logService;
+
+    public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
+
     public function index()
     {
         if (!Auth::user()->id_empresa) {
@@ -64,7 +72,10 @@ class VeiculoController extends Controller
 
         $veiculo = new Veiculo($validatedData);
         $veiculo->id_empresa = $idEmpresa;
+        
         $veiculo->save();
+
+        $this->logService->registrar('Criação de Veículo', 'Veículos', $veiculo);
 
         return redirect()->route('veiculos.index')
                          ->with('success', 'Veículo cadastrado com sucesso!');
@@ -116,7 +127,12 @@ class VeiculoController extends Controller
             $validatedData['chassi'] = strtoupper($validatedData['chassi']);
         }
         
+        $dadosAntigos = $veiculo->getOriginal();
+
         $veiculo->update($validatedData);
+
+        $this->logService->registrar('Atualização de Veículo', 'Veículos', $veiculo, $dadosAntigos);
+
         return redirect()->route('veiculos.index')
                          ->with('success', 'Veículo atualizado com sucesso!');
     }
@@ -127,7 +143,12 @@ class VeiculoController extends Controller
             abort(403, 'Acesso não autorizado.');
         }
 
+        $dadosAntigos = $veiculo->toArray();
+
         $veiculo->delete();
+
+        $this->logService->registrar('Exclusão de Veículo', 'Veículos', (new Veiculo())->forceFill($dadosAntigos));
+
         return redirect()->route('veiculos.index')
                          ->with('success', 'Veículo removido com sucesso!');
     }

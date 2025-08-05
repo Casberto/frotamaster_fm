@@ -8,9 +8,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use App\Services\LogService;
 
 class AbastecimentoController extends Controller
 {
+    protected $logService;
+
+    public function __construct(LogService $logService)
+    {
+        $this->logService = $logService;
+    }
+
     public function index()
     {
         $abastecimentos = Abastecimento::where('id_empresa', Auth::user()->id_empresa)
@@ -89,7 +97,14 @@ class AbastecimentoController extends Controller
         // 2. Lógica de Salvamento
         $veiculo = Veiculo::find($validatedData['id_veiculo']);
 
+        
+
         $abastecimento = new Abastecimento();
+
+        $dadosAntigosAbastecimento = $abastecimento->getOriginal();
+        $dadosAntigosVeiculo = $veiculo->getOriginal();
+
+
         $abastecimento->id_empresa = $idEmpresa;
         $abastecimento->id_user = Auth::id(); // Salva o ID do usuário logado
         $abastecimento->id_veiculo = $validatedData['id_veiculo'];
@@ -116,7 +131,11 @@ class AbastecimentoController extends Controller
         if ($abastecimento->quilometragem > $veiculo->quilometragem_atual) {
             $veiculo->quilometragem_atual = $abastecimento->quilometragem;
             $veiculo->save();
+
+            $this->logService->registrar('Atualização', 'Veículos (via Abastecimento)', $veiculo, $dadosAntigosVeiculo);
         }
+
+        $this->logService->registrar('Criação de Abastecimento', 'Abastecimentos', $abastecimento);
 
         return redirect()->route('abastecimentos.index')->with('success', 'Abastecimento registrado com sucesso!');
     }
@@ -176,6 +195,9 @@ class AbastecimentoController extends Controller
         ]);
 
         $veiculo = Veiculo::find($validatedData['id_veiculo']);
+
+        $dadosAntigosAbastecimento = $abastecimento->getOriginal();
+        $dadosAntigosVeiculo = $veiculo->getOriginal();
         
         $abastecimento->fill($validatedData);
         $abastecimento->unidade_medida = $veiculo->tipo_combustivel === 'eletrico' ? 'kWh' : 'Litros';
@@ -189,9 +211,32 @@ class AbastecimentoController extends Controller
         if ($abastecimento->quilometragem > $veiculo->quilometragem_atual) {
             $veiculo->quilometragem_atual = $abastecimento->quilometragem;
             $veiculo->save();
+
+            $this->logService->registrar('Atualização de KM do veículo', 'Veículos (via Abastecimento)', $veiculo, $dadosAntigosVeiculo);
         }
 
+        $this->logService->registrar('Atualização de Abastecimento', 'Abastecimentos', $abastecimento, $dadosAntigosAbastecimento);
+
         return redirect()->route('abastecimentos.index')->with('success', 'Abastecimento atualizado com sucesso!');
+    }
+
+    public function destroy(Abastecimento $abastecimento)
+    {
+        // Esta verificação de segurança está CORRETA e deve ser mantida.
+        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
+        $dadosAntigosAbastecimento = $abastecimento->getOriginal();
+        
+        $abastecimento->delete();
+
+        // CORREÇÃO APLICADA AQUI: O log agora registra a exclusão de uma 'Manutenção' corretamente.
+        $this->logService->registrar('Exclusão de Abastecimento', 'Abastecimentos', (new Abastecimento())->forceFill($dadosAntigosAbastecimento));
+
+        // Este redirecionamento está CORRETO e irá funcionar com as rotas simplificadas.
+        return redirect()->route('abastecimentos.index')
+                         ->with('success', 'Registro de abastecimento removido com sucesso!');
     }
 
     public function getVeiculoData($id)
@@ -203,6 +248,8 @@ class AbastecimentoController extends Controller
         $veiculo = Veiculo::where('id', $id)
             ->where('id_empresa', Auth::user()->id_empresa)
             ->firstOrFail();
+
+        $this->logService->registrar('delete', 'Veículos', (new Veiculo())->forceFill($dadosAntigos));
 
         return response()->json($veiculo);
     }

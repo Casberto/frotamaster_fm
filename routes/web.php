@@ -25,6 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Rota de geração de Logs
+    Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');
+
     // CRUDs da Aplicação
     Route::resource('veiculos', VeiculoController::class);
      Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao']);
