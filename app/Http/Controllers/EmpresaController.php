@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\User;
+use App\Models\Licenca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Services\LogService;
+use Carbon\Carbon;
 
 class EmpresaController extends Controller
 {
@@ -35,7 +37,6 @@ class EmpresaController extends Controller
             'nome_fantasia' => 'required|string|max:255',
             'razao_social' => 'required|string|max:255',
             'cnpj' => 'required|string|unique:empresas,cnpj',
-            // Garante que o email da empresa também seja único na tabela de usuários
             'email_contato' => 'required|email|max:255|unique:users,email',
             'telefone_contato' => 'required|string|max:20',
         ]);
@@ -47,22 +48,27 @@ class EmpresaController extends Controller
         $password = Str::random(8); // Gera uma senha aleatória de 8 caracteres
 
         $user = new User();
+
         $user->name = 'Master ' . $empresa->nome_fantasia;
-        
-        // --- CORREÇÃO APLICADA AQUI ---
-        // O email do usuário master agora é o mesmo email de contato da empresa
         $user->email = $request->email_contato;
-        
         $user->password = Hash::make($password);
         $user->role = 'master';
         $user->email_verified_at = now();
-        
-        // Associa o ID da empresa recém-criada ao novo usuário
         $user->id_empresa = $empresa->id;
         
         $user->save();
 
         $this->logService->registrar('Criação de Empresa', 'Empresas', $empresa);
+
+        Licenca::create([
+            'id_empresa' => $empresa->id,
+            'plano' => 'Mensal',
+            'id_usuario_criador' => auth()->id(),
+            'valor_pago' => 0.00,
+            'data_inicio' => Carbon::today(),
+            'data_vencimento' => Carbon::today()->addDays(30),
+            'status' => 'ativo',
+        ]);
 
         // Guarda as credenciais para exibir ao admin
         $credentials = [

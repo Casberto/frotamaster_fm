@@ -41,6 +41,10 @@
                             <span :class="{ 'text-gray-900': scrolled, 'text-white': !scrolled }" class="text-2xl font-bold transition-colors">Frotamaster</span>
                         </a>
                     </div>
+                    <div class="hidden lg:flex lg:gap-x-12">
+                         {{-- Adicionado link de cadastro --}}
+                        <a href="{{ route('company.register') }}" :class="{'text-gray-900': scrolled, 'text-white': !scrolled}" class="text-sm font-semibold leading-6 transition-colors">Cadastre sua empresa</a>
+                    </div>
                     <div class="flex lg:flex-1 lg:justify-end">
                         <a href="{{ route('login') }}" class="rounded-md bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition">Acessar Sistema <span aria-hidden="true">&rarr;</span></a>
                     </div>
@@ -54,7 +58,8 @@
                         <h1 class="text-4xl font-bold tracking-tight text-white sm:text-6xl">A gestão da sua frota, finalmente simplificada.</h1>
                         <p class="mt-6 text-lg leading-8 text-gray-300">Deixe a complexidade para trás. Com o Frotamaster, você tem o controle total sobre manutenções, abastecimentos e custos, de forma inteligente e intuitiva.</p>
                         <div class="mt-10">
-                            <a href="{{ route('login') }}" class="rounded-md bg-blue-600 px-5 py-3 text-base font-semibold text-white shadow-lg hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition">Começar agora</a>
+                             {{-- Botão principal agora aponta para o novo cadastro --}}
+                            <a href="{{ route('company.register') }}" class="rounded-md bg-blue-600 px-5 py-3 text-base font-semibold text-white shadow-lg hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition">Começar agora (Grátis por 30 dias)</a>
                         </div>
                     </div>
                 </section>

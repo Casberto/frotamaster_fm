@@ -9,18 +9,31 @@ class Empresa extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+ use HasFactory;
+
     protected $fillable = [
         'nome_fantasia',
         'razao_social',
         'cnpj',
         'email_contato',
         'telefone_contato',
-        'status_pagamento',
-        'data_vencimento_plano',
+        'cep',
+        'logradouro',
+        'numero',
+        'complemento',
+        'bairro',
+        'cidade',
+        'estado',
     ];
+
+    public function licencas()
+    {
+        return $this->hasMany(Licenca::class, 'id_empresa');
+    }
+
+    public function activeLicense()
+    {
+        return $this->hasOne(Licenca::class, 'id_empresa')->where('status', 'ativo')->latest('data_vencimento');
+    }
 }
+

@@ -18,9 +18,12 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'id_empresa',
         'name',
         'email',
         'password',
+        'role', // Adicionado para o controle de perfil (super-admin, master, etc.)
+        'must_change_password', // Novo campo para forçar a troca de senha no primeiro login
     ];
 
     /**
@@ -44,5 +47,39 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Define o relacionamento com o modelo Empresa.
+     * Um Usuário pertence a uma Empresa (ou é super-admin sem empresa).
+     */
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class, 'id_empresa');
+    }
+
+    /**
+     * Verifica se o usuário é um super-admin.
+     */
+    public function isSuperAdmin()
+    {
+        return $this->role === 'super-admin';
+    }
+
+    /**
+     * Verifica se o usuário é um master.
+     */
+    public function isMaster()
+    {
+        return $this->role === 'master';
+    }
+
+    /**
+     * Define o relacionamento com o modelo Licenca (licenças criadas por este usuário).
+     * Um Usuário pode ter criado muitas Licenças.
+     */
+    public function licencasCriadas()
+    {
+        return $this->hasMany(Licenca::class, 'id_usuario_criador');
     }
 }
