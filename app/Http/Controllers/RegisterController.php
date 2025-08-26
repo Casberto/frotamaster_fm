@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\User;
-use App\Models\Plano;
 use App\Models\Licenca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -51,46 +50,32 @@ class RegisterController extends Controller
                 'email_verified_at' => now(),
             ]);
 
-            // 3. Criar a Licença Trial
+            // 3. Criar a Licença Trial diretamente
             Licenca::create([
                 'id_empresa' => $empresa->id,
-                'plano' => 'Mensal',
+                'plano' => 'Trial', // Define o tipo de plano como Trial
                 'id_usuario_criador' => null, // Ninguém criou, foi automático
                 'valor_pago' => 0.00,
                 'data_inicio' => Carbon::today(),
-                'data_vencimento' => Carbon::today()->addDays(30),
+                'data_vencimento' => Carbon::today()->addDays(30), // Vencimento em 30 dias
                 'status' => 'ativo',
             ]);
-
-            Licenca::create([
-                'id_empresa' => $empresa->id,
-                'id_plano' => $planoTrial->id,
-                'id_usuario_criador' => null,
-                'valor_pago' => 0.00,
-                'data_inicio' => Carbon::today(),
-                'data_vencimento' => Carbon::today()->addDays($planoTrial->duracao_dias),
-                'status' => 'ativo',
-            ]);
-
-            // 4. Enviar e-mail com as credenciais (descomente quando o mailer estiver configurado)
-            /*
-            Mail::raw("Bem-vindo ao Frotamaster!\n\nSeu acesso foi criado.\n\nEmail: {$user->email}\nSenha: {$password}\n\nAcesse: " . route('login'), function ($message) use ($user) {
-                $message->to($user->email)
-                        ->subject('Bem-vindo ao Frotamaster - Suas Credenciais');
-            });
-            */
             
+            // Log da senha para fins de teste (remover em produção)
             Log::info("Novo usuário registrado: Email {$user->email}, Senha: {$password}");
-
 
             DB::commit();
 
-            return redirect()->route('login')->with('status', 'Empresa registrada com sucesso! As credenciais de acesso foram enviadas para o seu e-mail.');
+            // Autenticar o usuário recém-criado
+            auth()->login($user);
+
+            // Redirecionar para o dashboard
+            return redirect()->route('dashboard')->with('status', 'Empresa registrada com sucesso! Bem-vindo ao Frotamaster.');
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Erro no registro de empresa: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Ocorreu um erro ao registrar a empresa. Tente novamente.');
+            return back()->withInput()->with('error', 'Ocorreu um erro inesperado ao registrar a empresa. Por favor, tente novamente.');
         }
     }
 

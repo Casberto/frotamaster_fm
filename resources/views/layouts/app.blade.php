@@ -61,7 +61,7 @@
         {{-- SCRIPT LIBS --}}
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script type="text/javascript">
+        <script type="text/javascript">
             $(document).ready(function(){
                 // Máscaras de Contato e Empresa
                 $('#cnpj').mask('00.000.000/0000-00', {reverse: true});

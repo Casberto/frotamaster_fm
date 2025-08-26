@@ -27,27 +27,7 @@
             Dashboard
         </x-nav-link-custom>
 
-        {{-- =============================================== --}}
-        {{-- INDICADOR DE LICENÇA (APENAS PARA CLIENTES) --}}
-        {{-- =============================================== --}}
-        @if(auth()->user()->role !== 'super-admin' && isset($activeLicense))
-            @php
-                $diasRestantes = now()->diffInDays($activeLicense->data_vencimento, false);
-                $cor = 'bg-green-500';
-                if ($diasRestantes < 0) {
-                    $cor = 'bg-red-500';
-                    $texto = 'Licença Expirada';
-                } elseif ($diasRestantes <= 7) {
-                    $cor = 'bg-yellow-500';
-                    $texto = "Expira em {$diasRestantes} dia(s)";
-                } else {
-                    $texto = "{$diasRestantes} dias restantes";
-                }
-            @endphp
-            <div class="px-4 py-2 my-2 text-center rounded-md {{ $cor }} text-white text-sm font-semibold">
-                <a href="#">{{ $texto }}</a>
-            </div>
-        @endif
+
 
         {{-- =============================================== --}}
         {{-- MENU DO CLIENTE (USUÁRIO MASTER/COMUM) --}}
@@ -265,6 +245,26 @@
 
     <!-- Usuário e Sair (Rodapé Fixo) -->
     <div class="p-4 border-t border-gray-700 shrink-0">
+        @if (isset($activeLicense))
+            @php
+                $dataVencimento = \Carbon\Carbon::parse($activeLicense->data_vencimento);
+                $hoje = \Carbon\Carbon::now();
+                $dias_restantes = floor($hoje->diffInDays($dataVencimento, false));
+            @endphp
+
+            @if ($dias_restantes <= 10 && $dias_restantes >= 0)
+                    {{-- Usando Alpine.js para controlar a visibilidade e flexbox para o layout --}}
+                <div x-data="{ show: true }" x-show="show" class="flex items-center justify-between w-full px-4 py-3 rounded-lg
+                    {{ $dias_restantes <= 5 ? 'border border-red-500 bg-red-500/20 text-red-300' : 'border border-yellow-400 bg-yellow-400/20 text-yellow-300' }}">
+                        
+                    <span class="text-sm">
+                        A licença expira em
+                        <span class="font-bold">{{ $dias_restantes }}</span>
+                        {{ $dias_restantes == 1 ? 'dia' : 'dias' }}.
+                    </span>
+                </div>
+            @endif
+        @endif 
         <a href="{{ route('profile.edit') }}" class="sidebar-link flex items-center w-full">
             <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-3">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
