@@ -24,17 +24,27 @@ class Veiculo extends Model
         'cor',
         'chassi',
         'renavam',
+        'vencimento_licenciamento', // Novo
         'tipo_veiculo',
         'tipo_combustivel',
         'data_aquisicao',
-        'quilometragem_inicial', // <--- GARANTA QUE ESTA LINHA EXISTE
+        'quilometragem_inicial',
         'quilometragem_atual',
         'capacidade_tanque',
-        'consumo_medio_fabricante',
-        'consumo_medio_atual',
-        'alerta_consumo_ativo',
+        'seguradora',               // Novo
+        'apolice_seguro',           // Novo
+        'vencimento_apolice',       // Novo
+        'km_troca_pneus',           // Novo
+        'data_troca_pneus',         // Novo
         'status',
         'observacoes',
+    ];
+
+    protected $casts = [
+        'data_aquisicao' => 'date',
+        'vencimento_licenciamento' => 'date', // Novo
+        'vencimento_apolice' => 'date',       // Novo
+        'data_troca_pneus' => 'date',         // Novo
     ];
 
     /**
