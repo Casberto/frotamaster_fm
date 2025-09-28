@@ -13,34 +13,38 @@ class LogService
         $user = Auth::user();
 
         Log::create([
-            'id_empresa' => $user->id_empresa,
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'tela' => $tela,
-            'acao' => $acao,
-            'registro_id' => $modelo->id,
+            'id_empresa'      => $user->id_empresa,
+            'user_id'         => $user->id,
+            'user_name'       => $user->name,
+            'tela'            => $tela,
+            'acao'            => $acao,
+            // --- CORREÇÃO 1: Obter a chave primária da forma correta ---
+            'registro_id'     => $modelo->getKey(),
             'registro_string' => $this->getRegistroString($modelo, $tela),
-            'dados_antigos' => $acao !== 'create' ? json_encode($dadosAntigos ?: $modelo->getOriginal()) : null,
-            'dados_novos' => $acao !== 'delete' ? json_encode($modelo->getAttributes()) : null,
+            'dados_antigos'   => $dadosAntigos ? json_encode($dadosAntigos) : null,
+            'dados_novos'     => json_encode($modelo->toArray()),
         ]);
     }
 
     private function getRegistroString(Model $modelo, string $tela): string
     {
-        // O 'case' agora agrupa as telas para reutilizar a lógica
+        // --- CORREÇÃO 2: Lógica adaptada para o novo modelo Veiculo ---
+        if ($modelo instanceof \App\Models\Veiculo) {
+            return "{$modelo->vei_placa} ({$modelo->vei_fabricante}/{$modelo->vei_modelo})";
+        }
+        
+        // Mantém a lógica original para os outros modelos
         switch ($tela) {
-            case 'Veículos':
-            case 'Veículos (via Abastecimento)':
-            case 'Veículos (via Manutenção)':
-                return $modelo->placa . ' (' . $modelo->marca . '/' . $modelo->modelo . ')';
             case 'Manutenções':
-                return $modelo->descricao_servico . ' (Veículo: ' . $modelo->veiculo->placa . ')';
+                return $modelo->descricao_servico . ' (Veículo: ' . optional($modelo->veiculo)->placa . ')';
             case 'Abastecimentos':
-                return 'Abastecimento em ' . $modelo->data_abastecimento->format('d/m/Y') . ' (Veículo: ' . $modelo->veiculo->placa . ')';
+                return 'Abastecimento em ' . $modelo->data_abastecimento->format('d/m/Y') . ' (Veículo: ' . optional($modelo->veiculo)->placa . ')';
             case 'Empresas':
                 return $modelo->nome_fantasia . ' (CNPJ: ' . $modelo->cnpj . ')';
             default:
-                return 'ID: ' . $modelo->id;
+                // Fallback seguro usando a chave primária
+                return get_class($modelo) . ' ID: ' . $modelo->getKey();
         }
     }
 }
+
