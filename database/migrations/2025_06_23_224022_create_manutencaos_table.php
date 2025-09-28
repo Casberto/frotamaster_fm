@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('manutencoes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_veiculo')->constrained('veiculos')->onDelete('cascade');
+            
+            // CORREÇÃO: Aponta explicitamente para a tabela 'veiculos' e a coluna 'vei_id'
+            $table->foreignId('id_veiculo')->constrained(table: 'veiculos', column: 'vei_id')->onDelete('cascade');
+            
             $table->foreignId('id_empresa')->constrained('empresas')->onDelete('cascade');
             $table->foreignId('id_user')->constrained('users')->onDelete('cascade');
             $table->enum('tipo_manutencao', ['preventiva', 'corretiva', 'preditiva', 'outra']);
@@ -26,7 +29,7 @@ return new class extends Migration
             $table->string('responsavel')->nullable();
             $table->text('observacoes')->nullable();
             $table->date('proxima_revisao_data')->nullable();
-            $table->integer('proxima_revisao_km')->nullable();            
+            $table->integer('proxima_revisao_km')->nullable();
             $table->enum('status', ['agendada', 'em_andamento', 'concluida', 'cancelada'])->default('agendada');
             $table->timestamps();
         });

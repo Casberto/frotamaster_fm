@@ -6,7 +6,7 @@ use App\Models\Veiculo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use App\Services\LogService; // Mantido o seu LogService
+use App\Services\LogService;
 use Carbon\Carbon;
 
 class VeiculoController extends Controller
@@ -18,17 +18,24 @@ class VeiculoController extends Controller
         $this->logService = $logService;
     }
 
+    /**
+     * Exibe uma lista dos veículos da empresa logada.
+     */
     public function index()
     {
         if (!Auth::user()->id_empresa) {
             return redirect()->route('dashboard')->with('error', 'Você não tem permissão para acessar esta área.');
         }
-        
+
         $idEmpresa = Auth::user()->id_empresa;
-        $veiculos = Veiculo::where('id_empresa', $idEmpresa)->latest()->paginate(10);
+        $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->latest('created_at')->paginate(10);
+
         return view('veiculos.index', compact('veiculos'));
     }
 
+    /**
+     * Mostra o formulário para criar um novo veículo.
+     */
     public function create()
     {
         if (!Auth::user()->id_empresa) {
@@ -37,6 +44,9 @@ class VeiculoController extends Controller
         return view('veiculos.create');
     }
 
+    /**
+     * Armazena um novo veículo no banco de dados.
+     */
     public function store(Request $request)
     {
         if (!Auth::user()->id_empresa) {
@@ -45,17 +55,15 @@ class VeiculoController extends Controller
 
         $idEmpresa = Auth::user()->id_empresa;
 
-        // Valida os dados usando o método centralizado
         $validatedData = $request->validate($this->getValidationRules($idEmpresa));
 
-        // Formata e adiciona dados antes de salvar
-        $validatedData['id_empresa'] = $idEmpresa;
-        $validatedData['placa'] = strtoupper($validatedData['placa']);
-        if (isset($validatedData['chassi'])) {
-            $validatedData['chassi'] = strtoupper($validatedData['chassi']);
+        $validatedData['vei_emp_id'] = $idEmpresa;
+        $validatedData['vei_user_id'] = Auth::id();
+        $validatedData['vei_placa'] = strtoupper($validatedData['vei_placa']);
+        if (isset($validatedData['vei_chassi'])) {
+            $validatedData['vei_chassi'] = strtoupper($validatedData['vei_chassi']);
         }
-        // Calcula e adiciona o vencimento do licenciamento
-        $validatedData['vencimento_licenciamento'] = $this->calcularVencimentoLicenciamento($request->placa);
+        $validatedData['vei_venc_licenciamento'] = $this->calcularVencimentoLicenciamento($request->vei_placa);
 
         $veiculo = Veiculo::create($validatedData);
 
@@ -64,91 +72,108 @@ class VeiculoController extends Controller
         return redirect()->route('veiculos.index')->with('success', 'Veículo cadastrado com sucesso!');
     }
 
+    /**
+     * Mostra o formulário para editar um veículo existente.
+     */
     public function edit(Veiculo $veiculo)
     {
-        // Utilizando a policy/gate para autorização (mais seguro e padrão Laravel)
-        $this->authorize('view', $veiculo);
+        // Mecanismo de autorização manual
+        if ($veiculo->vei_emp_id !== Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
         return view('veiculos.edit', compact('veiculo'));
     }
 
+    /**
+     * Atualiza um veículo específico no banco de dados.
+     */
     public function update(Request $request, Veiculo $veiculo)
     {
-        $this->authorize('update', $veiculo);
+        // Mecanismo de autorização manual
+        if ($veiculo->vei_emp_id !== Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
 
         $idEmpresa = Auth::user()->id_empresa;
+        $veiculoId = $veiculo->vei_id;
 
-        // Valida os dados usando o método centralizado, ignorando o ID do veículo atual
-        $validatedData = $request->validate($this->getValidationRules($idEmpresa, $veiculo->id));
-        
-        // Formata e adiciona dados antes de salvar
-        $validatedData['placa'] = strtoupper($validatedData['placa']);
-        if (isset($validatedData['chassi'])) {
-            $validatedData['chassi'] = strtoupper($validatedData['chassi']);
+        $validatedData = $request->validate($this->getValidationRules($idEmpresa, $veiculoId));
+
+        $validatedData['vei_placa'] = strtoupper($validatedData['vei_placa']);
+        if (isset($validatedData['vei_chassi'])) {
+            $validatedData['vei_chassi'] = strtoupper($validatedData['vei_chassi']);
         }
-        // Calcula e adiciona o vencimento do licenciamento
-        $validatedData['vencimento_licenciamento'] = $this->calcularVencimentoLicenciamento($request->placa);
-        
-        $dadosAntigos = $veiculo->getOriginal();
+        $validatedData['vei_venc_licenciamento'] = $this->calcularVencimentoLicenciamento($request->vei_placa);
 
+        $dadosAntigos = $veiculo->getOriginal();
         $veiculo->update($validatedData);
 
         $this->logService->registrar('Atualização de Veículo', 'Veículos', $veiculo, $dadosAntigos);
 
         return redirect()->route('veiculos.index')->with('success', 'Veículo atualizado com sucesso!');
     }
-    
+
+    /**
+     * Remove um veículo do banco de dados.
+     */
     public function destroy(Veiculo $veiculo)
     {
-        $this->authorize('delete', $veiculo);
+        // Mecanismo de autorização manual
+        if ($veiculo->vei_emp_id !== Auth::user()->id_empresa) {
+            abort(403, 'Acesso não autorizado.');
+        }
 
-        $dadosAntigos = $veiculo->toArray();
+        $this->logService->registrar('Exclusão de Veículo', 'Veículos', $veiculo, $veiculo->toArray());
+        
         $veiculo->delete();
-        $this->logService->registrar('Exclusão de Veículo', 'Veículos', (new Veiculo())->forceFill($dadosAntigos));
 
         return redirect()->route('veiculos.index')->with('success', 'Veículo removido com sucesso!');
     }
 
     /**
-     * Centraliza as regras de validação para store e update.
+     * Centraliza as regras de validação para store e update com os novos campos.
      */
     private function getValidationRules($idEmpresa, $veiculoId = null)
     {
         return [
-            'placa' => ['required', 'string', 'max:8', Rule::unique('veiculos')->where(function ($query) use ($idEmpresa) {
-                return $query->where('id_empresa', $idEmpresa);
-            })->ignore($veiculoId)],
-            'marca' => 'required|string|max:255',
-            'modelo' => 'required|string|max:255',
-            'cor' => 'required|string|max:255',
-            'ano_fabricacao' => 'required|digits:4|integer|min:1940',
-            'ano_modelo' => 'required|digits:4|integer|gte:ano_fabricacao', // Mantida sua regra
-            'tipo_veiculo' => ['required', Rule::in(['carro', 'moto', 'caminhao', 'van', 'outro'])],
-            'chassi' => ['nullable', 'string', 'size:17', Rule::unique('veiculos')->where(function ($query) use ($idEmpresa) {
-                return $query->where('id_empresa', $idEmpresa);
-            })->ignore($veiculoId)],
-            'renavam' => ['nullable', 'string', 'min:9', 'max:11', Rule::unique('veiculos')->where(function ($query) use ($idEmpresa) {
-                return $query->where('id_empresa', $idEmpresa);
-            })->ignore($veiculoId)],
-            'quilometragem_inicial' => 'required|integer|min:0|max:9999999',
-            'quilometragem_atual' => 'required|integer|gte:quilometragem_inicial|max:9999999', // Mantida sua regra
-            'tipo_combustivel' => ['required', Rule::in(['gasolina', 'etanol', 'diesel', 'flex', 'gnv', 'eletrico'])],
-            'capacidade_tanque' => 'nullable|numeric|min:0',
-            // Novos campos
-            'seguradora' => 'nullable|string|max:255',
-            'apolice_seguro' => 'nullable|string|max:255',
-            'vencimento_apolice' => 'nullable|date',
-            'km_troca_pneus' => 'nullable|integer|min:0',
-            'data_troca_pneus' => 'nullable|date',
-            // Campos existentes
-            'data_aquisicao' => 'nullable|date',
-            'status' => ['required', Rule::in(['ativo', 'inativo', 'em_manutencao', 'vendido'])],
-            'observacoes' => 'nullable|string',
+            'vei_placa' => ['required', 'string', 'max:8', Rule::unique('veiculos', 'vei_placa')->where(fn ($query) => $query->where('vei_emp_id', $idEmpresa))->ignore($veiculoId, 'vei_id')],
+            'vei_fabricante' => 'required|string|max:50',
+            'vei_modelo' => 'required|string|max:50',
+            'vei_cor_predominante' => 'required|string|max:30',
+            'vei_ano_fab' => 'required|digits:4|integer|min:1940',
+            'vei_ano_mod' => 'required|digits:4|integer|gte:vei_ano_fab',
+            'vei_tipo' => 'required|integer',
+            'vei_especie' => 'required|integer',
+            'vei_carroceria' => 'required|integer',
+            'vei_segmento' => 'required|integer|in:1,2,3,4',
+            'vei_chassi' => ['nullable', 'string', 'size:17', Rule::unique('veiculos', 'vei_chassi')->where(fn ($query) => $query->where('vei_emp_id', $idEmpresa))->ignore($veiculoId, 'vei_id')],
+            'vei_renavam' => ['nullable', 'string', 'min:9', 'max:11', Rule::unique('veiculos', 'vei_renavam')->where(fn ($query) => $query->where('vei_emp_id', $idEmpresa))->ignore($veiculoId, 'vei_id')],
+            
+            'vei_km_inicial' => 'required|integer|min:0|max:9999999',
+            'vei_km_atual' => 'required|integer|gte:vei_km_inicial|max:9999999',
+            'vei_combustivel' => 'required|integer|in:1,2,3,4,5,6',
+            'vei_cap_tanque' => 'nullable|numeric|min:0',
+            'vei_potencia' => 'nullable|string|max:10',
+            'vei_cilindradas' => 'nullable|string|max:10',
+            'vei_num_motor' => 'nullable|string|max:30',
+            'vei_crv' => 'nullable|string|max:12',
+            'vei_data_licenciamento' => 'nullable|date',
+            'vei_antt' => 'nullable|string|max:20',
+            'vei_tara' => 'nullable|integer|min:0',
+            'vei_lotacao' => 'nullable|integer|min:0',
+            'vei_pbt' => 'nullable|integer|min:0',
+            'vei_data_aquisicao' => 'required|date',
+            'vei_valor_aquisicao' => 'nullable|numeric|min:0',
+            'vei_data_venda' => 'nullable|date|after_or_equal:vei_data_aquisicao',
+            'vei_valor_venda' => 'nullable|numeric|min:0',
+            'vei_status' => ['required', 'integer', Rule::in([1, 2, 3, 4])],
+            'vei_obs' => 'nullable|string',
         ];
     }
 
     /**
      * Calcula a data de vencimento do licenciamento com base no final da placa.
-     * Calendário de SP como referência.
      */
     private function calcularVencimentoLicenciamento($placa)
     {
@@ -156,22 +181,28 @@ class VeiculoController extends Controller
             return null;
         }
 
-        $ultimoDigito = substr($placa, -1);
+        $ultimoDigito = substr(preg_replace('/[^0-9]/', '', $placa), -1);
+        $anoAtual = date('Y');
+
         $mesVencimento = match ($ultimoDigito) {
-            '1' => 7, // Julho
-            '2' => 8, // Agosto
-            '3' => 9, // Setembro
-            '4' => 10, // Outubro
-            '5', '6' => 11, // Novembro
-            '7', '8', '9', '0' => 12, // Dezembro
+            '1', '2' => 7,
+            '3', '4' => 8,
+            '5', '6' => 9,
+            '7', '8' => 10,
+            '9' => 11,
+            '0' => 12,
             default => null,
         };
 
         if ($mesVencimento) {
-            // Define o vencimento para o último dia do mês correspondente no ano atual.
-            return Carbon::create(date('Y'), $mesVencimento)->endOfMonth()->toDateString();
+            $vencimento = Carbon::create($anoAtual, $mesVencimento)->endOfMonth();
+            if ($vencimento->isPast()) {
+                return $vencimento->addYear()->toDateString();
+            }
+            return $vencimento->toDateString();
         }
 
         return null;
     }
 }
+
