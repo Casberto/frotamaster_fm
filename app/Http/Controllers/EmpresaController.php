@@ -2,14 +2,24 @@
 
 namespace App\Http\Controllers;
 
+// Models
 use App\Models\Empresa;
 use App\Models\User;
 use App\Models\Licenca;
+
+// Illuminate
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Auth\Notifications\ResetPassword;
+
+// Others
 use App\Services\LogService;
 use Carbon\Carbon;
+
 
 class EmpresaController extends Controller
 {
@@ -33,6 +43,7 @@ class EmpresaController extends Controller
 
     public function store(Request $request)
     {
+        // Validação dos dados de entrada
         $request->validate([
             'nome_fantasia' => 'required|string|max:255',
             'razao_social' => 'required|string|max:255',
@@ -41,44 +52,42 @@ class EmpresaController extends Controller
             'telefone_contato' => 'required|string|max:20',
         ]);
 
-        // Cria a empresa primeiro
-        $empresa = Empresa::create($request->all());
+        // Usar uma transação para garantir a integridade dos dados
+        DB::transaction(function () use ($request) {
+            // 1. Cria a empresa
+            $empresa = Empresa::create($request->all());
 
-        // LÓGICA PARA CRIAR O USUÁRIO MASTER DA EMPRESA
-        $password = Str::random(8); // Gera uma senha aleatória de 8 caracteres
+            // 2. Cria o usuário Master associado
+            $user = User::create([
+                'name' => 'Master ' . $request->nome_fantasia,
+                'email' => $request->email_contato,
+                'password' => Hash::make(Str::random(16)), // Senha temporária segura
+                'role' => 'master',
+                'email_verified_at' => now(),
+                'id_empresa' => $empresa->id,
+            ]);
 
-        $user = new User();
+            // 3. Registra o log da criação da empresa
+            $this->logService->registrar('Criação de Empresa', 'Empresas', $empresa);
 
-        $user->name = 'Master ' . $empresa->nome_fantasia;
-        $user->email = $request->email_contato;
-        $user->password = Hash::make($password);
-        $user->role = 'master';
-        $user->email_verified_at = now();
-        $user->id_empresa = $empresa->id;
-        
-        $user->save();
+            // 4. Cria a licença para a nova empresa
+            Licenca::create([
+                'id_empresa' => $empresa->id,
+                'plano' => 'Mensal',
+                'id_usuario_criador' => auth()->id(),
+                'valor_pago' => 0.00,
+                'data_inicio' => Carbon::today(),
+                'data_vencimento' => Carbon::today()->addDays(30),
+                'status' => 'ativo',
+            ]);
 
-        $this->logService->registrar('Criação de Empresa', 'Empresas', $empresa);
-
-        Licenca::create([
-            'id_empresa' => $empresa->id,
-            'plano' => 'Mensal',
-            'id_usuario_criador' => auth()->id(),
-            'valor_pago' => 0.00,
-            'data_inicio' => Carbon::today(),
-            'data_vencimento' => Carbon::today()->addDays(30),
-            'status' => 'ativo',
-        ]);
-
-        // Guarda as credenciais para exibir ao admin
-        $credentials = [
-            'email' => $user->email,
-            'password' => $password,
-        ];
+            // 5. Envia o e-mail para o usuário definir a senha de forma explícita
+            $token = Password::broker()->createToken($user);
+            $user->notify(new ResetPassword($token));
+        });
 
         return redirect()->route('admin.empresas.index')
-                         ->with('success', 'Empresa criada com sucesso!')
-                         ->with('credentials', $credentials); // Enviamos as credenciais para a view
+                         ->with('success', 'Empresa criada com sucesso! Um e-mail de boas-vindas foi enviado para o usuário definir sua senha.');
     }
 
     public function edit(Empresa $empresa)
