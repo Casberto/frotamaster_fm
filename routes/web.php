@@ -9,6 +9,8 @@ use App\Http\Controllers\AbastecimentoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\Admin\LicenseController;
+use App\Http\Controllers\ServicoController;
+use App\Http\Controllers\FornecedorController;
 
 
 // Rota para a página inicial
@@ -41,6 +43,8 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('veiculos', VeiculoController::class);
     Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao']);
     Route::resource('abastecimentos', AbastecimentoController::class);
+    Route::resource('servicos', ServicoController::class);
+    Route::resource('fornecedores', FornecedorController::class);
 });
 
 

@@ -18,7 +18,6 @@
                     <thead>
                         <tr>
                             <th scope="col" class="px-6 py-3">Veículo</th>
-                            <th scope="col" class="px-6 py-3">Serviço</th>
                             <th scope="col" class="px-6 py-3">Data</th>
                             <th scope="col" class="px-6 py-3">Custo</th>
                             <th scope="col" class="px-6 py-3">Status</th>
@@ -28,11 +27,10 @@
                     <tbody>
                         @forelse ($manutencoes as $manutencao)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 font-medium">{{ $manutencao->veiculo->placa }} - {{ $manutencao->veiculo->modelo }}</td>
-                            <td class="px-6 py-4">{{ $manutencao->descricao_servico }}</td>
-                            <td class="px-6 py-4">{{ \Carbon\Carbon::parse($manutencao->data_manutencao)->format('d/m/Y') }}</td>
-                            <td class="px-6 py-4">R$ {{ number_format($manutencao->custo_total, 2, ',', '.') }}</td>
-                            <td class="px-6 py-4">{{ ucfirst($manutencao->status) }}</td>
+                            <td class="px-6 py-4 font-medium">{{ $manutencao->veiculo->vei_placa }} - {{ $manutencao->veiculo->vei_modelo }}</td>
+                            <td class="px-6 py-4">{{ \Carbon\Carbon::parse($manutencao->man_data_inicio)->format('d/m/Y') }}</td>
+                            <td class="px-6 py-4">R$ {{ number_format($manutencao->man_custo_total, 2, ',', '.') }}</td>
+                            <td class="px-6 py-4">{{ ucfirst($manutencao->man_status) }}</td>
                             <td class="px-6 py-4 text-right">
                                 <a href="{{ route('manutencoes.edit', $manutencao) }}" class="font-medium text-blue-600 hover:underline mr-3">Editar</a>
                                 <form action="{{ route('manutencoes.destroy', $manutencao) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">

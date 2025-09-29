@@ -23,7 +23,8 @@ class DashboardController extends Controller
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        $veiculosAtivos = Veiculo::where('id_empresa', $id_empresa)->where('status', 'ativo')->count();
+        // --- CORREÇÃO 1: Usar 'vei_status' com valor numérico (1 = Ativo) ---
+        $veiculosAtivos = Veiculo::where('vei_emp_id', $id_empresa)->where('vei_status', 1)->count();
 
         $manutencoesVencidas = Manutencao::where('id_empresa', $id_empresa)
             ->where('data_manutencao', '<', now())
@@ -35,28 +36,30 @@ class DashboardController extends Controller
             ->where('status', '!=', 'concluida')
             ->count();
 
-        $frota = Veiculo::where('id_empresa', $id_empresa)
-            ->where('status', 'ativo')
-            ->with(['ultimoAbastecimento']) // essa não precisa de filtro
+        // --- CORREÇÃO 2: Usar 'vei_status' com valor numérico (1 = Ativo) ---
+        $frota = Veiculo::where('vei_emp_id', $id_empresa)
+            ->where('vei_status', 1)
+            ->with(['ultimoAbastecimento'])
             ->get();
 
         $custoTotalMes = 0;
 
         foreach ($frota as $veiculo) {
-            // Somar abastecimentos do mês atual
-            $custoAbastecimento = Abastecimento::where('id_veiculo', $veiculo->id)
+            // --- CORREÇÃO 3: Usar a nova chave primária 'vei_id' ---
+            $custoAbastecimento = Abastecimento::where('id_veiculo', $veiculo->vei_id)
                 ->whereBetween('data_abastecimento', [$startOfMonth, $endOfMonth])
                 ->sum('custo_total');
 
-            // Somar manutenções do mês atual
-            $custoManutencao = Manutencao::where('id_veiculo', $veiculo->id)
+            // --- CORREÇÃO 4: Usar a nova chave primária 'vei_id' ---
+            $custoManutencao = Manutencao::where('id_veiculo', $veiculo->vei_id)
                 ->whereBetween('data_manutencao', [$startOfMonth, $endOfMonth])
                 ->sum('custo_total');
 
+            // Atribuição dos custos para serem usados na view
             $veiculo->custo_mensal_abastecimento = $custoAbastecimento;
             $veiculo->custo_mensal_manutencao = $custoManutencao;
-            $veiculo->custo_total_mensal = $custoAbastecimento + $custoManutencao;
-
+            
+            // O atributo 'custo_total_mensal' já é calculado automaticamente na Model
             $custoTotalMes += $veiculo->custo_total_mensal;
         }
 
@@ -64,7 +67,7 @@ class DashboardController extends Controller
             ->where('data_manutencao', '>', now())
             ->where('data_manutencao', '<=', now()->addDays(30))
             ->where('status', '!=', 'concluida')
-            ->with('veiculo')
+            ->with('veiculo') // O relacionamento buscará o veículo corretamente
             ->orderBy('data_manutencao', 'asc')
             ->take(5)
             ->get();
@@ -78,5 +81,4 @@ class DashboardController extends Controller
             'proximosLembretes' => $proximosLembretes,
         ]);
     }
-
 }

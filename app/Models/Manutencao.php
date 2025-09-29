@@ -9,42 +9,63 @@ class Manutencao extends Model
 {
     use HasFactory;
 
-    /**
-     * O nome da tabela associada ao model.
-     *
-     * @var string
-     */
-    protected $table = 'manutencoes'; // Adicione esta linha
+    protected $table = 'manutencoes';
+    protected $primaryKey = 'man_id';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'id_veiculo',
-        'id_empresa',
-        'id_user',
-        'tipo_manutencao',
-        'descricao_servico',
-        'data_manutencao',
-        'quilometragem',
-        'custo_total',
-        'custo_previsto',
-        'nome_fornecedor',
-        'responsavel',
-        'observacoes',
-        'proxima_revisao_data',
-        'proxima_revisao_km',
-        'status',
+        'man_vei_id',
+        'man_emp_id',
+        'man_user_id',
+        'man_for_id',
+        'man_tipo',
+        'man_data_inicio',
+        'man_data_fim',
+        'man_km',
+        'man_custo_previsto',
+        'man_custo_pecas',
+        'man_custo_mao_de_obra',
+        'man_custo_total',
+        'man_responsavel',
+        'man_nf',
+        'man_garantia',
+        'man_observacoes',
+        'man_prox_revisao_data',
+        'man_prox_revisao_km',
+        'man_status',
     ];
 
     /**
-     * Define a relação com o Veículo.
+     * Relação: Uma manutenção pertence a um Veículo.
      */
     public function veiculo()
     {
-        return $this->belongsTo(Veiculo::class, 'id_veiculo');
+        return $this->belongsTo(Veiculo::class, 'man_vei_id');
+    }
+
+    /**
+     * Relação: Uma manutenção pertence a um Fornecedor.
+     */
+    public function fornecedor()
+    {
+        return $this->belongsTo(Fornecedor::class, 'man_for_id');
+    }
+
+    /**
+     * Relação: Uma manutenção é registrada por um Usuário.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'man_user_id');
+    }
+
+    /**
+     * Relação: Uma manutenção pode ter vários Serviços (Muitos para Muitos).
+     */
+    public function servicos()
+    {
+        return $this->belongsToMany(Servico::class, 'manutencao_servico', 'ms_man_id', 'ms_ser_id')
+            ->withPivot('ms_custo')
+            ->withTimestamps();
     }
 
     /**
@@ -55,11 +76,4 @@ class Manutencao extends Model
         return $this->belongsTo(Veiculo::class, 'id_empresa');
     }
 
-    /**
-     * Define a relação com o Usuário.
-     */
-    public function user()
-    {
-        return $this->belongsTo(Veiculo::class, 'id_user');
-    }
 }
