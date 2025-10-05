@@ -211,7 +211,7 @@ class Veiculo extends Model
      */
     public function manutencoes(): HasMany
     {
-        return $this->hasMany(Manutencao::class, 'id_veiculo', 'vei_id');
+        return $this->hasMany(Manutencao::class, 'man_vei_id', 'vei_id');
     }
 
     /**

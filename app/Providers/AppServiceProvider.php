@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Empresa;
+use App\Models\Manutencao;
+use App\Observers\ManutencaoObserver;
 
 
 class AppServiceProvider extends ServiceProvider

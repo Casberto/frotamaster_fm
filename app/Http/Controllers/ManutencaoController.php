@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Services\LogService;
+use Illuminate\Support\Facades\Log; // Adicionado para as regras de negócio
 
 class ManutencaoController extends Controller
 {
@@ -21,24 +22,42 @@ class ManutencaoController extends Controller
         $this->logService = $logService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $idEmpresa = Auth::user()->id_empresa;
-        // Carrega os serviços para exibição na listagem
-        $manutencoes = Manutencao::with(['veiculo', 'servicos'])
-            ->where('man_emp_id', $idEmpresa)
-            ->latest('man_data_inicio')
-            ->paginate(15);
+
+        // Inicia a query base de manutenções
+        $query = Manutencao::with(['veiculo', 'servicos'])
+            ->where('man_emp_id', $idEmpresa);
+
+        // Aplica os filtros se eles existirem na requisição
+        if ($request->filled('data_inicio')) {
+            $query->where('man_data_inicio', '>=', $request->data_inicio);
+        }
+        if ($request->filled('data_fim')) {
+            $query->where('man_data_inicio', '<=', $request->data_fim);
+        }
+        if ($request->filled('veiculo_id')) {
+            $query->where('man_vei_id', $request->veiculo_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('man_status', $request->status);
+        }
+
+        // Ordena e pagina os resultados
+        $manutencoes = $query->latest('man_data_inicio')->paginate(15);
         
-        return view('manutencoes.index', compact('manutencoes'));
+        // Busca os veículos para popular o dropdown de filtro
+        $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->orderBy('vei_placa')->get();
+
+        // Retorna a view com os dados paginados e os veículos para o filtro
+        return view('manutencoes.index', compact('manutencoes', 'veiculos'));
     }
     
-    // Método privado para buscar os dados dos formulários
     private function getDadosFormulario()
     {
         $idEmpresa = Auth::user()->id_empresa;
         return [
-            // CORREÇÃO: Utiliza os campos com prefixo 'vei_'
             'veiculos' => Veiculo::where('vei_emp_id', $idEmpresa)->where('vei_status', '1')->orderBy('vei_placa')->get(),
             'servicos' => Servico::where('ser_emp_id', $idEmpresa)->orderBy('ser_nome')->get(),
             'fornecedores' => Fornecedor::where('for_emp_id', $idEmpresa)->orderBy('for_nome_fantasia')->get(),
@@ -48,7 +67,7 @@ class ManutencaoController extends Controller
     public function create()
     {
         $manutencao = new Manutencao();
-        $manutencao->servicos = collect(); // Garante que a coleção exista no formulário
+        $manutencao->servicos = collect();
         $dados = $this->getDadosFormulario();
 
         return view('manutencoes.create', compact('manutencao') + $dados);
@@ -56,7 +75,6 @@ class ManutencaoController extends Controller
 
     public function edit(Manutencao $manutencao)
     {
-        // CORREÇÃO: Substituído authorize pela verificação manual padrão do projeto
         if ($manutencao->man_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -74,7 +92,6 @@ class ManutencaoController extends Controller
 
     public function update(Request $request, Manutencao $manutencao)
     {
-        // CORREÇÃO: Substituído authorize pela verificação manual padrão do projeto
         if ($manutencao->man_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -85,9 +102,8 @@ class ManutencaoController extends Controller
     {
         $user = Auth::user();
         $idEmpresa = $user->id_empresa;
+        $eraNova = !$manutencao->exists;
 
-        // 1. AJUSTE NA VALIDAÇÃO
-        // Adicionada a regra para o campo 'garantia' dentro do array de serviços.
         $validatedData = $request->validate([
             'man_vei_id' => ['required', Rule::exists('veiculos', 'vei_id')->where('vei_emp_id', $idEmpresa)],
             'man_for_id' => ['nullable', Rule::exists('fornecedores', 'for_id')->where('for_emp_id', $idEmpresa)],
@@ -105,11 +121,13 @@ class ManutencaoController extends Controller
             'servicos' => ['nullable', 'array'],
             'servicos.*.id' => ['required_with:servicos', 'integer', Rule::exists('servicos', 'ser_id')->where('ser_emp_id', $idEmpresa)],
             'servicos.*.custo' => ['required_with:servicos', 'string'],
-            'servicos.*.garantia' => ['nullable', 'date'], // <-- TRECHO ADICIONADO
+            'servicos.*.garantia' => ['nullable', 'date'],
         ]);
 
         try {
             DB::beginTransaction();
+
+            $statusOriginal = $manutencao->getOriginal('man_status');
 
             $validatedData['man_custo_pecas'] = $this->limparValor($request->man_custo_pecas);
             $validatedData['man_custo_mao_de_obra'] = $this->limparValor($request->man_custo_mao_de_obra);
@@ -124,15 +142,10 @@ class ManutencaoController extends Controller
                 $dadosParaPivot = [];
                 foreach ($request->servicos as $servico) {
                     $custoLimpo = $this->limparValor($servico['custo']);
-                    
-                    // 2. AJUSTE NO CADASTRO DA GARANTIA
-                    // Adicionado o campo 'ms_garantia' ao array que será salvo na tabela pivô.
                     $dadosParaPivot[$servico['id']] = [
                         'ms_custo' => $custoLimpo,
-                        // Garante que o valor seja nulo se o campo vier vazio.
-                        'ms_garantia' => !empty($servico['garantia']) ? $servico['garantia'] : null, // <-- TRECHO ADICIONADO
+                        'ms_garantia' => !empty($servico['garantia']) ? $servico['garantia'] : null,
                     ];
-
                     $custoTotalServicos += $custoLimpo;
                 }
                 $manutencao->servicos()->sync($dadosParaPivot);
@@ -143,9 +156,17 @@ class ManutencaoController extends Controller
             $manutencao->man_custo_total = $custoTotalServicos + $manutencao->man_custo_pecas + $manutencao->man_custo_mao_de_obra;
             $manutencao->save();
 
+            // LÓGICA DO OBSERVER MOVIDA PARA CÁ
+            // Verifica se a manutenção foi concluída nesta operação
+            $foiConcluidaAgora = $manutencao->man_status === 'concluida' && ($eraNova || $statusOriginal !== 'concluida');
+
+            if ($foiConcluidaAgora) {
+                $this->processarRegrasDeNegocioPosConclusao($manutencao);
+            }
+
             DB::commit();
 
-            $mensagem = $manutencao->wasRecentlyCreated ? 'Manutenção registrada com sucesso!' : 'Manutenção atualizada com sucesso!';
+            $mensagem = $eraNova ? 'Manutenção registrada com sucesso!' : 'Manutenção atualizada com sucesso!';
             return redirect()->route('manutencoes.index')->with('success', $mensagem);
 
         } catch (\Exception $e) {
@@ -156,7 +177,6 @@ class ManutencaoController extends Controller
 
     public function destroy(Manutencao $manutencao)
     {
-        // CORREÇÃO: Substituído authorize pela verificação manual padrão do projeto
         if ($manutencao->man_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -169,13 +189,98 @@ class ManutencaoController extends Controller
         }
     }
 
-    // Função auxiliar para converter valores monetários (ex: "1.250,50") para o formato do DB
     private function limparValor($valor)
     {
         if (empty($valor)) {
             return 0;
         }
-        return floatval(str_replace(['.', ','], ['', '.'], $valor));
+        
+        $valor = (string) $valor;
+        $lastDot = strrpos($valor, '.');
+        $lastComma = strrpos($valor, ',');
+
+        // Caso 1: Formato brasileiro (vírgula é o decimal). Ex: "1.000,50" ou "10,50"
+        if ($lastComma !== false && ($lastDot === false || $lastComma > $lastDot)) {
+            $valor = str_replace('.', '', $valor); // Remove pontos (milhares)
+            $valor = str_replace(',', '.', $valor); // Substitui vírgula (decimal) por ponto
+        } 
+        // Caso 2: Formato padrão (ponto é o decimal) ou internacional. Ex: "1,000.50" ou "10.50"
+        else if ($lastDot !== false && ($lastComma === false || $lastDot > $lastComma)) {
+            $valor = str_replace(',', '', $valor); // Remove vírgulas (milhares)
+        }
+        
+        return floatval($valor);
+    }
+
+    /**
+     * Centraliza a execução das regras de negócio que antes estavam no Observer.
+     */
+    private function processarRegrasDeNegocioPosConclusao(Manutencao $manutencao): void
+    {
+        // Força o recarregamento das relações para garantir que temos os dados mais recentes
+        $manutencao->load('veiculo', 'servicos');
+
+        $this->atualizarKmVeiculo($manutencao);
+        $this->agendarProximaManutencao($manutencao);
+    }
+
+    /**
+     * REGRA 1: Se o KM da manutenção for maior, atualiza o KM do veículo.
+     */
+    private function atualizarKmVeiculo(Manutencao $manutencao): void
+    {
+        $veiculo = $manutencao->veiculo;
+
+        if ($veiculo && $manutencao->man_km > $veiculo->vei_km_atual) {
+            $veiculo->vei_km_atual = $manutencao->man_km;
+            $veiculo->save();
+            Log::info("KM do veículo {$veiculo->vei_placa} atualizado para {$manutencao->man_km} via manutenção #{$manutencao->man_id}.");
+        }
+    }
+
+    /**
+     * REGRA 2: Cria uma nova manutenção agendada se a atual for preventiva e concluída.
+     */
+    private function agendarProximaManutencao(Manutencao $manutencao): void
+    {
+        if ($manutencao->man_tipo !== 'preventiva' || (!$manutencao->man_prox_revisao_data && !$manutencao->man_prox_revisao_km)) {
+            return;
+        }
+
+        $existeAgendada = Manutencao::where('man_vei_id', $manutencao->man_vei_id)
+                                    ->where('man_status', 'agendada')
+                                    ->exists();
+
+        if ($existeAgendada) {
+            Log::info("Nova manutenção preventiva para o veículo {$manutencao->veiculo->vei_placa} não foi criada pois já existe uma agendada.");
+            return;
+        }
+
+        $novaManutencao = new Manutencao();
+        
+        $novaManutencao->man_vei_id = $manutencao->man_vei_id;
+        $novaManutencao->man_emp_id = $manutencao->man_emp_id;
+        $novaManutencao->man_user_id = Auth::id() ?? $manutencao->man_user_id;
+        $novaManutencao->man_for_id = $manutencao->man_for_id;
+        $novaManutencao->man_tipo = 'preventiva';
+        
+        $novaManutencao->man_status = 'agendada';
+        $novaManutencao->man_data_inicio = $manutencao->man_prox_revisao_data;
+        $novaManutencao->man_km = $manutencao->man_prox_revisao_km;
+        
+        $novaManutencao->man_custo_pecas = 0;
+        $novaManutencao->man_custo_mao_de_obra = 0;
+        $novaManutencao->man_custo_total = 0;
+
+        $novaManutencao->save();
+
+        // Replica os mesmos serviços, mas sem custo
+        $servicosIds = $manutencao->servicos()->pluck('ser_id');
+        if ($servicosIds->isNotEmpty()) {
+            $novaManutencao->servicos()->attach($servicosIds);
+        }
+
+        Log::info("Manutenção #{$novaManutencao->man_id} agendada automaticamente a partir da manutenção #{$manutencao->man_id}.");
     }
 }
 

@@ -21,17 +21,50 @@ class VeiculoController extends Controller
     /**
      * Exibe uma lista dos veículos da empresa logada.
      */
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->id_empresa) {
             return redirect()->route('dashboard')->with('error', 'Você não tem permissão para acessar esta área.');
         }
 
         $idEmpresa = Auth::user()->id_empresa;
-        $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->latest('created_at')->paginate(10);
 
-        return view('veiculos.index', compact('veiculos'));
+        // Inicia a query base de veículos
+        $query = Veiculo::where('vei_emp_id', $idEmpresa);
+
+        // Aplica o filtro de busca por termo (placa ou modelo)
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('vei_placa', 'like', $searchTerm)
+                  ->orWhere('vei_modelo', 'like', $searchTerm);
+            });
+        }
+
+        // Aplica o filtro por tipo de veículo
+        if ($request->filled('tipo')) {
+            $query->where('vei_tipo', $request->tipo);
+        }
+
+        // Aplica o filtro por status
+        if ($request->filled('status')) {
+            $query->where('vei_status', $request->status);
+        }
+
+        // Ordena e pagina os resultados
+        $veiculos = $query->latest('created_at')->paginate(10);
+
+        // Array de tipos de veículo para o filtro
+        $tipos = [
+            '6' => 'Automóvel', '13' => 'Camioneta', '14' => 'Caminhão', '17' => 'Caminhão Trator',
+            '2' => 'Ciclomotor', '7' => 'Micro-ônibus', '4' => 'Motocicleta', '3' => 'Motoneta',
+            '8' => 'Ônibus', '21' => 'Quadriciclo', '10' => 'Reboque', '11' => 'Semirreboque',
+            '5' => 'Triciclo', '25' => 'Utilitário', '22' => 'Chassi Plataforma',
+        ];
+
+        return view('veiculos.index', compact('veiculos', 'tipos'));
     }
+
 
     /**
      * Mostra o formulário para criar um novo veículo.
