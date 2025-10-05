@@ -11,28 +11,40 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('abastecimentos');
+        
         Schema::create('abastecimentos', function (Blueprint $table) {
-            $table->id();
+            // Chaves
+            $table->id('aba_id');
+            $table->foreignId('aba_emp_id')->constrained('empresas', 'id')->onDelete('cascade');
+            $table->foreignId('aba_user_id')->constrained('users', 'id')->onDelete('cascade');
+            $table->foreignId('aba_vei_id')->constrained('veiculos', 'vei_id')->onDelete('cascade');
+            $table->foreignId('aba_for_id')->nullable()->constrained('fornecedores', 'for_id')->onDelete('set null')->comment('FK para o posto de combustível (fornecedor)');
 
-            // CORREÇÃO: Aponta explicitamente para a tabela 'veiculos' e a coluna 'vei_id'
-            $table->foreignId('id_veiculo')->constrained(table: 'veiculos', column: 'vei_id')->onDelete('cascade');
+            // Dados Essenciais
+            $table->date('aba_data')->comment('Data do abastecimento');
+            $table->unsignedInteger('aba_km')->comment('Quilometragem do veículo no momento do abastecimento');
 
-            $table->foreignId('id_empresa')->constrained('empresas')->onDelete('cascade');
-            $table->unsignedBigInteger('id_user'); // Adicionado
-            $table->date('data_abastecimento');
-            $table->integer('quilometragem');
-            $table->string('unidade_medida');
-            $table->decimal('quantidade', 10, 3);
-            $table->decimal('valor_por_unidade', 10, 3);
-            $table->decimal('custo_total', 10, 2);
-            $table->string('nome_posto')->nullable();
-            $table->string('tipo_combustivel');
-            $table->string('nivel_tanque_inicio')->nullable();
-            $table->boolean('tanque_cheio')->default(false);
+            // Valores
+            $table->enum('aba_und_med', ['L', 'm³', 'kWh'])->comment('Unidade de Medida: Litros, Metros Cúbicos para GNV, kWh para elétricos');
+            $table->decimal('aba_qtd', 10, 3)->comment('Quantidade abastecida/carregada');
+            $table->decimal('aba_vlr_und', 10, 3)->comment('Valor por unidade (R$ por Litro, m³, kWh)');
+            $table->decimal('aba_vlr_tot', 10, 2)->comment('Valor total pago');
+
+            // Detalhes do Abastecimento
+            $table->tinyInteger('aba_combustivel')->nullable()->comment('Tipo de combustível usado (para veículos flex/híbridos). 1: Gasolina, 2: Etanol, etc.');
+            $table->boolean('aba_tanque_cheio')->default(false)->comment('Indica se o tanque foi completado');
+            $table->enum('aba_tanque_inicio', ['reserva', '25', '50', '75', '100'])->nullable()->comment('Nível do tanque na chegada (percentual aproximado)');
+
+            // Checklist Rápido (Opcional)
+            $table->boolean('aba_pneus_calibrados')->default(false);
+            $table->boolean('aba_agua_verificada')->default(false);
+            $table->boolean('aba_oleo_verificado')->default(false);
+
+            // Observações
+            $table->text('aba_obs')->nullable();
+
             $table->timestamps();
-
-            // Adicionando a chave estrangeira para id_user de forma explícita
-            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

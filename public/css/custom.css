@@ -80,14 +80,21 @@
     margin-bottom: 1.5rem;
 }
 
-.main-content input, .main-content select, .main-content textarea {
+/* CORREÇÃO: Aplica os estilos a todos os inputs, EXCETO checkboxes */
+.main-content input:not([type=checkbox]),
+.main-content select,
+.main-content textarea {
     background-color: #F7FAFC !important; /* Fundo cinza claro para inputs */
     color: var(--cor-texto-principal) !important;
     border-color: var(--cor-borda) !important;
 }
 
-.main-content input:focus, .main-content select:focus, .main-content textarea:focus {
+/* CORREÇÃO: Aplica os estilos de foco a todos os inputs, EXCETO checkboxes */
+.main-content input:not([type=checkbox]):focus,
+.main-content select:focus,
+.main-content textarea:focus {
     border-color: var(--cor-acao) !important;
     box-shadow: 0 0 0 1px var(--cor-acao) !important;
     background-color: var(--cor-branca) !important;
 }
+

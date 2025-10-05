@@ -194,7 +194,7 @@ class Veiculo extends Model
      */
     public function abastecimentos(): HasMany
     {
-        return $this->hasMany(Abastecimento::class, 'id_veiculo', 'vei_id');
+        return $this->hasMany(Abastecimento::class, 'aba_vei_id', 'vei_id');
     }
 
     /**
@@ -202,8 +202,7 @@ class Veiculo extends Model
      */
     public function ultimoAbastecimento(): HasOne
     {
-        // Chave estrangeira em Abastecimento -> Chave local em Veiculo
-        return $this->hasOne(Abastecimento::class, 'id_veiculo', 'vei_id')->latestOfMany('data_abastecimento');
+        return $this->hasOne(Abastecimento::class, 'aba_vei_id', 'vei_id')->latestOfMany('aba_data');
     }
 
     /**

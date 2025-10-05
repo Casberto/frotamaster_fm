@@ -9,59 +9,68 @@ class Abastecimento extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    protected $primaryKey = 'aba_id';
+
     protected $fillable = [
-        'id_veiculo',
-        'id_empresa',
-        'id_user',
-        'data_abastecimento',
-        'quilometragem',
-        'unidade_medida',
-        'quantidade',
-        'valor_por_unidade',
-        'custo_total',
-        'nome_posto',
-        'tipo_combustivel',
-        'nivel_tanque_chegada',
-        'nivel_tanque_saida',
-        'tanque_cheio',
+        'aba_emp_id',
+        'aba_user_id',
+        'aba_vei_id',
+        'aba_for_id',
+        'aba_data',
+        'aba_km',
+        'aba_und_med',
+        'aba_qtd',
+        'aba_vlr_und',
+        'aba_vlr_tot',
+        'aba_combustivel',
+        'aba_tanque_cheio',
+        'aba_tanque_inicio',
+        'aba_pneus_calibrados',
+        'aba_agua_verificada',
+        'aba_oleo_verificado',
+        'aba_obs',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'data_abastecimento' => 'date',
-        'tanque_cheio' => 'boolean',
+        'aba_data' => 'date',
+        'aba_tanque_cheio' => 'boolean',
+        'aba_pneus_calibrados' => 'boolean',
+        'aba_agua_verificada' => 'boolean',
+        'aba_oleo_verificado' => 'boolean',
+        'aba_qtd' => 'decimal:3',
+        'aba_vlr_und' => 'decimal:3',
+        'aba_vlr_tot' => 'decimal:2',
     ];
 
-    /**
-     * Define a relação: um abastecimento pertence a um veículo.
+/**
+     * Define a relação: um abastecimento pertence a um Veículo.
      */
     public function veiculo()
     {
-        return $this->belongsTo(Veiculo::class, 'id_veiculo');
+        return $this->belongsTo(Veiculo::class, 'aba_vei_id', 'vei_id');
     }
 
     /**
-     * Define a relação: um abastecimento pertence a uma empresa.
+     * Define a relação: um abastecimento pertence a uma Empresa.
      */
-    public function empresa()
+    public function empresa(): BelongsTo
     {
-        return $this->belongsTo(Empresa::class, 'id_empresa');
+        return $this->belongsTo(Empresa::class, 'aba_emp_id', 'id');
     }
 
     /**
-     * Define a relação: um abastecimento é registrado por um usuário.
+     * Define a relação: um abastecimento é registrado por um Usuário.
      */
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_user');
+        return $this->belongsTo(User::class, 'aba_user_id', 'id');
+    }
+
+    /**
+     * Define a relação: um abastecimento foi feito em um Fornecedor (posto).
+     */
+    public function fornecedor(): BelongsTo
+    {
+        return $this->belongsTo(Fornecedor::class, 'aba_for_id', 'for_id');
     }
 }

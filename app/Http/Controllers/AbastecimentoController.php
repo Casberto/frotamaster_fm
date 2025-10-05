@@ -4,253 +4,200 @@ namespace App\Http\Controllers;
 
 use App\Models\Abastecimento;
 use App\Models\Veiculo;
+use App\Models\Fornecedor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Carbon\Carbon;
-use App\Services\LogService;
 
 class AbastecimentoController extends Controller
 {
-    protected $logService;
-
-    public function __construct(LogService $logService)
+    /**
+     * Mostra uma lista de todos os abastecimentos da empresa.
+     */
+    public function index(Request $request)
     {
-        $this->logService = $logService;
+        $idEmpresa = Auth::user()->id_empresa;
+
+        // Inicia a query
+        $query = Abastecimento::where('aba_emp_id', $idEmpresa)->with('veiculo');
+
+        // Aplica os filtros
+        if ($request->filled('veiculo_id')) {
+            $query->where('aba_vei_id', $request->veiculo_id);
+        }
+
+        if ($request->filled('data_inicio')) {
+            $query->where('aba_data', '>=', $request->data_inicio);
+        }
+
+        if ($request->filled('data_fim')) {
+            $query->where('aba_data', '<=', $request->data_fim);
+        }
+        
+        // Ordena e pagina os resultados
+        $abastecimentos = $query->latest('aba_data')->paginate(15)->appends($request->query());
+
+        // Carrega os veículos para o dropdown do filtro
+        $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->orderBy('vei_placa')->get();
+
+        return view('abastecimentos.index', compact('abastecimentos', 'veiculos'));
     }
 
-    public function index()
-    {
-        $abastecimentos = Abastecimento::where('id_empresa', Auth::user()->id_empresa)
-            ->with('veiculo', 'user') // Carrega o veículo e o usuário para a listagem
-            ->latest('data_abastecimento')
-            ->paginate(15);
-            
-        return view('abastecimentos.index', compact('abastecimentos'));
-    }
 
+    /**
+     * Mostra o formulário para criar um novo abastecimento.
+     */
     public function create()
     {
         $idEmpresa = Auth::user()->id_empresa;
-        $veiculos = Veiculo::where('id_empresa', $idEmpresa)
-            ->where('status', 'ativo')
-            ->orderBy('placa')
-            ->get();
+        $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->orderBy('vei_placa')->get();
+        $fornecedores = Fornecedor::where('for_emp_id', $idEmpresa)->orderBy('for_nome_fantasia')->get();
 
-        // Cria um mapa de ID do veículo => KM atual para o JavaScript
-        $veiculosKmMap = $veiculos->pluck('quilometragem_atual', 'id');
+        // Mapeia os dados necessários para o JavaScript
+        $veiculosData = $veiculos->mapWithKeys(function ($veiculo) {
+            return [$veiculo->vei_id => [
+                'km' => $veiculo->vei_km_atual,
+                'combustivel_tipo' => $veiculo->vei_combustivel,
+            ]];
+        });
 
-        return view('abastecimentos.create', compact('veiculos', 'veiculosKmMap'));
+        return view('abastecimentos.create', compact('veiculos', 'fornecedores', 'veiculosData'));
     }
 
+    /**
+     * Armazena um novo abastecimento no banco de dados.
+     */
     public function store(Request $request)
     {
         $idEmpresa = Auth::user()->id_empresa;
 
-        // Função para limpar e converter valores monetários
-        $limparValor = function ($valor) {
-            if (empty($valor)) return 0;
-            return floatval(str_replace(['.', ','], ['', '.'], $valor));
-        };
-
-        // Mapa para validar a ordem dos níveis do tanque
-        $niveisOrdem = ['reserva' => 0, '1/4' => 1, '1/2' => 2, '3/4' => 3, 'cheio' => 4];
-
-        // 1. Validação dos Dados
-        $validatedData = $request->validate([
-            'id_veiculo' => ['required', Rule::exists('veiculos', 'id')->where('id_empresa', $idEmpresa)],
-            'data_abastecimento' => ['required', 'date', 'before_or_equal:today'],
-            'quilometragem' => ['required', 'integer', 'min:0', function ($attribute, $value, $fail) use ($request) {
-                $veiculo = Veiculo::find($request->id_veiculo);
-                if (!$veiculo) return;
-
-                // Regra: KM menor que o atual só é permitido para datas passadas.
-                if ($value < $veiculo->quilometragem_atual) {
-                    $ultimoAbastecimento = Abastecimento::where('id_veiculo', $veiculo->id)
-                                                        ->latest('data_abastecimento')
-                                                        ->first();
-                    
-                    if ($ultimoAbastecimento && Carbon::parse($request->data_abastecimento)->gte($ultimoAbastecimento->data_abastecimento)) {
-                        $fail('A quilometragem só pode ser menor que a atual ('.$veiculo->quilometragem_atual.' km) para registros com data retroativa.');
-                    }
-                }
-            }],
-            'tipo_combustivel' => ['required'],
-            'custo_total' => ['required', 'string'],
-            'quantidade' => ['required', 'string'],
-            'valor_por_unidade' => ['required', 'string'],
-            'nome_posto' => ['nullable', 'string', 'max:255'],
-            'nivel_tanque_chegada' => ['nullable', 'string'],
-            'nivel_tanque_saida' => ['nullable', 'string', function ($attribute, $value, $fail) use ($request, $niveisOrdem) {
-                $chegada = $request->nivel_tanque_chegada;
-                $saida = $value;
-
-                // Se ambos os campos foram preenchidos, valida a ordem
-                if ($chegada && $saida && isset($niveisOrdem[$chegada]) && isset($niveisOrdem[$saida])) {
-                    if ($niveisOrdem[$saida] < $niveisOrdem[$chegada]) {
-                        $fail('O nível de saída não pode ser menor que o nível de chegada.');
-                    }
-                }
-            }],
-        ]);
-
-        // 2. Lógica de Salvamento
-        $veiculo = Veiculo::find($validatedData['id_veiculo']);
-
+        $validatedData = $this->validateRequest($request, $idEmpresa);
         
-
-        $abastecimento = new Abastecimento();
-
-        $dadosAntigosAbastecimento = $abastecimento->getOriginal();
-        $dadosAntigosVeiculo = $veiculo->getOriginal();
-
-
-        $abastecimento->id_empresa = $idEmpresa;
-        $abastecimento->id_user = Auth::id(); // Salva o ID do usuário logado
-        $abastecimento->id_veiculo = $validatedData['id_veiculo'];
-        $abastecimento->data_abastecimento = $validatedData['data_abastecimento'];
-        $abastecimento->quilometragem = $validatedData['quilometragem'];
+        $abastecimento = new Abastecimento($validatedData);
+        $abastecimento->aba_emp_id = $idEmpresa;
+        $abastecimento->aba_user_id = Auth::id();
         
-        $abastecimento->unidade_medida = $veiculo->tipo_combustivel === 'eletrico' ? 'kWh' : 'Litros';
-        $abastecimento->tipo_combustivel = $validatedData['tipo_combustivel'];
-
-        $abastecimento->quantidade = $limparValor($validatedData['quantidade']);
-        $abastecimento->valor_por_unidade = $limparValor($validatedData['valor_por_unidade']);
-        $abastecimento->custo_total = $limparValor($validatedData['custo_total']);
-        
-        $abastecimento->nome_posto = $validatedData['nome_posto'];
-        $abastecimento->nivel_tanque_chegada = $validatedData['nivel_tanque_chegada'];
-        $abastecimento->nivel_tanque_saida = $validatedData['nivel_tanque_saida'];
-        
-        // Define 'tanque_cheio' com base na seleção de 'nivel_tanque_saida'
-        $abastecimento->tanque_cheio = ($validatedData['nivel_tanque_saida'] === 'cheio');
+        $this->processarValores($abastecimento, $validatedData);
         
         $abastecimento->save();
-
-        // 3. Atualiza a Quilometragem do Veículo (se necessário)
-        if ($abastecimento->quilometragem > $veiculo->quilometragem_atual) {
-            $veiculo->quilometragem_atual = $abastecimento->quilometragem;
-            $veiculo->save();
-
-            $this->logService->registrar('Atualização', 'Veículos (via Abastecimento)', $veiculo, $dadosAntigosVeiculo);
-        }
-
-        $this->logService->registrar('Criação de Abastecimento', 'Abastecimentos', $abastecimento);
+        
+        $this->atualizarKmVeiculo($abastecimento->aba_vei_id, $abastecimento->aba_km);
 
         return redirect()->route('abastecimentos.index')->with('success', 'Abastecimento registrado com sucesso!');
     }
 
+    /**
+     * Mostra o formulário para editar um abastecimento.
+     */
     public function edit(Abastecimento $abastecimento)
     {
-        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
-            abort(403, 'Acesso não autorizado.');
-        }
-
         $idEmpresa = Auth::user()->id_empresa;
-        $veiculos = Veiculo::where('id_empresa', $idEmpresa)
-            ->where('status', 'ativo')
-            ->orderBy('placa')
-            ->get();
+        $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->orderBy('vei_placa')->get();
+        $fornecedores = Fornecedor::where('for_emp_id', $idEmpresa)->orderBy('for_nome_fantasia')->get();
         
-        $veiculosKmMap = $veiculos->pluck('quilometragem_atual', 'id');
+        $veiculosData = $veiculos->mapWithKeys(function ($veiculo) {
+            return [$veiculo->vei_id => [
+                'km' => $veiculo->vei_km_atual,
+                'combustivel_tipo' => $veiculo->vei_combustivel,
+            ]];
+        });
 
-        return view('abastecimentos.edit', compact('abastecimento', 'veiculos', 'veiculosKmMap'));
+        return view('abastecimentos.edit', compact('abastecimento', 'veiculos', 'fornecedores', 'veiculosData'));
     }
 
-
+    /**
+     * Atualiza um abastecimento no banco de dados.
+     */
     public function update(Request $request, Abastecimento $abastecimento)
     {
-        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
-            abort(403, 'Acesso não autorizado.');
-        }
-
         $idEmpresa = Auth::user()->id_empresa;
-
-        $limparValor = function ($valor) {
-            if (empty($valor)) return 0;
-            return floatval(str_replace(['.', ','], ['', '.'], $valor));
-        };
-
-        $niveisOrdem = ['reserva' => 0, '1/4' => 1, '1/2' => 2, '3/4' => 3, 'cheio' => 4];
-
-        $validatedData = $request->validate([
-            'id_veiculo' => ['required', Rule::exists('veiculos', 'id')->where('id_empresa', $idEmpresa)],
-            'data_abastecimento' => ['required', 'date', 'before_or_equal:today'],
-            'quilometragem' => ['required', 'integer', 'min:0'],
-            'tipo_combustivel' => ['required'],
-            'custo_total' => ['required', 'string'],
-            'quantidade' => ['required', 'string'],
-            'valor_por_unidade' => ['required', 'string'],
-            'nome_posto' => ['nullable', 'string', 'max:255'],
-            'nivel_tanque_chegada' => ['nullable', 'string'],
-            'nivel_tanque_saida' => ['nullable', 'string', function ($attribute, $value, $fail) use ($request, $niveisOrdem) {
-                $chegada = $request->nivel_tanque_chegada;
-                $saida = $value;
-                if ($chegada && $saida && isset($niveisOrdem[$chegada]) && isset($niveisOrdem[$saida])) {
-                    if ($niveisOrdem[$saida] < $niveisOrdem[$chegada]) {
-                        $fail('O nível de saída não pode ser menor que o nível de chegada.');
-                    }
-                }
-            }],
-        ]);
-
-        $veiculo = Veiculo::find($validatedData['id_veiculo']);
-
-        $dadosAntigosAbastecimento = $abastecimento->getOriginal();
-        $dadosAntigosVeiculo = $veiculo->getOriginal();
         
+        $validatedData = $this->validateRequest($request, $idEmpresa, $abastecimento->aba_id);
+
         $abastecimento->fill($validatedData);
-        $abastecimento->unidade_medida = $veiculo->tipo_combustivel === 'eletrico' ? 'kWh' : 'Litros';
-        $abastecimento->quantidade = $limparValor($validatedData['quantidade']);
-        $abastecimento->valor_por_unidade = $limparValor($validatedData['valor_por_unidade']);
-        $abastecimento->custo_total = $limparValor($validatedData['custo_total']);
-        $abastecimento->tanque_cheio = ($validatedData['nivel_tanque_saida'] === 'cheio');
-        
+        $this->processarValores($abastecimento, $validatedData);
         $abastecimento->save();
-
-        if ($abastecimento->quilometragem > $veiculo->quilometragem_atual) {
-            $veiculo->quilometragem_atual = $abastecimento->quilometragem;
-            $veiculo->save();
-
-            $this->logService->registrar('Atualização de KM do veículo', 'Veículos (via Abastecimento)', $veiculo, $dadosAntigosVeiculo);
-        }
-
-        $this->logService->registrar('Atualização de Abastecimento', 'Abastecimentos', $abastecimento, $dadosAntigosAbastecimento);
+        
+        // Pode ser necessário re-calcular a KM do veículo
+        // (lógica mais complexa, por enquanto atualizamos se for maior)
+        $this->atualizarKmVeiculo($abastecimento->aba_vei_id, $abastecimento->aba_km);
 
         return redirect()->route('abastecimentos.index')->with('success', 'Abastecimento atualizado com sucesso!');
     }
 
+    /**
+     * Remove um abastecimento do banco de dados.
+     */
     public function destroy(Abastecimento $abastecimento)
     {
-        // Esta verificação de segurança está CORRETA e deve ser mantida.
-        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
-            abort(403, 'Acesso não autorizado.');
-        }
-
-        $dadosAntigosAbastecimento = $abastecimento->getOriginal();
-        
         $abastecimento->delete();
-
-        // CORREÇÃO APLICADA AQUI: O log agora registra a exclusão de uma 'Manutenção' corretamente.
-        $this->logService->registrar('Exclusão de Abastecimento', 'Abastecimentos', (new Abastecimento())->forceFill($dadosAntigosAbastecimento));
-
-        // Este redirecionamento está CORRETO e irá funcionar com as rotas simplificadas.
-        return redirect()->route('abastecimentos.index')
-                         ->with('success', 'Registro de abastecimento removido com sucesso!');
+        return redirect()->route('abastecimentos.index')->with('success', 'Registro de abastecimento removido com sucesso!');
     }
 
-    public function getVeiculoData($id)
+    /**
+     * Valida os dados da request.
+     */
+    private function validateRequest(Request $request, int $idEmpresa, int $abastecimentoId = null): array
     {
-        if ((int)$abastecimento->id_empresa !== (int)Auth::user()->id_empresa) {
-            abort(403, 'Acesso não autorizado.');
-        }
+        return $request->validate([
+            'aba_vei_id' => ['required', Rule::exists('veiculos', 'vei_id')->where('vei_emp_id', $idEmpresa)],
+            'aba_for_id' => ['nullable', Rule::exists('fornecedores', 'for_id')->where('for_emp_id', $idEmpresa)],
+            'aba_data' => ['required', 'date', 'before_or_equal:today'],
+            'aba_km' => ['required', 'integer', 'min:0'],
+            'aba_combustivel' => ['nullable', 'integer'], // ID do combustível
+            'aba_vlr_tot' => ['required', 'string'],
+            'aba_qtd' => ['required', 'string'],
+            'aba_vlr_und' => ['required', 'string'],
+            'aba_tanque_inicio' => ['nullable', 'string'],
+            'aba_tanque_cheio' => ['nullable', 'boolean'],
+            'aba_pneus_calibrados' => ['nullable', 'boolean'],
+            'aba_agua_verificada' => ['nullable', 'boolean'],
+            'aba_oleo_verificado' => ['nullable', 'boolean'],
+            'aba_obs' => ['nullable', 'string'],
+        ]);
+    }
+
+    /**
+     * Converte e atribui os valores numéricos.
+     */
+    private function processarValores(Abastecimento $abastecimento, array $validatedData): void
+    {
+        $limparValor = fn($v) => $v ? (float)str_replace(['.', ','], ['', '.'], $v) : 0;
+
+        $abastecimento->aba_vlr_tot = $limparValor($validatedData['aba_vlr_tot']);
+        $abastecimento->aba_qtd = $limparValor($validatedData['aba_qtd']);
+        $abastecimento->aba_vlr_und = $limparValor($validatedData['aba_vlr_und']);
+
+        $veiculo = Veiculo::find($abastecimento->aba_vei_id);
         
-        $veiculo = Veiculo::where('id', $id)
-            ->where('id_empresa', Auth::user()->id_empresa)
-            ->firstOrFail();
+        // Adiciona uma verificação para garantir que o veículo foi encontrado
+        if ($veiculo) {
+            $abastecimento->aba_und_med = match ((int)$veiculo->vei_combustivel) {
+                5 => 'kWh',
+                4 => 'm³',
+                default => 'L',
+            };
+        } else {
+            $abastecimento->aba_und_med = 'L'; // Fallback
+        }
 
-        $this->logService->registrar('delete', 'Veículos', (new Veiculo())->forceFill($dadosAntigos));
+        // Garante que os checkboxes não enviados sejam `false`
+        $abastecimento->aba_tanque_cheio = $validatedData['aba_tanque_cheio'] ?? false;
+        $abastecimento->aba_pneus_calibrados = $validatedData['aba_pneus_calibrados'] ?? false;
+        $abastecimento->aba_agua_verificada = $validatedData['aba_agua_verificada'] ?? false;
+        $abastecimento->aba_oleo_verificado = $validatedData['aba_oleo_verificado'] ?? false;
+    }
 
-        return response()->json($veiculo);
+    /**
+     * Atualiza a quilometragem do veículo se o novo registro for maior.
+     */
+    private function atualizarKmVeiculo(int $veiculoId, int $novaKm): void
+    {
+        $veiculo = Veiculo::find($veiculoId);
+        if ($veiculo && $novaKm > $veiculo->vei_km_atual) {
+            $veiculo->vei_km_atual = $novaKm;
+            $veiculo->save();
+        }
     }
 }
+
