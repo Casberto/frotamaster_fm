@@ -11,9 +11,12 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         
-        <!-- AlpineJS -->
-        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-        <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
+        <!-- AlpineJS (CORREÇÃO: Adicionado 'defer' em ambas as tags) -->
+        <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -59,8 +62,8 @@
             </div>
         </div>
 
-        {{-- CORREÇÃO: Espaço reservado no final da página para renderizar os modais --}}
         @stack('modals')
+        @stack('scripts')
 
         {{-- SCRIPT LIBS --}}
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

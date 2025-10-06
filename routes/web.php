@@ -46,7 +46,8 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('servicos', ServicoController::class);
     Route::resource('fornecedores', FornecedorController::class);
 
-    // Rota para o histórico do veículo (AJAX)
+    // Rotas AJAX para o Dashboard
+    Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/veiculos/{id}/historico', [DashboardController::class, 'getVeiculoHistorico'])->name('veiculos.historico');
     Route::get('/abastecimentos/veiculo/{id}', [AbastecimentoController::class, 'getVeiculoData'])->name('abastecimentos.veiculo.data');
 

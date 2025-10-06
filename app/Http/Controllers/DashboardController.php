@@ -19,7 +19,7 @@ class DashboardController extends Controller
     {
         $idEmpresa = Auth::user()->id_empresa;
         if (!$idEmpresa) {
-            return view('dashboard');
+            return view('dashboard.index');
         }
 
         $startOfMonth = now()->startOfMonth();
@@ -109,7 +109,7 @@ class DashboardController extends Controller
                 'ultimoAbastecimento'
             ])
             ->where('vei_status', 1)
-            ->get();
+        ->get();
         
         // --- Análise Comparativa de Custos (para o modal) ---
         $frota->each(function ($veiculo) use ($startOfMonth, $endOfMonth) {
@@ -145,10 +145,10 @@ class DashboardController extends Controller
             ->where('man_data_inicio', '>=', now()->toDateString())
             ->orderBy('man_data_inicio', 'asc')
             ->take(5)
-            ->get();
+        ->get();
 
 
-        return view('dashboard', compact(
+        return view('dashboard.index', compact(
             'veiculosAtivos',
             'manutencoesVencidas',
             'alertasProximos',
@@ -161,9 +161,6 @@ class DashboardController extends Controller
         ));
     }
 
-    /**
-     * Busca o histórico de um veículo para exibir no modal.
-     */
     public function getVeiculoHistorico($id)
     {
         try {
@@ -198,5 +195,96 @@ class DashboardController extends Controller
                 'line' => $e->getLine()
             ], 500);
         }
+    }
+
+    public function getChartData(Request $request)
+    {
+        $idEmpresa = Auth::user()->id_empresa;
+        $period = (int)$request->input('period', 30);
+        $startDate = now()->subDays($period);
+        $endDate = now();
+
+        // 1. Custos do Período (Pizza)
+        $custoManutencoes = Manutencao::where('man_emp_id', $idEmpresa)
+            ->whereBetween('man_data_inicio', [$startDate, $endDate])
+            ->sum('man_custo_total');
+        $custoAbastecimentos = Abastecimento::where('aba_emp_id', $idEmpresa)
+            ->whereBetween('aba_data', [$startDate, $endDate])
+            ->sum('aba_vlr_tot');
+        
+        $custosPeriodoData = [
+            'labels' => ['Manutenções', 'Abastecimentos'],
+            'data' => [
+                round($custoManutencoes, 2), 
+                round($custoAbastecimentos, 2)
+            ],
+        ];
+
+        // 2. Evolução de Custos (Últimos 6 meses)
+        $evolutionLabels = [];
+        $evolutionData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $evolutionLabels[] = $date->format('M/y');
+            $startOfMonth = $date->copy()->startOfMonth();
+            $endOfMonth = $date->copy()->endOfMonth();
+
+            $totalManutencoes = Manutencao::where('man_emp_id', $idEmpresa)
+                ->whereBetween('man_data_inicio', [$startOfMonth, $endOfMonth])
+                ->sum('man_custo_total');
+
+            $totalAbastecimentos = Abastecimento::where('aba_emp_id', $idEmpresa)
+                ->whereBetween('aba_data', [$startOfMonth, $endOfMonth])
+                ->sum('aba_vlr_tot');
+            
+            $evolutionData[] = round($totalManutencoes + $totalAbastecimentos, 2);
+        }
+
+        $evolucaoCustosData = [
+            'labels' => $evolutionLabels,
+            'data' => $evolutionData,
+        ];
+
+        // 3. Custo por Veículo (Top 10)
+        $custosManutencaoPorVeiculo = Manutencao::where('man_emp_id', $idEmpresa)
+            ->whereBetween('man_data_inicio', [$startDate, $endDate])
+            ->groupBy('man_vei_id')
+            ->select('man_vei_id', DB::raw('SUM(man_custo_total) as total'))
+            ->pluck('total', 'man_vei_id');
+
+        $custosAbastecimentoPorVeiculo = Abastecimento::where('aba_emp_id', $idEmpresa)
+            ->whereBetween('aba_data', [$startDate, $endDate])
+            ->groupBy('aba_vei_id')
+            ->select('aba_vei_id', DB::raw('SUM(aba_vlr_tot) as total'))
+            ->pluck('total', 'aba_vei_id');
+
+        $custosCombinados = [];
+        foreach ($custosManutencaoPorVeiculo as $vei_id => $total) {
+            $custosCombinados[$vei_id] = ($custosCombinados[$vei_id] ?? 0) + $total;
+        }
+        foreach ($custosAbastecimentoPorVeiculo as $vei_id => $total) {
+            $custosCombinados[$vei_id] = ($custosCombinados[$vei_id] ?? 0) + $total;
+        }
+
+        arsort($custosCombinados); // Ordena do maior para o menor custo
+        $custosCombinados = array_slice($custosCombinados, 0, 10, true); // Pega os 10 maiores
+
+        $veiculoIds = array_keys($custosCombinados);
+        $veiculos = Veiculo::whereIn('vei_id', $veiculoIds)->pluck('vei_placa', 'vei_id');
+
+        $custoPorVeiculoData = [
+            'labels' => [],
+            'data' => [],
+        ];
+        foreach ($custosCombinados as $vei_id => $total) {
+            $custoPorVeiculoData['labels'][] = $veiculos[$vei_id] ?? 'ID ' . $vei_id;
+            $custoPorVeiculoData['data'][] = round($total, 2);
+        }
+
+        return response()->json([
+            'custosPeriodo' => $custosPeriodoData,
+            'evolucaoCustos' => $evolucaoCustosData,
+            'custoPorVeiculo' => $custoPorVeiculoData,
+        ]);
     }
 }

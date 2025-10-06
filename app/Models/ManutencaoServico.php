@@ -54,7 +54,7 @@ class ManutencaoServico extends Pivot
     /**
      * Define o relacionamento com a Manutenção principal.
      */
-    public function manutencao(): BelongsTo
+    public function manutencao()
     {
         return $this->belongsTo(Manutencao::class);
     }
