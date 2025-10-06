@@ -69,7 +69,7 @@ class Abastecimento extends Model
     /**
      * Define a relação: um abastecimento foi feito em um Fornecedor (posto).
      */
-    public function fornecedor(): BelongsTo
+    public function fornecedor()
     {
         return $this->belongsTo(Fornecedor::class, 'aba_for_id', 'for_id');
     }

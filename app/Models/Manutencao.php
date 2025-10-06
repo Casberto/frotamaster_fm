@@ -34,6 +34,13 @@ class Manutencao extends Model
         'man_status',
     ];
 
+    protected $casts = [
+        'man_data_inicio' => 'date',
+        'man_data_fim' => 'date',
+        'man_garantia' => 'date',
+        'man_prox_revisao_data' => 'date',
+    ];
+
     /**
      * Relação: Uma manutenção pertence a um Veículo.
      */

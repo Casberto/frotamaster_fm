@@ -115,8 +115,22 @@ class ManutencaoController extends Controller
             'man_custo_mao_de_obra' => ['nullable', 'string'],
             'man_responsavel' => ['nullable', 'string', 'max:255'],
             'man_nf' => ['nullable', 'string', 'max:255'],
-            'man_prox_revisao_data' => ['nullable', 'date', 'after_or_equal:man_data_inicio'],
-            'man_prox_revisao_km' => ['nullable', 'integer', 'min:' . $request->input('man_km', 0)],
+            'man_prox_revisao_data' => [
+                'nullable', 
+                'date', 
+                'after_or_equal:man_data_inicio',
+                Rule::requiredIf(function () use ($request) {
+                    return $request->input('man_tipo') === 'preventiva' && $request->input('man_status') === 'concluida' && empty($request->input('man_prox_revisao_km'));
+                }),
+            ],
+            'man_prox_revisao_km' => [
+                'nullable', 
+                'integer', 
+                'min:' . $request->input('man_km', 0),
+                Rule::requiredIf(function () use ($request) {
+                    return $request->input('man_tipo') === 'preventiva' && $request->input('man_status') === 'concluida' && empty($request->input('man_prox_revisao_data'));
+                }),
+            ],
             'man_status' => ['required', Rule::in(['agendada', 'em_andamento', 'concluida', 'cancelada'])],
             'servicos' => ['nullable', 'array'],
             'servicos.*.id' => ['required_with:servicos', 'integer', Rule::exists('servicos', 'ser_id')->where('ser_emp_id', $idEmpresa)],

@@ -13,6 +13,7 @@
         
         <!-- AlpineJS -->
         <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -22,7 +23,7 @@
 
     </head>
     <body class="font-sans antialiased">
-        <div x-data="{ sidebarOpen: false }" class="min-h-screen flex">
+        <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-gray-100">
             <!-- Sidebar -->
             <aside 
                 class="w-64 flex-shrink-0 fixed inset-y-0 left-0 z-40 transform lg:translate-x-0 transition-transform duration-200 ease-in-out"
@@ -57,6 +58,9 @@
                 </main>
             </div>
         </div>
+
+        {{-- CORREÇÃO: Espaço reservado no final da página para renderizar os modais --}}
+        @stack('modals')
 
         {{-- SCRIPT LIBS --}}
         <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -94,3 +98,4 @@
         </script>
     </body>
 </html>
+
