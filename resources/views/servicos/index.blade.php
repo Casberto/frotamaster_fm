@@ -17,7 +17,7 @@
                 <table class="w-full text-sm text-left">
                     <thead>
                         <tr>
-                            <th scope="col" class="px-6 py-3">Nome do Serviço</th>
+                            <th scope="col" class="px-6 py-3">Código do Serviço</th>
                             <th scope="col" class="px-6 py-3">Descrição</th>
                             <th scope="col" class="px-6 py-3 text-right">Ações</th>
                         </tr>

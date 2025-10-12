@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('for_contato_email')->nullable();
             $table->string('for_contato_telefone')->nullable();
             $table->text('for_endereco')->nullable();
+            $table->enum('for_tipo', ['oficina', 'posto', 'ambos', 'outro'])->default('outro')->comment('Tipo do fornecedor: Oficina, Posto de Combustível, Ambos, ou Outro.');
+            $table->tinyInteger('for_status')->default(1)->comment('1-Ativo, 2-Inativo');
             $table->text('for_observacoes')->nullable();
             $table->timestamps();
             $table->softDeletes();

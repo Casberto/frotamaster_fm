@@ -174,6 +174,30 @@
                 </div>
             </div>
 
+            {{-- Módulo Cadastros --}}
+            <div>
+                <button @click="open = (open === 'cadastros' ? '' : 'cadastros')" class="sidebar-link w-full flex justify-between items-center">
+                    <div class="flex items-center">
+                        <span class="mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a6.759 6.759 0 0 1 0 1.905c-.008.379.137.752.43.992l1.004.827a1.125 1.125 0 0 1 .26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.333.183-.582.495-.645.87l-.213 1.28c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.759 6.759 0 0 1 0-1.905c.008-.379-.137-.752-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.645-.87l.213-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                        </span>
+                        <span>Cadastros</span>
+                    </div>
+                    <svg :class="{'rotate-180': open === 'cadastros'}" class="h-5 w-5 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+                <div x-show="open === 'cadastros'" x-transition class="pl-8 space-y-1 mt-1">
+                    <a href="{{ route('servicos.index') }}" class="sidebar-submenu-link @if(request()->routeIs('servicos.*')) active @endif">
+                        <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" /></svg></span>
+                        <span>Serviços</span>
+                    </a>
+                    <a href="{{ route('fornecedores.index') }}" class="sidebar-submenu-link @if(request()->routeIs('fornecedores.*')) active @endif">
+                        <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /><path d="M3 4a1 1 0 011-1h10a1 1 0 011 1v1h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1h-9v-1H6a1 1 0 01-1-1V6a1 1 0 011-1h1V4z" /></svg></span>
+                        <span>Fornecedores</span>
+                    </a>
+                    
+                </div>
+            </div>
+
             {{-- Módulo Configurações --}}
             <div>
                 <button @click="open = (open === 'configuracoes' ? '' : 'configuracoes')" class="sidebar-link w-full flex justify-between items-center">
@@ -186,14 +210,6 @@
                     <svg :class="{'rotate-180': open === 'configuracoes'}" class="h-5 w-5 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                 </button>
                 <div x-show="open === 'configuracoes'" x-transition class="pl-8 space-y-1 mt-1">
-                    <a href="{{ route('servicos.index') }}" class="sidebar-submenu-link @if(request()->routeIs('servicos.*')) active @endif">
-                        <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" /></svg></span>
-                        <span>Serviços</span>
-                    </a>
-                    <a href="{{ route('fornecedores.index') }}" class="sidebar-submenu-link @if(request()->routeIs('fornecedores.*')) active @endif">
-                        <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /><path d="M3 4a1 1 0 011-1h10a1 1 0 011 1v1h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1h-9v-1H6a1 1 0 01-1-1V6a1 1 0 011-1h1V4z" /></svg></span>
-                        <span>Fornecedores</span>
-                    </a>
                     <a href="{{ route('logs.index') }}" class="sidebar-submenu-link @if(request()->routeIs('logs.index')) active @endif">
                         <span class="mr-3">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>

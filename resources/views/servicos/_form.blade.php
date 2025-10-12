@@ -12,12 +12,12 @@
 <div class="form-section">
     <div class="space-y-6">
         <div>
-            <label for="ser_nome" class="block font-medium text-sm text-gray-700">Nome do Serviço*</label>
-            <input type="text" name="ser_nome" id="ser_nome" class="mt-1 block w-full" value="{{ old('ser_nome', $servico->ser_nome ?? '') }}" required autofocus>
+            <label for="ser_nome" class="block font-medium text-sm text-gray-700">Código do Serviço*</label>
+            <input type="text" name="ser_nome" id="ser_nome" class="mt-1 block w-full" value="{{ old('ser_nome', $servico->ser_nome ?? '') }}" required autofocus maxlength="20">
         </div>
         <div>
-            <label for="ser_descricao" class="block font-medium text-sm text-gray-700">Descrição</label>
-            <textarea name="ser_descricao" id="ser_descricao" rows="4" class="mt-1 block w-full">{{ old('ser_descricao', $servico->ser_descricao ?? '') }}</textarea>
+            <label for="ser_descricao" class="block font-medium text-sm text-gray-700">Descrição*</label>
+            <textarea name="ser_descricao" id="ser_descricao" rows="4" class="mt-1 block w-full" required>{{ old('ser_descricao', $servico->ser_descricao ?? '') }}</textarea>
         </div>
     </div>
 </div>
