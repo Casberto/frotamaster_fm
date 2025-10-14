@@ -14,36 +14,29 @@ class Fornecedor extends Model
     protected $table = 'fornecedores';
     protected $primaryKey = 'for_id';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'for_emp_id',
         'for_nome_fantasia',
         'for_razao_social',
         'for_cnpj_cpf',
-        'for_tipo', // Adicionado
+        'for_tipo',
         'for_contato_email',
         'for_contato_telefone',
         'for_endereco',
         'for_observacoes',
-        'for_ativo', // Adicionado
+        'for_ativo',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
+
     protected $casts = [
         'for_ativo' => 'boolean',
     ];
 
-    /**
-     * Accessor para formatar o tipo de fornecedor para exibição.
-     */
+    public function getRouteKeyName()
+    {
+        return 'for_id';
+    }
+
     protected function tipoFormatado(): Attribute
     {
         return Attribute::make(
@@ -57,9 +50,6 @@ class Fornecedor extends Model
         );
     }
 
-    /**
-     * Accessor para formatar o status para exibição.
-     */
     protected function statusFormatado(): Attribute
     {
         return Attribute::make(

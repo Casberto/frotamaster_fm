@@ -82,4 +82,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Licenca::class, 'id_usuario_criador');
     }
+
+    public function perfis()
+    {
+        return $this->belongsToMany(Perfil::class, 'usuario_perfis', 'usp_usr_id', 'usp_per_id');
+    }
 }

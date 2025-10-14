@@ -11,6 +11,8 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\Admin\LicenseController;
 use App\Http\Controllers\ServicoController;
 use App\Http\Controllers\FornecedorController;
+use App\Http\Controllers\Admin\PermissaoController;
+use App\Http\Controllers\PerfilController;
 
 
 // Rota para a página inicial
@@ -45,6 +47,7 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('abastecimentos', AbastecimentoController::class);
     Route::resource('servicos', ServicoController::class);
     Route::resource('fornecedores', FornecedorController::class);
+    Route::resource('perfis', PerfilController::class);
 
     // Rotas AJAX para o Dashboard
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
@@ -65,6 +68,9 @@ Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->gro
 
     // CRUD de Licenças
     Route::resource('licencas', LicenseController::class);
+
+    // CRUD de Permissões
+    Route::resource('permissoes', PermissaoController::class);
 });
 
 
