@@ -1,83 +1,87 @@
 <x-guest-layout>
-    {{-- 
-        Este bloco de estilo é adicionado para sobrescrever os estilos do formulário 
-        incluído ('admin.empresas._form'), garantindo a consistência visual
-        com a tela de login sem modificar o arquivo original do formulário.
-    --}}
-    <style>
-        #company-register-form .form-section label,
-        #company-register-form .form-section .form-section-title {
-            color: #e2e8f0;
-        }
-        #company-register-form .form-section .form-section-title {
-            border-bottom-color: #4a5568;
-        }
-        #company-register-form .form-section input,
-        #company-register-form .form-section select {
-            background-color: #374151 !important;
-            border-color: #4b5563 !important;
-            color: #ffffff !important;
-        }
-        #company-register-form .form-section input:focus,
-        #company-register-form .form-section select:focus {
-            --tw-ring-color: #3b82f6 !important;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 1px var(--tw-ring-color) !important;
-        }
-        #company-register-form .flex.items-center.justify-end.mt-8 {
-            display: none;
-        }
-    </style>
-
-    <div class="w-full min-h-screen flex flex-col justify-center sm:min-h-0 sm:h-auto sm:max-w-2xl px-6 py-8 bg-gray-800 sm:shadow-md overflow-hidden sm:rounded-lg">
-        <div class="flex flex-col items-center">
-            <a href="/">
-                <img src="{{ asset('img/logo.png') }}" alt="Frotamaster Logo" class="w-50 h-20">
+    <div class="w-full sm:max-w-2xl bg-white shadow-2xl rounded-2xl overflow-hidden">
+        <!-- Cabeçalho Azul -->
+        <div class="bg-blue-600 px-6 py-8 text-center">
+            <a href="/" class="inline-block mb-4">
+                <img src="{{ asset('img/logo.png') }}" alt="Frotamaster Logo" class="h-16 w-auto mx-auto">
             </a>
-            <h1 class="text-white text-3xl font-bold mt-2">Cadastre sua Empresa</h1>
-            <p class="text-gray-400 mt-1">Comece a gerenciar sua frota hoje mesmo.</p>
+            <h1 class="text-2xl font-bold text-white mt-4">Cadastre sua Empresa</h1>
+            <p class="text-blue-200 mt-1 text-sm">Comece a gerenciar sua frota hoje mesmo.</p>
         </div>
 
-        @if (session('error'))
-            <div class="mt-4 bg-red-500 text-white p-4 rounded-md">{{ session('error') }}</div>
-        @endif
+        <!-- Formulário -->
+        <div x-data="{ openModal: false }" class="p-6 sm:p-8">
+            @if (session('error'))
+                <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+                    <p class="font-bold">Ocorreu um erro</p>
+                    <p>{{ session('error') }}</p>
+                </div>
+            @endif
 
-        <form method="POST" action="{{ route('company.store') }}" class="mt-6">
-            @csrf
-            
-            <div id="company-register-form">
+            <form method="POST" action="{{ route('company.store') }}">
+                @csrf
+
                 @php $empresa = new \App\Models\Empresa(); @endphp
                 @include('admin.empresas._form', ['empresa' => $empresa])
-            </div>
 
-            <div class="mt-6">
-                <button type="submit" class="w-full justify-center inline-flex items-center px-4 py-3 bg-gray-200 border border-transparent rounded-md font-semibold text-base text-gray-800 uppercase tracking-widest hover:bg-gray-300 focus:bg-gray-300 active:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                    Cadastrar e Acessar
-                </button>
-            </div>
+                {{-- Termos de Uso --}}
+                <div class="mt-6 text-center text-sm text-gray-500">
+                    Ao continuar, você concorda com nossos
+                    <a href="#" @click.prevent="openModal = true" class="underline text-blue-600 hover:text-blue-800">
+                        Termos de Uso e Política de Privacidade
+                    </a>.
+                </div>
 
-            <div class="text-center mt-6">
-                <a class="underline text-sm text-gray-400 hover:text-gray-200" href="{{ route('login') }}">
-                    Já possui uma conta? Acesse aqui
-                </a>
+                <div class="mt-6">
+                    <x-primary-button class="w-full justify-center text-base py-3 group">
+                        <span>Cadastrar e Acessar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </x-primary-button>
+                </div>
+
+                <div class="text-center mt-6">
+                    <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">
+                        Já possui uma conta? Acesse aqui
+                    </a>
+                </div>
+            </form>
+
+            <!-- Modal dos Termos de Uso -->
+            <div x-show="openModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75" x-cloak>
+                <div @click.away="openModal = false" class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col">
+                    <div class="flex justify-between items-center p-4 border-b">
+                        <h2 class="text-xl font-semibold">Termos de Uso e Política de Privacidade</h2>
+                        <button @click="openModal = false" class="text-gray-500 hover:text-gray-800">&times;</button>
+                    </div>
+                    <div class="p-6 overflow-y-auto">
+                        <h3 class="font-bold mb-2">Termos de Uso</h3>
+                        <p class="text-gray-600 mb-4 text-sm">
+                            [Aqui entrará o texto completo dos Termos de Uso do Frotamaster.]
+                        </p>
+                        <h3 class="font-bold mb-2">Política de Privacidade</h3>
+                        <p class="text-gray-600 text-sm">
+                            [Aqui entrará o texto da Política de Privacidade.]
+                        </p>
+                    </div>
+                    <div class="p-4 border-t bg-gray-50 text-right">
+                        <x-secondary-button @click="openModal = false">
+                            Fechar
+                        </x-secondary-button>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 
+    @push('scripts')
     {{-- SCRIPTS PARA A MÁSCARA --}}
-    {{-- 1. Incluindo a biblioteca jQuery (necessária para o plugin de máscara) --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    
-    {{-- 2. Incluindo a biblioteca jQuery Mask --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
-    {{-- 3. Seu script de inicialização da máscara (apenas para os campos desta tela) --}}
     <script type="text/javascript">
         $(document).ready(function(){
-            // Máscara para o campo CNPJ
             $('#cnpj').mask('00.000.000/0000-00', {reverse: true});
-
-            // Máscara para o campo de Telefone
             var SPMaskBehavior = function (val) {
                 return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
             },
@@ -89,4 +93,6 @@
             $('#telefone_contato').mask(SPMaskBehavior, spOptions);
         });
     </script>
+    @endpush
 </x-guest-layout>
+
