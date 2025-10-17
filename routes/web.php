@@ -14,7 +14,7 @@ use App\Http\Controllers\FornecedorController;
 use App\Http\Controllers\Admin\PermissaoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\UsuarioController;
-
+use App\Http\Controllers\MotoristaController;
 
 // Rota para a página inicial
 Route::get('/', function () {
@@ -50,6 +50,7 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('fornecedores', FornecedorController::class);
     Route::resource('perfis', PerfilController::class);
     Route::resource('usuarios', UsuarioController::class);
+    Route::resource('motoristas', MotoristaController::class);
 
     // Rotas AJAX para o Dashboard
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
