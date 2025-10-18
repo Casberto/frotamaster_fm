@@ -35,5 +35,10 @@ class Empresa extends Model
     {
         return $this->hasOne(Licenca::class, 'id_empresa')->where('status', 'ativo')->latest('data_vencimento');
     }
+
+    public function configuracoes()
+    {
+        return $this->hasMany(ConfiguracaoEmpresa::class, 'cfe_emp_id');
+    }
 }
 

@@ -81,7 +81,17 @@ class EmpresaController extends Controller
                 'status' => 'ativo',
             ]);
 
-            // 5. Envia o e-mail para o usuário definir a senha de forma explícita
+            // 5. Sincroniza as configurações padrão para a nova empresa
+            $configuracoesPadrao = ConfiguracaoPadrao::all();
+            foreach ($configuracoesPadrao as $configPadrao) {
+                ConfiguracaoEmpresa::create([
+                    'cfe_emp_id' => $empresa->id,
+                    'cfe_cfp_id' => $configPadrao->cfp_id,
+                    'cfe_valor'  => $configPadrao->cfp_valor, // Copia o valor padrão
+                ]);
+            }
+
+            // 6. Envia o e-mail para o usuário definir a senha de forma explícita
             $token = Password::broker()->createToken($user);
             $user->notify(new ResetPassword($token));
         });

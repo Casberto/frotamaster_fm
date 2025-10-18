@@ -12,6 +12,6 @@
     </button>
     <div x-show="open === 'admin'" x-transition class="pl-8 space-y-1 mt-1">
         <a href="{{ route('admin.empresas.index') }}" class="sidebar-submenu-link @if(request()->routeIs('admin.empresas.*')) active @endif">Gerenciar Empresas</a>
-        <a href="#" class="sidebar-submenu-link disabled">Gerenciar Licenças</a>
+        <a href="{{ route('admin.licencas.index') }}" class="sidebar-submenu-link">Gerenciar Licenças</a>
     </div>
 </div>

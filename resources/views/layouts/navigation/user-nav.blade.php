@@ -21,4 +21,4 @@
 @include('layouts.navigation.user.cadastros')
 
 {{-- Módulo Configurações --}}
-@include('layouts.navigation.user.configuracoes')
+@include('layouts.navigation.user.parametros')

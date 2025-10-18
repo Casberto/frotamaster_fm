@@ -15,6 +15,8 @@ use App\Http\Controllers\Admin\PermissaoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\MotoristaController;
+use App\Http\Controllers\Admin\ConfiguracaoPadraoController;
+use App\Http\Controllers\ConfiguracaoEmpresaController;
 
 // Rota para a página inicial
 Route::get('/', function () {
@@ -29,11 +31,10 @@ Route::view('/licenca-expirada', 'licenca-expirada')->middleware('auth')->name('
 
 // ROTA DE REDIRECIONAMENTO APÓS LOGIN
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'check.license'])->name('dashboard'); // Adicionado 'check.license' aqui também
+    ->middleware(['auth', 'verified', 'check.license'])->name('dashboard');
 
 
 // ROTAS DO USUÁRIO AUTENTICADO (CLIENTE DA EMPRESA)
-// A CORREÇÃO PRINCIPAL ESTÁ AQUI: ADICIONADO O 'check.license'
 Route::middleware(['auth', 'check.license'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -51,6 +52,11 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('perfis', PerfilController::class);
     Route::resource('usuarios', UsuarioController::class);
     Route::resource('motoristas', MotoristaController::class);
+
+    // --- CORREÇÃO: Sintaxe da Rota e Adição do POST ---
+    Route::get('parametros', [ConfiguracaoEmpresaController::class, 'index'])->name('parametros.index');
+    Route::post('parametros', [ConfiguracaoEmpresaController::class, 'update'])->name('parametros.update');
+
 
     // Rotas AJAX para o Dashboard
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
@@ -74,7 +80,13 @@ Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->gro
 
     // CRUD de Permissões
     Route::resource('permissoes', PermissaoController::class);
+
+     // CRUD de Configurações Padrão
+    Route::resource('configuracoes-padrao', ConfiguracaoPadraoController::class)->parameters([
+        'configuracoes-padrao' => 'configuracoes_padrao'
+    ]);
 });
 
 
 require __DIR__.'/auth.php';
+
