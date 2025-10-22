@@ -1,4 +1,4 @@
-{{-- resources/views/dashboard/components/vehicle-history-modal.blade.php --}}
+{{-- resources/views/dashboard/components/veiculos/vehicle-history-modal.blade.php --}}
 {{-- Este componente é o modal que exibe o histórico de manutenções e abastecimentos. --}}
 
 <div x-data="{
@@ -50,7 +50,7 @@
     x-cloak>
 
     <div @click.away="isOpen = false"
-        class="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+        class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
 
         <!-- Cabeçalho -->
         <div class="flex-shrink-0 flex justify-between items-center p-4 border-b">
@@ -225,3 +225,4 @@
         </div>
     </div>
 </div>
+

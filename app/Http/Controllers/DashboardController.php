@@ -29,9 +29,14 @@ class DashboardController extends Controller
             return view('dashboard.index'); // Para super-admin sem empresa
         }
 
-        $data = $this->dashboardService->getDashboardData();
-
-        return view('dashboard.index', $data);
+        try {
+            $data = $this->dashboardService->getDashboardData();
+            return view('dashboard.index', $data);
+        } catch (Exception $e) {
+            // Adiciona tratamento de erro para falhas na busca de dados
+            // Redireciona de volta com uma mensagem de erro
+            return back()->with('error', 'Não foi possível carregar os dados do dashboard. Erro: ' . $e->getMessage());
+        }
     }
 
     /**

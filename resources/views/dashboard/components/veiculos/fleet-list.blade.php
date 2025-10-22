@@ -1,12 +1,12 @@
-{{-- resources/views/dashboard/components/fleet-list.blade.php --}}
+{{-- resources/views/dashboard/components/veiculos/fleet-list.blade.php --}}
 {{-- Este componente exibe a lista interativa de veículos (accordion). --}}
 
 <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
     <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalhamento de Veículos</h3>
     <div class="space-y-4">
-        @forelse ($frota as $veiculo)
+        @forelse ($frota ?? [] as $veiculo)
             <div class="border rounded-lg overflow-hidden">
-                {{-- CORREÇÃO: O cabeçalho agora usa flex-wrap para se adaptar a telas menores --}}
+                {{-- Cabeçalho do Accordion --}}
                 <div @click="openVeiculo === {{ $veiculo->vei_id }} ? openVeiculo = null : openVeiculo = {{ $veiculo->vei_id }}" class="p-4 cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
                     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                         {{-- Informações do Veículo (Placa, Modelo) --}}
@@ -23,9 +23,10 @@
                     </div>
                 </div>
                 
+                {{-- Conteúdo do Accordion --}}
                 <div x-show="openVeiculo === {{ $veiculo->vei_id }}" x-collapse class="p-4 border-t bg-white">
                     @php
-                        $ultimaManutencao = $veiculo->manutencoes->first();
+                        $ultimaManutencao = $veiculo->manutencoes->where('man_status', 'concluida')->first();
                         $ultimaVerificacao = $veiculo->ultimoAbastecimento;
                     @endphp
                     
@@ -36,10 +37,10 @@
                             @if($ultimaManutencao)
                                 <p class="text-sm"><strong class="text-gray-600">Serviço:</strong> {{ $ultimaManutencao->servicos->pluck('ser_nome')->join(', ') ?: 'N/A' }}</p>
                                 <p class="text-sm"><strong class="text-gray-600">Fornecedor:</strong> {{ $ultimaManutencao->fornecedor->for_nome_fantasia ?? 'N/A' }}</p>
-                                <p class="text-sm"><strong class="text-gray-600">Data:</strong> {{ $ultimaManutencao->man_data_inicio->format('d/m/Y') }}</p>
+                                <p class="text-sm"><strong class="text-gray-600">Data:</strong> {{ $ultimaManutencao->man_data_fim ? $ultimaManutencao->man_data_fim->format('d/m/Y') : $ultimaManutencao->man_data_inicio->format('d/m/Y') }}</p>
                                 <p class="text-sm"><strong class="text-gray-600">Custo:</strong> R$ {{ number_format($ultimaManutencao->man_custo_total, 2, ',', '.') }}</p>
                             @else
-                                <p class="text-sm text-gray-500">Nenhum registro de manutenção.</p>
+                                <p class="text-sm text-gray-500">Nenhum registro de manutenção concluída.</p>
                             @endif
                         </div>
 
@@ -84,7 +85,7 @@
                         <div class="space-y-3">
                             <h4 class="font-semibold text-gray-700 border-b pb-1">Informações</h4>
                             <p class="text-sm"><strong class="text-gray-600">KM Atual:</strong> {{ number_format($veiculo->vei_km_atual, 0, ',', '.') }}</p>
-                            <p class="text-sm"><strong class="text-gray-600">Combustível:</strong> {{ Str::ucfirst($veiculo->vei_combustivel) }}</p>
+                            <p class="text-sm"><strong class="text-gray-600">Combustível:</strong> {{ $veiculo->combustivelTexto }}</p>
                             <p class="text-sm"><strong class="text-gray-600">Ano:</strong> {{ $veiculo->vei_ano_fab }}/{{ $veiculo->vei_ano_mod }}</p>
                         </div>
                     </div>

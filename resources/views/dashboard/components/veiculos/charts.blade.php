@@ -1,7 +1,7 @@
-{{-- resources/views/dashboard/components/charts.blade.php --}}
+{{-- resources/views/dashboard/components/veiculos/charts.blade.php --}}
 <div x-data="chartsComponent" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
 
-    {{-- CORREÇÃO: O cabeçalho agora funciona como um botão para minimizar/expandir os gráficos --}}
+    {{-- Cabeçalho agora funciona como um botão para minimizar/expandir os gráficos --}}
     <div @click="toggleCharts()" class="flex justify-between items-center cursor-pointer">
         <h3 class="text-xl font-semibold text-gray-800">Análise de Custos</h3>
         <button type="button" class="text-gray-500 hover:text-gray-700">
