@@ -12,20 +12,30 @@ use App\Models\ConfiguracaoPadrao;
 class ConfiguracaoEmpresaController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
         $idEmpresa = Auth::user()->id_empresa;
 
-        $configuracoes = ConfiguracaoEmpresa::where('cfe_emp_id', $idEmpresa)
-            ->with('configuracaoPadrao')
-            ->get();
-            
+        $query = ConfiguracaoEmpresa::where('cfe_emp_id', $idEmpresa)
+            ->with('configuracaoPadrao');
+
+        // Adiciona o filtro por termo de busca
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->whereHas('configuracaoPadrao', function ($q) use ($searchTerm) {
+                $q->where('cfp_chave', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('cfp_descricao', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        $configuracoes = $query->get();
+
         $configuracoesAgrupadas = $configuracoes->groupBy(function ($item) {
-             return $item->configuracaoPadrao->cfp_modulo ?? 'outros';
+            return optional($item->configuracaoPadrao)->cfp_modulo ?? 'outros';
         });
 
         return view('parametros.index', [
-            'configuracoesAgrupadas' => $configuracoesAgrupadas
+            'configuracoesAgrupadas' => $configuracoesAgrupadas,
         ]);
     }
 
@@ -59,7 +69,6 @@ class ConfiguracaoEmpresaController extends Controller
 
             DB::commit();
 
-            // CORREÇÃO: Redireciona para a rota correta 'parametros.index'
             return redirect()->route('parametros.index')->with('success', 'Parâmetros atualizados com sucesso!');
 
         } catch (\Exception $e) {

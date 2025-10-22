@@ -73,7 +73,6 @@ class Motorista extends Model
         'mot_cnh_primeira_habilitacao' => 'date',
         'mot_data_admissao' => 'date',
         'mot_data_demissao' => 'date',
-        'mot_status' => 'boolean',
     ];
 
     public function empresa()

@@ -79,7 +79,7 @@ return new class extends Migration
             $table->string('mot_chave_pix', 100)->nullable();
 
             // Controle
-            $table->boolean('mot_status')->default(true);
+            $table->string('mot_status', 50)->default('Ativo');
             $table->timestamps();
             $table->softDeletes();
         });
