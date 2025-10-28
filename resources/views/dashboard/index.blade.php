@@ -41,10 +41,13 @@
                         class="relative whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm focus:outline-none flex items-center group"
                         aria-current="page"
                     >
-                        <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                           <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-17.25 4.5h12.75m0 0H4.125M6 18.75h3.875m0 0h1.5M12 9.75V10.5m-2.063.146a3.75 3.75 0 0 1 5.275 0l.556.477a11.251 11.251 0 0 1 4.5 8.683c0 .34-.02.676-.058 1.012H5.558a11.318 11.318 0 0 1-.058-1.012c0-3.32 1.64-6.336 4.5-8.683l.556-.477Z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                            viewBox="0 0 256 256" 
+                            class="w-5 h-5 mr-2 fill-current">
+                            <path d="M240 112h-10.8l-27.78-62.5A16 16 0 0 0 186.8 40H69.2a16 16 0 0 0-14.62 9.5L26.8 112H16a8 8 0 0 0 0 16h8v80a16 16 0 0 0 16 16h24a16 16 0 0 0 16-16v-16h96v16a16 16 0 0 0 16 16h24a16 16 0 0 0 16-16v-80h8a8 8 0 0 0 0-16ZM69.2 56h117.6l24.89 56H44.31ZM64 208H40v-16h24Zm128 0v-16h24v16Zm24-32H40v-48h176ZM56 152a8 8 0 0 1 8-8h16a8 8 0 0 1 0 16H64a8 8 0 0 1-8-8Zm112 0a8 8 0 0 1 8-8h16a8 8 0 0 1 0 16h-16a8 8 0 0 1-8-8Z"/>
                         </svg>
                         <span>Veículos</span>
+
 
                         {{-- Notificação para Veículos --}}
                         @if(($manutencoesVencidasCount ?? 0) > 0 || ($alertasProximosCount ?? 0) > 0)

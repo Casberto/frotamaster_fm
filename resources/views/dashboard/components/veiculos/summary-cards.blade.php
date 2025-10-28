@@ -5,13 +5,15 @@
         class="block p-4 bg-white rounded-lg shadow hover:shadow-md transition group">
         <div class="flex items-center space-x-3">
             <div class="p-2 bg-green-100 rounded-full">
-                {{-- Ícone de carro (simples e limpo) --}}
-                <svg class="w-6 h-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M2.25 13.5h19.5M5.25 13.5V9.75a2.25 2.25 0 0 1 2.25-2.25h9a2.25 2.25 0 0 1 2.25 2.25V13.5M5.25 13.5a2.25 2.25 0 1 0 4.5 0m9 0a2.25 2.25 0 1 0 4.5 0" />
+                {{-- Ícone de veículo atualizado (no mesmo padrão visual) --}}
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 256 256" 
+                    class="w-6 h-6 text-green-600 fill-current">
+                    <path d="M240 112h-10.8l-27.78-62.5A16 16 0 0 0 186.8 40H69.2a16 16 0 0 0-14.62 9.5L26.8 112H16a8 8 0 0 0 0 16h8v80a16 16 0 0 0 16 16h24a16 16 0 0 0 16-16v-16h96v16a16 16 0 0 0 16 16h24a16 16 0 0 0 16-16v-80h8a8 8 0 0 0 0-16ZM69.2 56h117.6l24.89 56H44.31ZM64 208H40v-16h24Zm128 0v-16h24v16Zm24-32H40v-48h176ZM56 152a8 8 0 0 1 8-8h16a8 8 0 0 1 0 16H64a8 8 0 0 1-8-8Zm112 0a8 8 0 0 1 8-8h16a8 8 0 0 1 0 16h-16a8 8 0 0 1-8-8Z"/>
                 </svg>
             </div>
+
+
             <div>
                 <h3 class="text-sm font-medium text-gray-500">Veículos Ativos</h3>
                 <p class="mt-1 text-2xl font-bold text-gray-900">{{ $veiculosAtivosCount ?? 0 }}</p>
