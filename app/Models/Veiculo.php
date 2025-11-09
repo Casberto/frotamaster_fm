@@ -220,5 +220,13 @@ class Veiculo extends Model
     {
         return $this->hasMany(VeiDocumento::class, 'doc_vei_id', 'vei_id');
     }
+
+    /**
+     * Define o relacionamento com as Reservas.
+     */
+    public function reservas(): HasMany
+    {
+        return $this->hasMany(Reserva::class, 'res_vei_id', 'vei_id');
+    }
 }
 

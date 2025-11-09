@@ -46,7 +46,6 @@ return new class extends Migration
             ['cfp_modulo' => 'motoristas', 'cfp_chave' => 'usar_cnh_primeira_habilitacao', 'cfp_valor' => '1', 'cfp_tipo' => 'boolean', 'cfp_descricao' => 'Define se o campo "Primeira Habilitação" deve ser informado.', 'created_at' => $now, 'updated_at' => $now],
             ['cfp_modulo' => 'motoristas', 'cfp_chave' => 'usar_cnh_uf', 'cfp_valor' => '1', 'cfp_tipo' => 'boolean', 'cfp_descricao' => 'Define se o campo "UF da CNH" deve ser informado.', 'created_at' => $now, 'updated_at' => $now],
             ['cfp_modulo' => 'motoristas', 'cfp_chave' => 'usar_cnh_observacoes', 'cfp_valor' => '1', 'cfp_tipo' => 'boolean', 'cfp_descricao' => 'Define se o campo "Observações da CNH" deve ser informado.', 'created_at' => $now, 'updated_at' => $now],
-            ['cfp_modulo' => 'motoristas', 'cfp_chave' => 'bloqueia_cnh_vencida', 'cfp_valor' => '1', 'cfp_tipo' => 'boolean', 'cfp_descricao' => 'Bloqueia a atividade de motoristas com CNH vencida', 'created_at' => $now, 'updated_at' => $now],
             
             // --- Contato ---
             ['cfp_modulo' => 'motoristas', 'cfp_chave' => 'usar_email', 'cfp_valor' => '1', 'cfp_tipo' => 'boolean', 'cfp_descricao' => 'Define se o campo "Email" deve ser informado.', 'created_at' => $now, 'updated_at' => $now],

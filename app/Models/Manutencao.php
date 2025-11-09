@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Manutencao extends Model
 {
@@ -81,6 +82,17 @@ class Manutencao extends Model
     public function empresa()
     {
         return $this->belongsTo(Veiculo::class, 'id_empresa');
+    }
+
+    /**
+     * Relação: Uma manutenção pode estar ligada a muitas Reservas.
+     * (Embora na prática seja 1:1, a tabela pivô permite N:M)
+     */
+    public function reservas(): BelongsToMany
+    {
+        return $this->belongsToMany(Reserva::class, 'reserva_manutencoes', 'rma_man_id', 'rma_res_id')
+            ->using(ReservaManutencao::class)
+            ->withTimestamps();
     }
 
 }

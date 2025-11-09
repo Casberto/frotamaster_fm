@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
@@ -89,8 +90,24 @@ class User extends Authenticatable
         return $this->belongsToMany(Perfil::class, 'usuario_perfis', 'usp_usr_id', 'usp_per_id');
     }
 
-        public function motorista(): HasOne
+    public function motorista(): HasOne
     {
         return $this->hasOne(Motorista::class, 'mot_user_id', 'id');
+    }
+
+    /**
+     * Define o relacionamento com as Reservas que o usuário solicitou.
+     */
+    public function reservasSolicitadas(): HasMany
+    {
+        return $this->hasMany(Reserva::class, 'res_sol_id', 'id');
+    }
+
+    /**
+     * Define o relacionamento com os Logs de Auditoria de Reserva que o usuário gerou.
+     */
+    public function reservasAuditLogs(): HasMany
+    {
+        return $this->hasMany(ReservaAuditLog::class, 'ral_user_id', 'id');
     }
 }

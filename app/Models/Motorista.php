@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Motorista extends Model
@@ -83,5 +84,10 @@ class Motorista extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'mot_user_id');
+    }
+
+    public function reservas(): HasMany
+    {
+        return $this->hasMany(Reserva::class, 'res_mot_id', 'mot_id');
     }
 }

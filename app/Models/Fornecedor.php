@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Fornecedor extends Model
@@ -55,5 +56,21 @@ class Fornecedor extends Model
         return Attribute::make(
             get: fn () => $this->for_ativo ? 'Ativo' : 'Inativo'
         );
+    }
+
+    /**
+     * Define o relacionamento com as Manutenções.
+     */
+    public function manutencoes(): HasMany
+    {
+        return $this->hasMany(Manutencao::class, 'man_for_id', 'for_id');
+    }
+    
+    /**
+     * Define o relacionamento com as Reservas (de manutenção).
+     */
+    public function reservas(): HasMany
+    {
+        return $this->hasMany(Reserva::class, 'res_for_id', 'for_id');
     }
 }

@@ -17,6 +17,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\MotoristaController;
 use App\Http\Controllers\Admin\ConfiguracaoPadraoController;
 use App\Http\Controllers\ConfiguracaoEmpresaController;
+use App\Http\Controllers\ReservaController;
 
 // Rota para a página inicial
 Route::get('/', function () {
@@ -53,7 +54,32 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('usuarios', UsuarioController::class);
     Route::resource('motoristas', MotoristaController::class);
 
-    // --- CORREÇÃO: Sintaxe da Rota e Adição do POST ---
+    // Rotas de reservas
+    Route::resource('reservas', ReservaController::class);
+    Route::post('reservas/{reserva}/aprovar', [ReservaController::class, 'aprovar'])->name('reservas.aprovar');
+    Route::post('reservas/{reserva}/rejeitar', [ReservaController::class, 'rejeitar'])->name('reservas.rejeitar');
+    Route::post('reservas/{reserva}/cancelar', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
+    Route::post('reservas/{reserva}/iniciar', [ReservaController::class, 'iniciar'])->name('reservas.iniciar'); 
+    Route::post('reservas/{reserva}/finalizar', [ReservaController::class, 'finalizar'])->name('reservas.finalizar');
+    Route::post('reservas/{reserva}/revisar', [ReservaController::class, 'revisar'])->name('reservas.revisar');
+
+    // Rotas de abastecimentos em reservas
+    Route::post('reservas/{reserva}/abastecimentos', [ReservaController::class, 'attachAbastecimento'])->name('reservas.abastecimentos.attach');
+    Route::delete('reservas/{reserva}/abastecimentos/{abastecimento}', [ReservaController::class, 'detachAbastecimento'])->name('reservas.abastecimentos.detach');
+    
+    // Rotas de pedagios em reservas
+    Route::post('reservas/{reserva}/pedagios', [ReservaController::class, 'attachPedagio'])->name('reservas.pedagios.attach');
+    Route::delete('reservas/{reserva}/pedagio/{pedagio}', [ReservaController::class, 'detachPedagio'])->name('reservas.pedagios.detach');
+
+    // Rotas de passageiros em reservas
+    Route::post('reservas/{reserva}/passageiros', [ReservaController::class, 'attachPassageiro'])->name('reservas.passageiros.attach');
+    Route::delete('reservas/{reserva}/passageiro/{passageiro}', [ReservaController::class, 'detachPassageiro'])->name('reservas.passageiros.detach');
+
+    // Rotas de manutencoes em reservas
+    Route::post('reservas/{reserva}/manutencoes', [ReservaController::class, 'attachManutencao'])->name('reservas.manutencoes.attach');
+    Route::delete('reservas/{reserva}/manutencao/{manutencao}', [ReservaController::class, 'detachManutencao'])->name('reservas.manutencoes.detach');
+
+    // Rotas de parametros
     Route::get('parametros', [ConfiguracaoEmpresaController::class, 'index'])->name('parametros.index');
     Route::post('parametros', [ConfiguracaoEmpresaController::class, 'update'])->name('parametros.update');
 

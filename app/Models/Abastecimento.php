@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Abastecimento extends Model
 {
@@ -72,5 +74,16 @@ class Abastecimento extends Model
     public function fornecedor()
     {
         return $this->belongsTo(Fornecedor::class, 'aba_for_id', 'for_id');
+    }
+
+    /**
+     * Define a relação: um abastecimento pode estar ligado a muitas Reservas.
+     * (Embora na prática seja 1:1, a tabela pivô permite N:M)
+     */
+    public function reservas(): BelongsToMany
+    {
+        return $this->belongsToMany(Reserva::class, 'reserva_abastecimentos', 'rab_abs_id', 'rab_res_id')
+            ->using(ReservaAbastecimento::class)
+            ->withTimestamps();
     }
 }

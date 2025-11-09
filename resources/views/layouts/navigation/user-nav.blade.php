@@ -11,6 +11,9 @@
 {{-- Módulo Abastecimentos --}}
 @include('layouts.navigation.user.abastecimentos')
 
+{{-- Módulo Agendamentos --}}
+@include('layouts.navigation.user.agendamentos')
+
 {{-- Módulo Documentos --}}
 @include('layouts.navigation.user.documentos')
 
