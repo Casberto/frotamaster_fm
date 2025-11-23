@@ -8,16 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Relations\Pivot; // Import Pivot
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Reserva extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'res_id';
 
     protected $fillable = [
         'res_emp_id',
+        'res_codigo',
         'res_vei_id',
         'res_sol_id',
         'res_mot_id',
@@ -38,9 +39,9 @@ class Reserva extends Model
         'res_hora_saida',
         'res_hora_chegada',
         'res_obs_finais',
-        'res_revisor_id', // <-- Novo
-        'res_data_revisao', // <-- Novo
-        'res_obs_revisor', // <-- Novo
+        'res_revisor_id',
+        'res_data_revisao',
+        'res_obs_revisor',
         'created_by',
         'updated_by',
     ];
@@ -51,103 +52,77 @@ class Reserva extends Model
         'res_dia_todo' => 'boolean',
         'res_hora_saida' => 'datetime',
         'res_hora_chegada' => 'datetime',
-        'res_data_revisao' => 'datetime', // <-- Novo
+        'res_data_revisao' => 'datetime',
     ];
 
-    /**
-     * Boot the model.
-     * Define valores padrão para empresa, solicitante e criador.
-     */
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($reserva) {
             if (Auth::check()) {
-                $reserva->res_emp_id = $reserva->res_emp_id ?: Auth::user()->id_empresa;
-                $reserva->res_sol_id = $reserva->res_sol_id ?: Auth::id();
-                $reserva->created_by = $reserva->created_by ?: Auth::id();
-                // Status inicial sempre pendente ao criar
-                $reserva->res_status = 'pendente';
+                $user = Auth::user();
+                $reserva->res_emp_id = $reserva->res_emp_id ?: $user->id_empresa;
+                $reserva->res_sol_id = $reserva->res_sol_id ?: $user->id;
+                $reserva->created_by = $reserva->created_by ?: $user->id;
+                
+                if (!$reserva->res_status) {
+                    $reserva->res_status = 'pendente';
+                }
+
+                if (!$reserva->res_codigo) {
+                    $maxCodigo = static::where('res_emp_id', $reserva->res_emp_id)->max('res_codigo');
+                    $reserva->res_codigo = $maxCodigo ? $maxCodigo + 1 : 1;
+                }
             }
         });
 
         static::updating(function ($reserva) {
             if (Auth::check()) {
-                $reserva->updated_by = $reserva->updated_by ?: Auth::id();
+                $reserva->updated_by = Auth::id();
             }
         });
     }
 
-    // --- Relacionamentos ---
-
-    public function empresa(): BelongsTo
+    public function getTituloAttribute(): string
     {
-        return $this->belongsTo(Empresa::class, 'res_emp_id', 'id');
+        $placa = 'Veículo a definir';
+        if ($this->relationLoaded('veiculo') && $this->veiculo) {
+            $placa = $this->veiculo->vei_placa;
+        }
+        return "#{$this->res_codigo} - " . $placa;
     }
 
-    public function veiculo(): BelongsTo
-    {
-        return $this->belongsTo(Veiculo::class, 'res_vei_id', 'vei_id');
-    }
+    public function isPendente() { return $this->res_status === 'pendente'; }
+    public function isAprovada() { return $this->res_status === 'aprovada'; }
+    public function isEmUso() { return $this->res_status === 'em_uso'; }
+    public function isEmRevisao() { return $this->res_status === 'em_revisao'; }
+    public function isEncerrada() { return $this->res_status === 'encerrada'; }
+    public function isCancelada() { return $this->res_status === 'cancelada'; }
+    public function isRejeitada() { return $this->res_status === 'rejeitada'; }
 
-    public function solicitante(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'res_sol_id', 'id');
-    }
+    public function empresa(): BelongsTo { return $this->belongsTo(Empresa::class, 'res_emp_id', 'id'); }
+    public function veiculo(): BelongsTo { return $this->belongsTo(Veiculo::class, 'res_vei_id', 'vei_id'); }
+    public function solicitante(): BelongsTo { return $this->belongsTo(User::class, 'res_sol_id', 'id'); }
+    public function motorista(): BelongsTo { return $this->belongsTo(Motorista::class, 'res_mot_id', 'mot_id'); }
+    public function fornecedor(): BelongsTo { return $this->belongsTo(Fornecedor::class, 'res_for_id', 'for_id'); }
+    public function revisor(): BelongsTo { return $this->belongsTo(User::class, 'res_revisor_id', 'id'); }
+    
+    public function pedagios(): HasMany { return $this->hasMany(ReservaPedagio::class, 'rpe_res_id', 'res_id'); }
+    public function passageiros(): HasMany { return $this->hasMany(ReservaPassageiro::class, 'rpa_res_id', 'res_id'); }
+    public function auditLogs(): HasMany { return $this->hasMany(ReservaAuditLog::class, 'ral_res_id', 'res_id'); }
 
-    public function motorista(): BelongsTo
-    {
-        return $this->belongsTo(Motorista::class, 'res_mot_id', 'mot_id');
-    }
-
-    public function fornecedor(): BelongsTo
-    {
-        return $this->belongsTo(Fornecedor::class, 'res_for_id', 'for_id');
-    }
-
-     /**
-     * Relação com o usuário que revisou/encerrou a reserva.
-     */
-    public function revisor(): BelongsTo // <-- Nova Relação
-    {
-        return $this->belongsTo(User::class, 'res_revisor_id', 'id');
-    }
-
-    public function pedagios(): HasMany
-    {
-        return $this->hasMany(ReservaPedagio::class, 'rpe_res_id', 'res_id');
-    }
-
-    public function passageiros(): HasMany
-    {
-        return $this->hasMany(ReservaPassageiro::class, 'rpa_res_id', 'res_id');
-    }
-
-    public function auditLogs(): HasMany
-    {
-        return $this->hasMany(ReservaAuditLog::class, 'ral_res_id', 'res_id');
-    }
-
-     /**
-     * Relação Muitos-para-Muitos com Abastecimentos, usando a classe Pivot customizada.
-     */
     public function abastecimentos(): BelongsToMany
     {
         return $this->belongsToMany(Abastecimento::class, 'reserva_abastecimentos', 'rab_res_id', 'rab_abs_id')
-                    ->using(ReservaAbastecimento::class) // Especifica a classe Pivot
+                    ->using(ReservaAbastecimento::class)
                     ->withPivot('rab_mot_id', 'rab_emp_id', 'rab_forma_pagto', 'rab_reembolso', 'created_at');
     }
 
-     /**
-     * Relação Muitos-para-Muitos com Manutenções, usando a classe Pivot customizada.
-     */
     public function manutencoes(): BelongsToMany
     {
         return $this->belongsToMany(Manutencao::class, 'reserva_manutencoes', 'rma_res_id', 'rma_man_id')
-                    ->using(ReservaManutencao::class) // Especifica a classe Pivot
+                    ->using(ReservaManutencao::class)
                     ->withPivot('rma_mot_id', 'rma_emp_id', 'created_at');
     }
-
 }
-

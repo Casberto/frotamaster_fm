@@ -9,13 +9,10 @@ use App\Models\Manutencao;
 use App\Models\Abastecimento;
 use App\Models\Fornecedor;
 use App\Models\Servico;
-use App\Models\Motorista; // Adicionado
+use App\Models\Motorista;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-/**
- * Classe de serviço para encapsular a lógica de negócio do Dashboard.
- */
 class DashboardService
 {
     private $idEmpresa;
@@ -30,11 +27,6 @@ class DashboardService
         $this->thirtyDaysFromNow = Carbon::today()->addDays(30);
     }
 
-    /**
-     * Reúne todos os dados necessários para a view do dashboard.
-     *
-     * @return array
-     */
     public function getDashboardData()
     {
         $idEmpresa = Auth::user()->id_empresa;
@@ -47,7 +39,6 @@ class DashboardService
         // --- DADOS DE VEÍCULOS ---
         $veiculosAtivosCount = Veiculo::where('vei_emp_id', $idEmpresa)->where('vei_status', 1)->count();
 
-        // Manutenções Vencidas (Status diferente de Concluída E data de início passada)
         $manutencoesVencidas = Manutencao::where('man_emp_id', $idEmpresa)
             ->where('man_status', '!=', 'Concluída')
             ->where('man_data_inicio', '<', $hoje)
@@ -55,7 +46,6 @@ class DashboardService
             ->orderBy('man_data_inicio', 'asc')
             ->get();
 
-        // Alertas Próximos (Agendadas para os próximos 15 dias)
         $alertasProximos = Manutencao::where('man_emp_id', $idEmpresa)
             ->where('man_status', 'Agendada')
             ->whereBetween('man_data_inicio', [$hoje, $proximos15Dias])
@@ -63,7 +53,6 @@ class DashboardService
             ->orderBy('man_data_inicio', 'asc')
             ->get();
 
-        // Custos Mensais (Manutenções Concluídas e Abastecimentos do mês corrente)
         $custosManutencoes = Manutencao::where('man_emp_id', $idEmpresa)
             ->where('man_status', 'Concluída')
             ->whereBetween('man_data_fim', [$inicioMes, $fimMes])
@@ -89,22 +78,27 @@ class DashboardService
         $countManutencoesMes = $custosManutencoes->count();
         $countAbastecimentosMes = $custosAbastecimentos->count();
 
-        // Top Fornecedor por Tipo
-        $topFornecedoresPorTipo = [
-            'mecanica' => $this->getTopFornecedorPorTipo($idEmpresa, 'mecanica', $inicioMes),
-            'combustiveis' => $this->getTopFornecedorPorTipo($idEmpresa, 'combustiveis', $inicioMes),
-            'operacionais' => $this->getTopFornecedorPorTipo($idEmpresa, 'operacionais', $inicioMes),
-            'gestao' => $this->getTopFornecedorPorTipo($idEmpresa, 'gestao', $inicioMes),
-            'outro' => $this->getTopFornecedorPorTipo($idEmpresa, 'outro', $inicioMes),
+        // --- TOP FORNECEDORES POR GRUPO ---
+        // Definimos grupos para englobar os novos tipos detalhados
+        $grupos = [
+            'manutencao' => ['oficina', 'auto_eletrica', 'funilaria', 'borracharia', 'concessionaria', 'autocentro', 'loja_pecas', 'vidracaria', 'mecanica', 'ambos'],
+            'combustivel' => ['posto', 'posto_gnv', 'eletroposto', 'ambos'],
+            'servicos' => ['lava_rapido', 'guincho', 'vistoria', 'rastreamento', 'estacionamento'],
+            'outros' => ['seguradora', 'despachante', 'concessionaria_rodovia', 'locadora', 'outro']
         ];
 
-        // Ranking de Serviços (Últimos 30 dias)
+        $topFornecedoresPorTipo = [
+            'manutencao' => $this->getTopFornecedorPorGrupo($idEmpresa, $grupos['manutencao'], $inicioMes),
+            'combustivel' => $this->getTopFornecedorPorGrupo($idEmpresa, $grupos['combustivel'], $inicioMes),
+            'servicos' => $this->getTopFornecedorPorGrupo($idEmpresa, $grupos['servicos'], $inicioMes),
+            'outros' => $this->getTopFornecedorPorGrupo($idEmpresa, $grupos['outros'], $inicioMes),
+        ];
+
         $rankingServicos = DB::table('manutencao_servico')
             ->join('servicos', 'manutencao_servico.ms_ser_id', '=', 'servicos.ser_id')
             ->join('manutencoes', 'manutencao_servico.ms_man_id', '=', 'manutencoes.man_id')
             ->where('manutencoes.man_emp_id', $idEmpresa)
-            // ->where('manutencoes.man_data_fim', '>=', $inicio30Dias) // Idealmente filtrar por data de conclusão
-            ->where('manutencoes.created_at', '>=', $inicio30Dias) // Fallback por data de criação
+            ->where('manutencoes.created_at', '>=', $inicio30Dias)
             ->select('servicos.ser_nome', DB::raw('count(*) as total'))
             ->groupBy('servicos.ser_id', 'servicos.ser_nome')
             ->orderByDesc('total')
@@ -112,7 +106,6 @@ class DashboardService
             ->get();
         $servicoMaisFrequente = $rankingServicos->first();
 
-        // Custo Médio por KM (Baseado em combustível)
         $custoCombustivelMes = $custosAbastecimentos->sum('valor');
         $veiculosEmpresa = Veiculo::where('vei_emp_id', $idEmpresa)->get();
         $totalKmRodadoMes = 0;
@@ -129,34 +122,19 @@ class DashboardService
         $custoMedioKm = ($totalKmRodadoMes > 0) ? ($custoCombustivelMes / $totalKmRodadoMes) : 0;
         $memoriaCalculoKm = "R$ " . number_format($custoCombustivelMes, 2, ',', '.') . " (Custo Combustível Mês) / " . number_format($totalKmRodadoMes, 0, ',', '.') . " KM (KM Rodados Mês)";
 
-
         // --- DADOS DE MOTORISTAS ---
         $motoristasBaseQuery = Motorista::where('mot_emp_id', $idEmpresa);
-
         $motoristasAtivosCount = (clone $motoristasBaseQuery)->where('mot_status', 'Ativo')->count();
-
         $statusBloqueio = ['Inativo', 'Bloqueado', 'Afastado', 'Aguardando documentação', 'Suspenso', 'Em análise', 'Rejeitado'];
         $motoristasBloqueados = (clone $motoristasBaseQuery)->whereIn('mot_status', $statusBloqueio)->get();
-
         $motoristasCnhVencida = (clone $motoristasBaseQuery)->whereNotNull('mot_cnh_data_validade')->where('mot_cnh_data_validade', '<', $hoje)->get();
-
-        $motoristasCnhAVencer = (clone $motoristasBaseQuery)
-            ->whereNotNull('mot_cnh_data_validade')
-            ->where('mot_cnh_data_validade', '>=', $hoje)
-            ->where('mot_cnh_data_validade', '<=', Carbon::now()->addDays(30)->format('Y-m-d'))
-            ->get();
-
+        $motoristasCnhAVencer = (clone $motoristasBaseQuery)->whereNotNull('mot_cnh_data_validade')->where('mot_cnh_data_validade', '>=', $hoje)->where('mot_cnh_data_validade', '<=', Carbon::now()->addDays(30)->format('Y-m-d'))->get();
         $novosMotoristasMes = (clone $motoristasBaseQuery)->whereBetween('created_at', [$inicioMes, $fimMes])->get();
-
         $motoristasEmTreinamento = (clone $motoristasBaseQuery)->where('mot_status', 'Em treinamento')->get();
         
-        // --- DADOS DA FROTA (Para lista de veículos) ---
         $frota = $this->getFleetData($inicioMes, $fimMes);
 
-
-        // --- RETORNO GERAL ---
         return [
-            // Veículos
             'veiculosAtivosCount' => $veiculosAtivosCount,
             'manutencoesVencidasCount' => $manutencoesVencidas->count(),
             'manutencoesVencidasLista' => $manutencoesVencidas,
@@ -173,8 +151,6 @@ class DashboardService
             'memoriaCalculoKm' => $memoriaCalculoKm,
             'frota' => $frota,
             'proximosLembretes' => $this->getUpcomingReminders(),
-
-            // Motoristas
             'motoristasAtivosCount' => $motoristasAtivosCount,
             'motoristasBloqueadosCount' => $motoristasBloqueados->count(),
             'motoristasBloqueadosLista' => $motoristasBloqueados,
@@ -189,22 +165,17 @@ class DashboardService
         ];
     }
 
-    /**
-     * Helper para buscar o top fornecedor por tipo.
-     * ATENÇÃO: Assume que a coluna `fornecedores.for_tipo` foi atualizada 
-     * para incluir 'mecanica', 'combustiveis', 'operacionais', 'gestao'.
-     */
-    private function getTopFornecedorPorTipo($idEmpresa, $tipo, $inicioMes)
+    // Alterado para aceitar array de tipos (Grupo)
+    private function getTopFornecedorPorGrupo($idEmpresa, array $tipos, $inicioMes)
     {
-        // Verifica se a coluna 'for_tipo' existe antes de tentar usá-la.
         if (!DB::getSchemaBuilder()->hasColumn('fornecedores', 'for_tipo')) {
-            return null; // Retorna nulo se a coluna não existir
+            return null;
         }
 
         $manutencoes = DB::table('manutencoes')
             ->join('fornecedores', 'manutencoes.man_for_id', '=', 'fornecedores.for_id')
             ->where('manutencoes.man_emp_id', $idEmpresa)
-            ->where('fornecedores.for_tipo', $tipo)
+            ->whereIn('fornecedores.for_tipo', $tipos) // whereIn para aceitar vários
             ->where('manutencoes.man_data_fim', '>=', $inicioMes)
             ->groupBy('man_for_id')
             ->select('man_for_id as for_id', DB::raw('COUNT(*) as total'));
@@ -212,7 +183,7 @@ class DashboardService
         $abastecimentos = DB::table('abastecimentos')
             ->join('fornecedores', 'abastecimentos.aba_for_id', '=', 'fornecedores.for_id')
             ->where('abastecimentos.aba_emp_id', $idEmpresa)
-            ->where('fornecedores.for_tipo', $tipo)
+            ->whereIn('fornecedores.for_tipo', $tipos) // whereIn para aceitar vários
             ->where('abastecimentos.aba_data', '>=', $inicioMes)
             ->groupBy('aba_for_id')
             ->select('aba_for_id as for_id', DB::raw('COUNT(*) as total'));
@@ -229,16 +200,13 @@ class DashboardService
         if ($topFornecedorId) {
             $fornecedor = Fornecedor::find($topFornecedorId->for_id);
             if ($fornecedor) {
-                $fornecedor->uso_total = $topFornecedorId->uso_total; // Adiciona a contagem
+                $fornecedor->uso_total = $topFornecedorId->uso_total;
             }
             return $fornecedor;
         }
         return null;
     }
 
-    /**
-     * Busca e processa os dados da frota.
-     */
     private function getFleetData(Carbon $startOfMonth, Carbon $endOfMonth)
     {
         $frota = Veiculo::where('vei_emp_id', $this->idEmpresa)
@@ -254,29 +222,22 @@ class DashboardService
         $start12Months = now()->subMonthsNoOverflow(11)->startOfMonth();
 
         $frota->each(function ($veiculo) use ($startOfMonth, $endOfMonth, $startOfLastMonth, $endOfLastMonth, $start12Months) {
-            // Custos Mensais (Mês Atual)
             $veiculo->custo_mensal_manutencao = $veiculo->manutencoes()->where('man_status', 'Concluída')->whereBetween('man_data_fim', [$startOfMonth, $endOfMonth])->sum('man_custo_total');
             $veiculo->custo_mensal_abastecimento = $veiculo->abastecimentos()->whereBetween('aba_data', [$startOfMonth, $endOfMonth])->sum('aba_vlr_tot');
             $veiculo->custo_total_mensal = $veiculo->custo_mensal_manutencao + $veiculo->custo_mensal_abastecimento;
 
-            // Custos Mensais (Mês Anterior)
             $veiculo->custo_anterior_manutencao = $veiculo->manutencoes()->where('man_status', 'Concluída')->whereBetween('man_data_fim', [$startOfLastMonth, $endOfLastMonth])->sum('man_custo_total');
             $veiculo->custo_anterior_abastecimento = $veiculo->abastecimentos()->whereBetween('aba_data', [$startOfLastMonth, $endOfLastMonth])->sum('aba_vlr_tot');
             $veiculo->custo_total_anterior = $veiculo->custo_anterior_manutencao + $veiculo->custo_anterior_abastecimento;
 
-            // Média 12 Meses
             $totalManutencao12 = $veiculo->manutencoes()->where('man_status', 'Concluída')->where('man_data_fim', '>=', $start12Months)->sum('man_custo_total');
             $totalAbastecimento12 = $veiculo->abastecimentos()->where('aba_data', '>=', $start12Months)->sum('aba_vlr_tot');
             $veiculo->media_custo_total_12_meses = ($totalManutencao12 + $totalAbastecimento12) / 12;
         });
 
-
         return $frota;
     }
 
-    /**
-     * Busca os próximos lembretes de manutenção.
-     */
     private function getUpcomingReminders()
     {
         return Manutencao::with('veiculo')
@@ -288,9 +249,6 @@ class DashboardService
             ->get();
     }
 
-    /**
-     * Busca dados para os gráficos com base no período.
-     */
     public function getChartData(Request $request): array
     {
         $period = (int)$request->input('period', 30);
@@ -356,7 +314,7 @@ class DashboardService
         $labels = [];
         $data = [];
         foreach ($custosCombinados as $id => $total) {
-            if (isset($veiculos[$id])) { // Verifica se o veículo ainda existe
+            if (isset($veiculos[$id])) {
                 $labels[] = $veiculos[$id];
                 $data[] = round($total, 2);
             }
@@ -365,4 +323,3 @@ class DashboardService
         return ['labels' => $labels, 'data' => $data];
     }
 }
-

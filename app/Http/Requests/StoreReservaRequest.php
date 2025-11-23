@@ -5,30 +5,56 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-use Illuminate\Contracts\Validation\Validator;
 
 class StoreReservaRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
+    // IDs de Permissão (Constantes para facilitar leitura, mas são os fixos do banco)
+    const PERM_CRIAR = 34;
+    const PERM_APROVAR = 39; // Define quem é gestor
+
     public function authorize(): bool
     {
-        return Auth::check();
+        return Auth::check() && Auth::user()->temPermissaoId(self::PERM_CRIAR);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    protected function prepareForValidation()
+    {
+        $user = Auth::user();
+
+        // REGRA: Se o usuário NÃO tem permissão de aprovar (ID 39), ele é considerado um "Motorista/Comum".
+        // Portanto, tentamos vincular automaticamente seu cadastro de motorista.
+        if (!$user->temPermissaoId(self::PERM_APROVAR)) {
+            
+            $motorista = $user->motorista;
+            
+            if ($motorista) {
+                $this->merge([
+                    'res_mot_id' => $motorista->mot_id,
+                ]);
+            }
+            // Se não tiver motorista vinculado, segue null ("A definir")
+        }
+        // Se TEM permissão 39, ele é gestor e tem liberdade total no form.
+    }
+
     public function rules(): array
     {
-        $empresaId = Auth::user()->id_empresa;
+        $user = Auth::user();
+        $empresaId = $user->id_empresa;
+
+        $tiposPermitidos = ['viagem'];
+        
+        // Apenas quem tem permissão de Aprovar (Gestor) pode criar manutenção
+        if ($user->temPermissaoId(self::PERM_APROVAR)) {
+            $tiposPermitidos[] = 'manutencao';
+        }
 
         return [
+            'res_tipo' => ['required', Rule::in($tiposPermitidos)],
+            
             'res_vei_id' => [
-                'required',
+                'nullable', 
+                Rule::requiredIf($this->input('res_tipo') === 'manutencao'),
                 Rule::exists('veiculos', 'vei_id')->where('vei_emp_id', $empresaId)
             ],
             'res_mot_id' => [
@@ -37,21 +63,26 @@ class StoreReservaRequest extends FormRequest
             ],
             'res_for_id' => [
                 'nullable',
+                Rule::requiredIf($this->input('res_tipo') === 'manutencao'),
                 Rule::exists('fornecedores', 'for_id')->where('for_emp_id', $empresaId)
             ],
-            'res_tipo' => 'required|in:viagem,manutencao',
-            'res_data_inicio' => 'required|date',
-            'res_data_fim' => 'required|date|after_or_equal:res_data_inicio',
+            'res_data_inicio' => 'required|date|after_or_equal:today',
+            'res_data_fim' => 'required|date|after:res_data_inicio',
             'res_dia_todo' => 'nullable|boolean',
             'res_origem' => 'nullable|string|max:255',
             'res_destino' => 'nullable|string|max:255',
-            'res_just' => 'nullable|string',
+            'res_just' => 'required|string',
             'res_obs' => 'nullable|string',
-            'force_create' => 'nullable|boolean', // Permite o campo de forçar
+            'force_create' => 'nullable|boolean', 
         ];
     }
 
-    /**
-     * O método after() foi REMOVIDO daqui e movido para o Controller.
-     */
+    public function messages()
+    {
+        return [
+            'res_tipo.in' => 'Você não tem permissão para criar reservas do tipo Manutenção.',
+            'res_vei_id.required_if' => 'Para manutenção, o veículo é obrigatório.',
+            'res_for_id.required_if' => 'Para manutenção, o fornecedor é obrigatório.',
+        ];
+    }
 }

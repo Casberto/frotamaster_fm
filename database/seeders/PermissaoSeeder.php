@@ -85,6 +85,7 @@ class PermissaoSeeder extends Seeder
             ['prm_modulo' => 'Reservas', 'prm_acao' => 'Aprovar', 'prm_descricao' => 'Permite aprovar solicitações de reservas pendentes.'],
             ['prm_modulo' => 'Reservas', 'prm_acao' => 'Reprovar', 'prm_descricao' => 'Permite reprovar solicitações de reservas.'],
             ['prm_modulo' => 'Reservas', 'prm_acao' => 'Encerrar', 'prm_descricao' => 'Permite validar a revisão e encerrar definitivamente a reserva.'],
+            ['prm_modulo' => 'Reservas', 'prm_acao' => 'Incluir reserva de manutenção', 'prm_descricao' => 'Permite adicionar solicitações de reservas de manutenção.'],
         ];
 
         foreach ($permissoes as $permissao) {

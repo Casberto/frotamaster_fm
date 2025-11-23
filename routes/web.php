@@ -19,6 +19,18 @@ use App\Http\Controllers\Admin\ConfiguracaoPadraoController;
 use App\Http\Controllers\ConfiguracaoEmpresaController;
 use App\Http\Controllers\ReservaController;
 
+// Importação dos novos controladores de Reserva (Single Action & Sub-recursos)
+use App\Http\Controllers\Reserva\AprovarReservaController;
+use App\Http\Controllers\Reserva\RejeitarReservaController;
+use App\Http\Controllers\Reserva\CancelarReservaController;
+use App\Http\Controllers\Reserva\IniciarReservaController;
+use App\Http\Controllers\Reserva\FinalizarReservaController;
+use App\Http\Controllers\Reserva\RevisarReservaController;
+use App\Http\Controllers\Reserva\ReservaAbastecimentoController;
+use App\Http\Controllers\Reserva\ReservaPedagioController;
+use App\Http\Controllers\Reserva\ReservaPassageiroController;
+use App\Http\Controllers\Reserva\ReservaManutencaoController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -58,40 +70,42 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao']);
     Route::resource('abastecimentos', AbastecimentoController::class);
     Route::resource('servicos', ServicoController::class);
-    Route::resource('fornecedores', FornecedorController::class);
+    Route::resource('fornecedores', FornecedorController::class)->parameters(['fornecedores' => 'fornecedor']);
     Route::resource('perfis', PerfilController::class);
     Route::resource('usuarios', UsuarioController::class);
     Route::resource('motoristas', MotoristaController::class);
 
-    // --- MÓDULO DE RESERVAS (Versão Definitiva) ---
-    Route::controller(ReservaController::class)->prefix('reservas')->name('reservas.')->group(function () {
-        
-        // Workflow de Estados (Verbos PATCH para alteração de estado)
-        Route::patch('/{reserva}/aprovar', 'aprovar')->name('aprovar');
-        Route::patch('/{reserva}/rejeitar', 'rejeitar')->name('rejeitar');
-        Route::patch('/{reserva}/cancelar', 'cancelar')->name('cancelar');
-        Route::patch('/{reserva}/iniciar', 'iniciar')->name('iniciar');
-        Route::patch('/{reserva}/finalizar', 'finalizar')->name('finalizar');
-        
-        // Revisão (POST pois envia formulário complexo)
-        Route::post('/{reserva}/revisar', 'revisar')->name('revisar');
+    // --- MÓDULO DE RESERVAS (Refatorado) ---
+    
+    // 1. Workflow de Estados (Usando PATCH conforme os modais)
+    Route::patch('reservas/{reserva}/aprovar', AprovarReservaController::class)->name('reservas.aprovar');
+    Route::patch('reservas/{reserva}/rejeitar', RejeitarReservaController::class)->name('reservas.rejeitar');
+    Route::patch('reservas/{reserva}/cancelar', CancelarReservaController::class)->name('reservas.cancelar');
+    Route::patch('reservas/{reserva}/iniciar', IniciarReservaController::class)->name('reservas.iniciar'); 
+    Route::patch('reservas/{reserva}/finalizar', FinalizarReservaController::class)->name('reservas.finalizar');
+    
+    // Revisão usa POST pois o formulário pode ser complexo
+    Route::post('reservas/{reserva}/revisar', RevisarReservaController::class)->name('reservas.revisar');
 
-        // Vínculos (Abastecimentos, Pedágios, Passageiros, Manutenções)
-        Route::post('/{reserva}/abastecimentos', 'attachAbastecimento')->name('abastecimentos.attach');
-        Route::delete('/{reserva}/abastecimentos/{abastecimento}', 'detachAbastecimento')->name('abastecimentos.detach');
-        
-        Route::post('/{reserva}/pedagios', 'attachPedagio')->name('pedagios.attach');
-        Route::delete('/{reserva}/pedagio/{pedagio}', 'detachPedagio')->name('pedagios.detach');
+     // SUB-RECURSOS: Abastecimentos
+    // Abastecimentos
+    Route::post('reservas/{reserva}/abastecimentos', [ReservaAbastecimentoController::class, 'store'])->name('reservas.abastecimentos.attach');
+    Route::post('reservas/{reserva}/abastecimentos/novo', [ReservaAbastecimentoController::class, 'storeNew'])->name('reservas.abastecimentos.create'); // <--- NOVA ROTA
+    Route::delete('reservas/{reserva}/abastecimentos/{abastecimento}', [ReservaAbastecimentoController::class, 'destroy'])->name('reservas.abastecimentos.detach');
 
-        Route::post('/{reserva}/passageiros', 'attachPassageiro')->name('passageiros.attach');
-        Route::delete('/{reserva}/passageiro/{passageiro}', 'detachPassageiro')->name('passageiros.detach');
+    // 3. Sub-recursos: Pedágios em Reservas
+    Route::post('reservas/{reserva}/pedagios', [ReservaPedagioController::class, 'store'])->name('reservas.pedagios.attach');
+    Route::delete('reservas/{reserva}/pedagio/{pedagio}', [ReservaPedagioController::class, 'destroy'])->name('reservas.pedagios.detach');
 
-        Route::post('/{reserva}/manutencoes', 'attachManutencao')->name('manutencoes.attach');
-        Route::delete('/{reserva}/manutencao/{manutencao}', 'detachManutencao')->name('manutencoes.detach');
-    });
+    // 4. Sub-recursos: Passageiros em Reservas
+    Route::post('reservas/{reserva}/passageiros', [ReservaPassageiroController::class, 'store'])->name('reservas.passageiros.attach');
+    Route::delete('reservas/{reserva}/passageiro/{passageiro}', [ReservaPassageiroController::class, 'destroy'])->name('reservas.passageiros.detach');
 
-    // Resource Padrão de Reservas (Index, Create, Store, Show, Edit, Update, Destroy)
-    // Deve vir DEPOIS das rotas personalizadas acima para evitar conflito de URL
+    // 5. Sub-recursos: Manutenções em Reservas
+    Route::post('reservas/{reserva}/manutencoes', [ReservaManutencaoController::class, 'store'])->name('reservas.manutencoes.attach');
+    Route::delete('reservas/{reserva}/manutencao/{manutencao}', [ReservaManutencaoController::class, 'destroy'])->name('reservas.manutencoes.detach');
+
+    // 6. CRUD Padrão de Reservas (Deve vir por último para evitar conflito de rotas como /{reserva}/algo)
     Route::resource('reservas', ReservaController::class);
 
 

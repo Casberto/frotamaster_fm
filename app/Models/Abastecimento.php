@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Abastecimento extends Model
-{
+{ 
     use HasFactory;
 
     protected $primaryKey = 'aba_id';

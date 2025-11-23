@@ -25,19 +25,19 @@ class Fornecedor extends Model
         'for_contato_telefone',
         'for_endereco',
         'for_observacoes',
-        'for_ativo',
+        'for_status', // Corrigido de 'for_ativo' para 'for_status'
     ];
 
-
-    protected $casts = [
-        'for_ativo' => 'boolean',
-    ];
-
+    // Removemos o cast de 'for_ativo' pois agora usamos 'for_status' (inteiro)
+    
     public function getRouteKeyName()
     {
         return 'for_id';
     }
 
+    /**
+     * Accessor para exibir o tipo de forma amigável (Opcional)
+     */
     protected function tipoFormatado(): Attribute
     {
         return Attribute::make(
@@ -46,7 +46,8 @@ class Fornecedor extends Model
                 'posto' => 'Posto de Combustível',
                 'ambos' => 'Oficina e Posto',
                 'outro' => 'Outro',
-                default => 'Não definido',
+                // Se for um tipo novo (digitado manualmente/select), exibe ele mesmo capitalizado
+                default => ucfirst(str_replace('_', ' ', $this->for_tipo)), 
             }
         );
     }
@@ -54,21 +55,15 @@ class Fornecedor extends Model
     protected function statusFormatado(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->for_ativo ? 'Ativo' : 'Inativo'
+            get: fn () => $this->for_status == 1 ? 'Ativo' : 'Inativo'
         );
     }
 
-    /**
-     * Define o relacionamento com as Manutenções.
-     */
     public function manutencoes(): HasMany
     {
         return $this->hasMany(Manutencao::class, 'man_for_id', 'for_id');
     }
     
-    /**
-     * Define o relacionamento com as Reservas (de manutenção).
-     */
     public function reservas(): HasMany
     {
         return $this->hasMany(Reserva::class, 'res_for_id', 'for_id');

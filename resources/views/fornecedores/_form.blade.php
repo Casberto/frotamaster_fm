@@ -29,10 +29,41 @@
             <div>
                 <label for="for_tipo" class="block font-medium text-sm text-gray-700">Tipo de Fornecedor*</label>
                 <select name="for_tipo" id="for_tipo" class="mt-1 block w-full" required>
-                    <option value="oficina" @selected(old('for_tipo', $fornecedor->for_tipo) == 'oficina')>Oficina Mecânica</option>
-                    <option value="posto" @selected(old('for_tipo', $fornecedor->for_tipo) == 'posto')>Posto de Combustível</option>
-                    <option value="ambos" @selected(old('for_tipo', $fornecedor->for_tipo) == 'ambos')>Oficina e Posto</option>
-                    <option value="outro" @selected(old('for_tipo', $fornecedor->for_tipo) == 'outro')>Outro</option>
+                    <option value="">Selecione...</option>
+                    
+                    <optgroup label="Abastecimento">
+                        <option value="posto" @selected(old('for_tipo', $fornecedor->for_tipo) == 'posto')>Posto de Combustível</option>
+                        <option value="posto_gnv" @selected(old('for_tipo', $fornecedor->for_tipo) == 'posto_gnv')>Posto GNV</option>
+                        <option value="eletroposto" @selected(old('for_tipo', $fornecedor->for_tipo) == 'eletroposto')>Eletroposto / Recarga</option>
+                    </optgroup>
+
+                    <optgroup label="Manutenção e Reparo">
+                        <option value="oficina" @selected(old('for_tipo', $fornecedor->for_tipo) == 'oficina')>Oficina Mecânica Geral</option>
+                        <option value="auto_eletrica" @selected(old('for_tipo', $fornecedor->for_tipo) == 'auto_eletrica')>Auto Elétrica</option>
+                        <option value="funilaria" @selected(old('for_tipo', $fornecedor->for_tipo) == 'funilaria')>Funilaria e Pintura</option>
+                        <option value="borracharia" @selected(old('for_tipo', $fornecedor->for_tipo) == 'borracharia')>Borracharia / Pneus</option>
+                        <option value="concessionaria" @selected(old('for_tipo', $fornecedor->for_tipo) == 'concessionaria')>Concessionária Autorizada</option>
+                        <option value="autocentro" @selected(old('for_tipo', $fornecedor->for_tipo) == 'autocentro')>Auto Center (Pneus/Óleo)</option>
+                        <option value="loja_pecas" @selected(old('for_tipo', $fornecedor->for_tipo) == 'loja_pecas')>Loja de Autopeças</option>
+                        <option value="vidracaria" @selected(old('for_tipo', $fornecedor->for_tipo) == 'vidracaria')>Vidraçaria Automotiva</option>
+                    </optgroup>
+
+                    <optgroup label="Serviços e Estética">
+                        <option value="lava_rapido" @selected(old('for_tipo', $fornecedor->for_tipo) == 'lava_rapido')>Lava-rápido / Estética</option>
+                        <option value="guincho" @selected(old('for_tipo', $fornecedor->for_tipo) == 'guincho')>Guincho / Reboque</option>
+                        <option value="vistoria" @selected(old('for_tipo', $fornecedor->for_tipo) == 'vistoria')>Empresa de Vistoria</option>
+                        <option value="rastreamento" @selected(old('for_tipo', $fornecedor->for_tipo) == 'rastreamento')>Rastreamento / Telemetria</option>
+                        <option value="estacionamento" @selected(old('for_tipo', $fornecedor->for_tipo) == 'estacionamento')>Estacionamento</option>
+                    </optgroup>
+
+                    <optgroup label="Administrativo e Outros">
+                        <option value="seguradora" @selected(old('for_tipo', $fornecedor->for_tipo) == 'seguradora')>Seguradora / Corretora</option>
+                        <option value="despachante" @selected(old('for_tipo', $fornecedor->for_tipo) == 'despachante')>Despachante</option>
+                        <option value="concessionaria_rodovia" @selected(old('for_tipo', $fornecedor->for_tipo) == 'concessionaria_rodovia')>Concessionária de Rodovia (Pedágio)</option>
+                        <option value="locadora" @selected(old('for_tipo', $fornecedor->for_tipo) == 'locadora')>Locadora de Veículos</option>
+                        <option value="ambos" @selected(old('for_tipo', $fornecedor->for_tipo) == 'ambos')>Posto e Oficina (Integrados)</option>
+                        <option value="outro" @selected(old('for_tipo', $fornecedor->for_tipo) == 'outro')>Outro</option>
+                    </optgroup>
                 </select>
             </div>
         </div>
@@ -62,7 +93,6 @@
          <h3 class="form-section-title">Status e Observações</h3>
         <div class="grid grid-cols-1 gap-6">
              <div>
-                {{-- CORREÇÃO: Nome do campo e valores ajustados para for_status --}}
                 <label for="for_status" class="block font-medium text-sm text-gray-700">Status*</label>
                 <select name="for_status" id="for_status" class="mt-1 block w-full" required>
                     <option value="1" @selected(old('for_status', $fornecedor->for_status) == 1)>Ativo</option>
@@ -81,4 +111,3 @@
     <a href="{{ route('fornecedores.index') }}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition">Cancelar</a>
     <button type="submit" class="ml-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">Salvar</button>
 </div>
-
