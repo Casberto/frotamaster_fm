@@ -19,7 +19,12 @@ use App\Http\Controllers\Admin\ConfiguracaoPadraoController;
 use App\Http\Controllers\ConfiguracaoEmpresaController;
 use App\Http\Controllers\ReservaController;
 
-// Rota para a página inicial
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -37,14 +42,18 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 // ROTAS DO USUÁRIO AUTENTICADO (CLIENTE DA EMPRESA)
 Route::middleware(['auth', 'check.license'])->group(function () {
+    
+    // Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Rota de geração de Logs
+    // Logs e Parâmetros
     Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');
+    Route::get('parametros', [ConfiguracaoEmpresaController::class, 'index'])->name('parametros.index');
+    Route::post('parametros', [ConfiguracaoEmpresaController::class, 'update'])->name('parametros.update');
 
-    // CRUDs da Aplicação
+    // CRUDs Principais
     Route::resource('veiculos', VeiculoController::class);
     Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao']);
     Route::resource('abastecimentos', AbastecimentoController::class);
@@ -54,65 +63,52 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('usuarios', UsuarioController::class);
     Route::resource('motoristas', MotoristaController::class);
 
-    // Rotas de reservas
+    // --- MÓDULO DE RESERVAS (Versão Definitiva) ---
+    Route::controller(ReservaController::class)->prefix('reservas')->name('reservas.')->group(function () {
+        
+        // Workflow de Estados (Verbos PATCH para alteração de estado)
+        Route::patch('/{reserva}/aprovar', 'aprovar')->name('aprovar');
+        Route::patch('/{reserva}/rejeitar', 'rejeitar')->name('rejeitar');
+        Route::patch('/{reserva}/cancelar', 'cancelar')->name('cancelar');
+        Route::patch('/{reserva}/iniciar', 'iniciar')->name('iniciar');
+        Route::patch('/{reserva}/finalizar', 'finalizar')->name('finalizar');
+        
+        // Revisão (POST pois envia formulário complexo)
+        Route::post('/{reserva}/revisar', 'revisar')->name('revisar');
+
+        // Vínculos (Abastecimentos, Pedágios, Passageiros, Manutenções)
+        Route::post('/{reserva}/abastecimentos', 'attachAbastecimento')->name('abastecimentos.attach');
+        Route::delete('/{reserva}/abastecimentos/{abastecimento}', 'detachAbastecimento')->name('abastecimentos.detach');
+        
+        Route::post('/{reserva}/pedagios', 'attachPedagio')->name('pedagios.attach');
+        Route::delete('/{reserva}/pedagio/{pedagio}', 'detachPedagio')->name('pedagios.detach');
+
+        Route::post('/{reserva}/passageiros', 'attachPassageiro')->name('passageiros.attach');
+        Route::delete('/{reserva}/passageiro/{passageiro}', 'detachPassageiro')->name('passageiros.detach');
+
+        Route::post('/{reserva}/manutencoes', 'attachManutencao')->name('manutencoes.attach');
+        Route::delete('/{reserva}/manutencao/{manutencao}', 'detachManutencao')->name('manutencoes.detach');
+    });
+
+    // Resource Padrão de Reservas (Index, Create, Store, Show, Edit, Update, Destroy)
+    // Deve vir DEPOIS das rotas personalizadas acima para evitar conflito de URL
     Route::resource('reservas', ReservaController::class);
-    Route::post('reservas/{reserva}/aprovar', [ReservaController::class, 'aprovar'])->name('reservas.aprovar');
-    Route::post('reservas/{reserva}/rejeitar', [ReservaController::class, 'rejeitar'])->name('reservas.rejeitar');
-    Route::post('reservas/{reserva}/cancelar', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
-    Route::post('reservas/{reserva}/iniciar', [ReservaController::class, 'iniciar'])->name('reservas.iniciar'); 
-    Route::post('reservas/{reserva}/finalizar', [ReservaController::class, 'finalizar'])->name('reservas.finalizar');
-    Route::post('reservas/{reserva}/revisar', [ReservaController::class, 'revisar'])->name('reservas.revisar');
-
-    // Rotas de abastecimentos em reservas
-    Route::post('reservas/{reserva}/abastecimentos', [ReservaController::class, 'attachAbastecimento'])->name('reservas.abastecimentos.attach');
-    Route::delete('reservas/{reserva}/abastecimentos/{abastecimento}', [ReservaController::class, 'detachAbastecimento'])->name('reservas.abastecimentos.detach');
-    
-    // Rotas de pedagios em reservas
-    Route::post('reservas/{reserva}/pedagios', [ReservaController::class, 'attachPedagio'])->name('reservas.pedagios.attach');
-    Route::delete('reservas/{reserva}/pedagio/{pedagio}', [ReservaController::class, 'detachPedagio'])->name('reservas.pedagios.detach');
-
-    // Rotas de passageiros em reservas
-    Route::post('reservas/{reserva}/passageiros', [ReservaController::class, 'attachPassageiro'])->name('reservas.passageiros.attach');
-    Route::delete('reservas/{reserva}/passageiro/{passageiro}', [ReservaController::class, 'detachPassageiro'])->name('reservas.passageiros.detach');
-
-    // Rotas de manutencoes em reservas
-    Route::post('reservas/{reserva}/manutencoes', [ReservaController::class, 'attachManutencao'])->name('reservas.manutencoes.attach');
-    Route::delete('reservas/{reserva}/manutencao/{manutencao}', [ReservaController::class, 'detachManutencao'])->name('reservas.manutencoes.detach');
-
-    // Rotas de parametros
-    Route::get('parametros', [ConfiguracaoEmpresaController::class, 'index'])->name('parametros.index');
-    Route::post('parametros', [ConfiguracaoEmpresaController::class, 'update'])->name('parametros.update');
 
 
-    // Rotas AJAX para o Dashboard
+    // Rotas AJAX Dashboard
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/veiculos/{id}/historico', [DashboardController::class, 'getVeiculoHistorico'])->name('veiculos.historico');
     Route::get('/abastecimentos/veiculo/{id}', [AbastecimentoController::class, 'getVeiculoData'])->name('abastecimentos.veiculo.data');
-
 });
 
 
 // GRUPO DE ROTAS DO SUPER ADMINISTRADOR
 Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
-
-    // CRUD de Empresas
+    Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('dashboard');
     Route::resource('empresas', EmpresaController::class);
-
-    // CRUD de Licenças
     Route::resource('licencas', LicenseController::class);
-
-    // CRUD de Permissões
     Route::resource('permissoes', PermissaoController::class);
-
-     // CRUD de Configurações Padrão
-    Route::resource('configuracoes-padrao', ConfiguracaoPadraoController::class)->parameters([
-        'configuracoes-padrao' => 'configuracoes_padrao'
-    ]);
+    Route::resource('configuracoes-padrao', ConfiguracaoPadraoController::class)->parameters(['configuracoes-padrao' => 'configuracoes_padrao']);
 });
 
-
 require __DIR__.'/auth.php';
-

@@ -12,10 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('reservas', function (Blueprint $table) {
-            $table->bigIncrements('res_id');
+            $table->bigIncrements('res_id'); // ID Interno do Sistema (PK)
             
             $table->foreignId('res_emp_id')->comment('ID da Empresa (FK de empresas)')->constrained('empresas', 'id')->onDelete('cascade');
-            $table->foreignId('res_vei_id')->comment('ID do Veículo (FK de veiculos)')->constrained('veiculos', 'vei_id')->onDelete('cascade');
+            $table->unsignedBigInteger('res_codigo')->comment('ID Sequencial visível para a empresa'); // NOVO CAMPO: Sequencial por empresa
+            
+            $table->foreignId('res_vei_id')->nullable()->comment('ID do Veículo (Pode ser null se for "A definir")')->constrained('veiculos', 'vei_id')->onDelete('cascade');
             $table->foreignId('res_sol_id')->comment('ID do Solicitante (FK de users)')->constrained('users', 'id')->onDelete('cascade');
             $table->foreignId('res_mot_id')->nullable()->comment('ID do Motorista (FK de motoristas)')->constrained('motoristas', 'mot_id')->onDelete('set null');
             $table->foreignId('res_for_id')->nullable()->comment('ID do Fornecedor (FK de fornecedores)')->constrained('fornecedores', 'for_id')->onDelete('set null');
@@ -34,8 +36,8 @@ return new class extends Migration
             
             $table->integer('res_km_inicio')->unsigned()->nullable()->comment('KM do veículo na saída');
             $table->integer('res_km_fim')->unsigned()->nullable()->comment('KM do veículo no retorno');
-            $table->timestamp('res_hora_saida')->nullable()->comment('Data e hora da saída');
-            $table->timestamp('res_hora_chegada')->nullable()->comment('Data e hora do retorno');
+            $table->timestamp('res_hora_saida')->nullable()->comment('Data e hora efetiva da saída');
+            $table->timestamp('res_hora_chegada')->nullable()->comment('Data e hora efetiva do retorno');
             $table->string('res_comb_inicio', 50)->nullable()->comment('Nível de combustível na saída (ex: 1/4, 1/2, 3/4, cheio)');
             $table->string('res_comb_fim', 50)->nullable()->comment('Nível de combustível no retorno (ex: 1/4, 1/2, 3/4, cheio)');
 
@@ -53,13 +55,11 @@ return new class extends Migration
             // Índices para performance
             $table->index('res_emp_id');
             $table->index('res_vei_id');
-            $table->index('res_sol_id');
-            $table->index('res_mot_id');
-            $table->index('res_for_id');
-            $table->index('res_revisor_id');
-            $table->index('res_data_inicio');
-            $table->index('res_data_fim');
             $table->index('res_status');
+            $table->index(['res_data_inicio', 'res_data_fim']); // Índice composto para busca por período
+            
+            // Garante que o código é único dentro da empresa
+            $table->unique(['res_emp_id', 'res_codigo']);
         });
     }
 

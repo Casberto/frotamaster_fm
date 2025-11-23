@@ -41,6 +41,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        // 1. Tenta autenticar as credenciais básicas (Email/Senha)
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
@@ -49,6 +50,31 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // 2. Verificação Adicional: Vínculo com Perfil
+        $user = Auth::user();
+
+        // A validação de perfil é aplicada SOMENTE para usuários comuns (role 'usuario').
+        // 'super-admin' e 'master' não passam por esta verificação de vínculo de perfil para logar.
+        if ($user->role === 'usuario') {
+            
+            // Verifica se o usuário possui perfis vinculados através do relacionamento definido no Model User
+            // A relação perfis() usa a tabela pivô 'usuario_perfis'
+            if ($user->perfis()->count() === 0) {
+                
+                // Se não tiver perfil, desloga imediatamente para matar a sessão criada pelo Auth::attempt
+                Auth::guard('web')->logout();
+                
+                // Incrementa o RateLimiter para evitar brute-force de verificação de perfis
+                RateLimiter::hit($this->throttleKey());
+
+                // Retorna o erro para a tela de login
+                throw ValidationException::withMessages([
+                    'email' => 'Este usuário não possui um perfil de acesso vinculado. Contate o administrador.',
+                ]);
+            }
+        }
+
+        // Se passou por tudo, limpa o limitador de tentativas
         RateLimiter::clear($this->throttleKey());
     }
 

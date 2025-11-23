@@ -1,5 +1,6 @@
-<div>
-    <button @click="open = (open === 'manutencoes' ? '' : 'manutencoes')" class="sidebar-link w-full flex justify-between items-center">
+@if(Auth::user()->hasPermission('Manutenções', 'visualizar') || Auth::user()->hasPermission('Manutenções', 'criar'))
+<div x-data="{ open: false }">
+    <button @click="open = !open" class="sidebar-link w-full flex justify-between items-center">
         <div class="flex items-center">
             <span class="mr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -8,9 +9,10 @@
             </span>
             <span>Manutenções</span>
         </div>
-        <svg :class="{'rotate-180': open === 'manutencoes'}" class="h-5 w-5 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+        <svg :class="{'rotate-180': open}" class="h-5 w-5 transform transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
     </button>
-    <div x-show="open === 'manutencoes'" x-transition class="pl-8 space-y-1 mt-1">
+    <div x-show="open" x-transition class="pl-8 space-y-1 mt-1">
+        @if(Auth::user()->hasPermission('Manutenções', 'visualizar'))
         <a href="{{ route('manutencoes.index') }}" class="sidebar-submenu-link @if(request()->routeIs('manutencoes.index')) active @endif">
             <span class="mr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
@@ -19,9 +21,14 @@
             </span>
             <span>Listar Manutenções</span>
         </a>
+        @endif
+
+        @if(Auth::user()->hasPermission('Manutenções', 'criar'))
         <a href="{{ route('manutencoes.create') }}" class="sidebar-submenu-link @if(request()->routeIs('manutencoes.create')) active @endif">
             <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg></span>
             <span>Nova Manutenção</span>
         </a>
+        @endif
     </div>
 </div>
+@endif

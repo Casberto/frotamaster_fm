@@ -15,6 +15,12 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Cache local de permissões para a requisição atual.
+     * Evita consultas repetidas ao banco na mesma página.
+     */
+    protected array $permissionCache = [];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -109,5 +115,39 @@ class User extends Authenticatable
     public function reservasAuditLogs(): HasMany
     {
         return $this->hasMany(ReservaAuditLog::class, 'ral_user_id', 'id');
+    }
+
+    /**
+     * Verifica se o usuário tem permissão para um determinado módulo e ação.
+     *
+     * @param string $modulo O nome do módulo (ex: 'Veículos', 'Manutenções')
+     * @param string $acao A ação a ser verificada (ex: 'visualizar', 'criar')
+     * @return bool
+     */
+    public function hasPermission(string $modulo, string $acao): bool
+    {
+        // Super-admin e Master têm acesso total
+        if ($this->isSuperAdmin() || $this->isMaster()) {
+            return true;
+        }
+
+        // Cria uma chave única para a permissão
+        $key = "{$modulo}_{$acao}";
+
+        // Se já verificamos essa permissão nesta requisição, retorna o valor cacheado
+        if (isset($this->permissionCache[$key])) {
+            return $this->permissionCache[$key];
+        }
+
+        // Verifica se algum dos perfis do usuário tem a permissão solicitada
+        $hasPermission = $this->perfis()
+            ->whereHas('permissoes', function ($query) use ($modulo, $acao) {
+                $query->where('prm_modulo', $modulo)
+                      ->where('prm_acao', $acao);
+            })
+            ->exists();
+
+        // Salva no cache local e retorna
+        return $this->permissionCache[$key] = $hasPermission;
     }
 }
