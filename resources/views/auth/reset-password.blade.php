@@ -1,72 +1,91 @@
 <x-guest-layout>
-    <div class="w-full sm:max-w-md bg-white shadow-2xl rounded-2xl overflow-hidden">
-        <!-- Cabeçalho Azul -->
-        <div class="bg-blue-600 px-6 py-8 text-center">
-            <a href="/" class="inline-block mb-4">
-                <img src="{{ asset('img/logo.png') }}" alt="Frotamaster Logo" class="h-16 w-auto mx-auto">
-            </a>
-            <h1 class="text-2xl font-bold text-white mt-4">Crie sua Nova Senha</h1>
-            <p class="text-blue-200 mt-1 text-sm">Escolha uma senha forte e segura.</p>
-        </div>
+    <div class="min-h-screen flex flex-col justify-center bg-white sm:bg-slate-900">
         
-        <!-- Formulário -->
-        <div class="p-6 sm:p-8">
-            <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
-                @csrf
+        <!-- Cabeçalho -->
+        <div class="sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0 pt-8 sm:pt-0">
+            <a href="/" class="flex justify-center mb-6">
+                <img class="h-12 w-auto invert sm:invert-0 transition-all duration-300" src="{{ asset('img/logo.png') }}" alt="Frotamaster">
+            </a>
+            <h2 class="text-center text-2xl font-bold leading-9 tracking-tight text-slate-900 sm:text-white">
+                Crie sua nova senha
+            </h2>
+            <p class="mt-2 text-center text-sm leading-6 text-slate-500 sm:text-slate-400">
+                Escolha uma senha forte e segura.
+            </p>
+        </div>
 
-                <!-- Password Reset Token -->
-                <input type="hidden" name="token" value="{{ $request->route('token') }}">
-
-                <!-- E-mail -->
-                <div>
-                    <x-input-label for="email" value="E-mail" class="font-semibold text-gray-700"/>
-                    <div class="relative mt-2">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                           </svg>
-                        </span>
-                        <x-text-input id="email" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" class="w-full pl-10 py-3 text-base"/>
+        <!-- Área do Cartão -->
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-[480px] pb-12 sm:pb-0">
+            <div class="bg-white px-6 py-10 sm:rounded-2xl sm:px-10 sm:shadow-2xl sm:shadow-black/20 sm:border sm:border-slate-100/10">
+                
+                <!-- Feedback de Erros -->
+                @if ($errors->any())
+                    <div class="mb-6 rounded-lg bg-red-50 p-4 border border-red-100">
+                        <div class="flex">
+                            <div class="flex-shrink-0 text-red-400">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">Verifique os erros abaixo:</h3>
+                                <ul class="mt-1 text-sm text-red-700 list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                </div>
+                @endif
 
-                <!-- Nova Senha -->
-                <div>
-                    <x-input-label for="password" value="Nova Senha" class="font-semibold text-gray-700"/>
-                     <div class="relative mt-2">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                           </svg>
-                        </span>
-                        <x-text-input id="password" type="password" name="password" required autocomplete="new-password" placeholder="••••••••••" class="w-full pl-10 py-3 text-base"/>
+                <form method="POST" action="{{ route('password.store') }}" class="space-y-6">
+                    @csrf
+
+                    <!-- Token -->
+                    <input type="hidden" name="token" value="{{ $request->route('token') }}">
+
+                    <!-- E-mail -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium leading-6 text-slate-900">E-mail</label>
+                        <div class="mt-2">
+                            <input id="email" name="email" type="email" :value="old('email', $request->email)" required autofocus 
+                                class="block w-full rounded-lg border-0 py-3 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 bg-slate-50"
+                                readonly> {{-- Readonly pois vem do link --}}
+                        </div>
                     </div>
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                </div>
 
-                <!-- Confirmar Nova Senha -->
-                <div>
-                    <x-input-label for="password_confirmation" value="Confirme a Nova Senha" class="font-semibold text-gray-700"/>
-                     <div class="relative mt-2">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                           </svg>
-                        </span>
-                        <x-text-input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="••••••••••" class="w-full pl-10 py-3 text-base"/>
+                    <!-- Nova Senha -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium leading-6 text-slate-900">Nova Senha</label>
+                        <div class="mt-2">
+                            <input id="password" name="password" type="password" required autocomplete="new-password"
+                                class="block w-full rounded-lg border-0 py-3 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 bg-slate-50/50 focus:bg-white transition-all"
+                                placeholder="••••••••">
+                        </div>
                     </div>
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-                </div>
 
-                <div class="mt-6">
-                    <x-primary-button class="w-full justify-center text-base py-3">
-                        Redefinir Senha
-                    </x-primary-button>
-                </div>
-            </form>
+                    <!-- Confirmar Senha -->
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-medium leading-6 text-slate-900">Confirmar Nova Senha</label>
+                        <div class="mt-2">
+                            <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password"
+                                class="block w-full rounded-lg border-0 py-3 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 bg-slate-50/50 focus:bg-white transition-all"
+                                placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <!-- Botão Salvar -->
+                    <div>
+                        <button type="submit" class="flex w-full justify-center rounded-lg bg-blue-600 px-3 py-3 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-all duration-200">
+                            Redefinir Senha
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+             <!-- Copyright -->
+             <p class="mt-8 text-center text-xs leading-5 text-slate-400">
+                &copy; {{ date('Y') }} Frotamaster.
+            </p>
         </div>
     </div>
 </x-guest-layout>
-
