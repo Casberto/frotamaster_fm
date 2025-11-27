@@ -47,9 +47,10 @@
                     <div>
                         <label for="email" class="block text-sm font-medium leading-6 text-slate-900">E-mail</label>
                         <div class="mt-2">
-                            <input id="email" name="email" type="email" :value="old('email', $request->email)" required autofocus 
+                            {{-- CORREÇÃO: Usando sintaxe Blade value="{{ ... }}" --}}
+                            <input id="email" name="email" type="email" value="{{ old('email', $request->email) }}" required autofocus 
                                 class="block w-full rounded-lg border-0 py-3 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 bg-slate-50"
-                                readonly> {{-- Readonly pois vem do link --}}
+                                readonly>
                         </div>
                     </div>
 

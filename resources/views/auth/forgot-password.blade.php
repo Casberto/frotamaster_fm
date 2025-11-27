@@ -9,7 +9,6 @@
         <!-- Cabeçalho -->
         <div class="sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0 pt-8 sm:pt-0">
             <a href="/" class="flex justify-center mb-6">
-                <!-- Logo adaptativo -->
                 <img class="h-12 w-auto invert sm:invert-0 transition-all duration-300" src="{{ asset('img/logo.png') }}" alt="Frotamaster">
             </a>
             <h2 class="text-center text-2xl font-bold leading-9 tracking-tight text-slate-900 sm:text-white">
@@ -50,7 +49,8 @@
                     <div>
                         <label for="email" class="block text-sm font-medium leading-6 text-slate-900">E-mail</label>
                         <div class="mt-2 relative">
-                            <input id="email" name="email" type="email" :value="old('email')" required autofocus 
+                            {{-- CORREÇÃO: Usando sintaxe Blade value="{{ ... }}" --}}
+                            <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus 
                                 class="block w-full rounded-lg border-0 py-3 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 transition-all bg-slate-50/50 focus:bg-white"
                                 placeholder="seu@email.com">
                         </div>
