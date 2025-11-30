@@ -30,7 +30,7 @@
             {{-- Data --}}
             <div>
                 <label for="aba_data" class="block font-medium text-sm text-gray-700">Data*</label>
-                <input type="date" name="aba_data" id="aba_data" class="mt-1 block w-full" value="{{ old('aba_data', $abastecimento ? $abastecimento->aba_data->format('Y-m-d') : now()->format('Y-m-d')) }}" required>
+                <input type="date" name="aba_data" id="aba_data" class="mt-1 block w-full" value="{{ old('aba_data', $abastecimento && $abastecimento->aba_data ? $abastecimento->aba_data->format('Y-m-d') : now()->format('Y-m-d')) }}" required>
             </div>
             {{-- Quilometragem --}}
             <div>
@@ -66,6 +66,7 @@
                         <option value="">Selecione</option>
                         <option value="1" @selected(old('aba_combustivel', $abastecimento->aba_combustivel ?? '') == 1)>Gasolina</option>
                         <option value="2" @selected(old('aba_combustivel', $abastecimento->aba_combustivel ?? '') == 2)>Etanol</option>
+                        <option value="3" @selected(old('aba_combustivel', $abastecimento->aba_combustivel ?? '') == 3)>Diesel</option>
                         <option value="4" @selected(old('aba_combustivel', $abastecimento->aba_combustivel ?? '') == 4)>GNV</option>
                     </select>
                 </div>
@@ -180,20 +181,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tipoCombustivelVeiculo == 5) {
             labelUnidade.textContent = 'kWh';
             labelValorUnidade.textContent = 'kWh';
+            // Para elétricos, não usamos o select de combustível (pode ser null ou tratado no backend)
+             tipoCombustivelSelect.value = ""; 
         }
         
         // Lógica para GNV (4)
         if (tipoCombustivelVeiculo == 4) {
             labelUnidade.textContent = 'm³';
             labelValorUnidade.textContent = 'm³';
+            tipoCombustivelSelect.value = "4"; // Auto-seleciona GNV
         }
 
         // Lógica para Flex (6) e Híbridos (7)
         if (tipoCombustivelVeiculo == 6 || tipoCombustivelVeiculo == 7) {
             tipoCombustivelWrapper.classList.remove('hidden');
             tipoCombustivelSelect.required = true;
-        } else {
-            tipoCombustivelSelect.required = false;
+            // Não auto-seleciona, usuário deve escolher
+        } else if (tipoCombustivelVeiculo != 5 && tipoCombustivelVeiculo != 4) {
+             // Veículos mono-combustível (Gasolina=1, Etanol=2, Diesel=3)
+             // Auto-seleciona o tipo correspondente
+             tipoCombustivelSelect.value = tipoCombustivelVeiculo;
+             tipoCombustivelSelect.required = false; // Não é obrigatório interagir pois já está setado
         }
 
         // Atualiza KM
@@ -245,7 +253,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Máscaras de valor
     $('#aba_vlr_tot').mask('#.##0,00', {reverse: true});
-    $('#aba_qtd, #aba_vlr_und').mask('#.##0,000', {reverse: true});
+    // $('#aba_qtd').mask('#.##0,000', {reverse: true}); // Removido para permitir digitação livre
+    
+    // Para valor unitário e quantidade, permitimos digitar a vírgula livremente
+    // e formatamos ao sair do campo.
+    $('#aba_vlr_und, #aba_qtd').on('input', function() {
+        let value = $(this).val();
+        
+        // Remove caracteres inválidos (apenas números e vírgula)
+        value = value.replace(/[^0-9,]/g, '');
+        
+        // Garante apenas uma vírgula
+        const parts = value.split(',');
+        if (parts.length > 2) {
+            value = parts[0] + ',' + parts.slice(1).join('');
+        }
+        
+        // Limita a 3 casas decimais
+        if (parts.length > 1 && parts[1].length > 3) {
+             value = parts[0] + ',' + parts[1].substring(0, 3);
+        }
+        
+        if (value !== $(this).val()) {
+            $(this).val(value);
+        }
+    });
+
+    $('#aba_vlr_und, #aba_qtd').on('blur', function() {
+        let val = $(this).val().replace(/\./g, '').replace(',', '.');
+        if (val) {
+            $(this).val(parseFloat(val).toFixed(3).replace('.', ','));
+        }
+    });
 });
 </script>
 

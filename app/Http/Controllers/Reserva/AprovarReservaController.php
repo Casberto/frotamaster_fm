@@ -31,7 +31,7 @@ class AprovarReservaController extends Controller
         // mas aqui usaremos withErrors para popular o $errors na view
         $errors = [];
         if (empty($veiculoId)) $errors['veiculo_id'] = 'Selecione um veículo válido.';
-        if (empty($motoristaId)) $errors['motorista_id'] = 'É necessário definir um motorista.';
+        if (empty($motoristaId) && $reserva->res_tipo !== 'manutencao') $errors['motorista_id'] = 'É necessário definir um motorista.';
 
         if (!empty($errors)) {
             // Retorna com erros para que o modal reabra

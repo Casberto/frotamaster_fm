@@ -44,6 +44,21 @@ class Abastecimento extends Model
         'aba_vlr_tot' => 'decimal:2',
     ];
 
+    /**
+     * Retorna a descrição do combustível utilizado.
+     */
+    public function getCombustivelTextoAttribute()
+    {
+        return match ($this->aba_combustivel) {
+            1 => 'Gasolina',
+            2 => 'Etanol',
+            3 => 'Diesel',
+            4 => 'GNV',
+            5 => 'Elétrico',
+            default => 'Outro',
+        };
+    }
+
 /**
      * Define a relação: um abastecimento pertence a um Veículo.
      */
@@ -84,6 +99,6 @@ class Abastecimento extends Model
     {
         return $this->belongsToMany(Reserva::class, 'reserva_abastecimentos', 'rab_abs_id', 'rab_res_id')
             ->using(ReservaAbastecimento::class)
-            ->withTimestamps();
+            ->withPivot('rab_mot_id', 'rab_emp_id', 'rab_forma_pagto', 'rab_reembolso', 'created_at');
     }
 }

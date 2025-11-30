@@ -34,7 +34,7 @@
 
         <div class="mt-4">
             <x-input-label for="aprovar_motorista_id" value="Motorista *" />
-            <select name="motorista_id" id="aprovar_motorista_id" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+            <select name="motorista_id" id="aprovar_motorista_id" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" @if($reserva->res_tipo !== 'manutencao') required @endif>
                 <option value="">Selecione...</option>
                 @foreach($motoristas as $m)
                     <option value="{{ $m->mot_id }}" @selected(old('motorista_id', $reserva->res_mot_id) == $m->mot_id)>

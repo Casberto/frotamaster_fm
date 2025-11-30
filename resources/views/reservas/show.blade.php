@@ -26,19 +26,6 @@
                 </div>
             @endif
 
-            {{-- Exibição de Erros de Validação dos Modais (se houver) --}}
-            <div class>
-                @if ($errors->any())
-                    <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
-                        <p class="font-bold">Atenção! Verifique os erros abaixo:</p>
-                        <ul class="mt-2 list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-            </div>
 
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

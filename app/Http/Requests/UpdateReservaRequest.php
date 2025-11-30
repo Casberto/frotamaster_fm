@@ -17,6 +17,17 @@ class UpdateReservaRequest extends FormRequest
         return Auth::check();
     }
 
+    protected function prepareForValidation()
+    {
+        // Se for dia todo, ajusta os horários para 00:00 e 23:59
+        if ($this->boolean('res_dia_todo')) {
+            $this->merge([
+                'res_data_inicio' => substr($this->input('res_data_inicio'), 0, 10) . ' 00:00:00',
+                'res_data_fim' => substr($this->input('res_data_fim'), 0, 10) . ' 23:59:59',
+            ]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *

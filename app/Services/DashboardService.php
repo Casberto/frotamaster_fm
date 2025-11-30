@@ -41,7 +41,14 @@ class DashboardService
 
         $manutencoesVencidas = Manutencao::where('man_emp_id', $idEmpresa)
             ->where('man_status', '!=', 'Concluída')
+            ->where('man_status', '!=', 'em_andamento')
             ->where('man_data_inicio', '<', $hoje)
+            ->with('veiculo')
+            ->orderBy('man_data_inicio', 'asc')
+            ->get();
+
+        $manutencoesEmAndamento = Manutencao::where('man_emp_id', $idEmpresa)
+            ->where('man_status', 'em_andamento')
             ->with('veiculo')
             ->orderBy('man_data_inicio', 'asc')
             ->get();
@@ -138,6 +145,8 @@ class DashboardService
             'veiculosAtivosCount' => $veiculosAtivosCount,
             'manutencoesVencidasCount' => $manutencoesVencidas->count(),
             'manutencoesVencidasLista' => $manutencoesVencidas,
+            'manutencoesEmAndamentoCount' => $manutencoesEmAndamento->count(),
+            'manutencoesEmAndamentoLista' => $manutencoesEmAndamento,
             'alertasProximosCount' => $alertasProximos->count(),
             'alertasProximosLista' => $alertasProximos,
             'totalGastoMes' => $totalGastoMes,

@@ -121,6 +121,7 @@
             @include('dashboard.components.veiculos.modal-historico')
             @include('dashboard.components.veiculos.modal-analise')
             @include('dashboard.components.veiculos.modal-manutencoes-vencidas')
+            @include('dashboard.components.veiculos.modal-manutencoes-em-andamento')
             @include('dashboard.components.veiculos.modal-alertas-proximos')
             @include('dashboard.components.veiculos.modal-custos-mensais')
             @include('dashboard.components.veiculos.modal-ranking-servicos')

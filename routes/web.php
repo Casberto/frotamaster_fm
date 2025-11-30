@@ -83,6 +83,7 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::patch('reservas/{reserva}/cancelar', CancelarReservaController::class)->name('reservas.cancelar');
     Route::patch('reservas/{reserva}/iniciar', IniciarReservaController::class)->name('reservas.iniciar'); 
     Route::patch('reservas/{reserva}/finalizar', FinalizarReservaController::class)->name('reservas.finalizar');
+    Route::patch('reservas/{reserva}/corrigir', \App\Http\Controllers\Reserva\CorrigirReservaController::class)->name('reservas.corrigir');
     
     // Revisão usa POST pois o formulário pode ser complexo
     Route::post('reservas/{reserva}/revisar', RevisarReservaController::class)->name('reservas.revisar');
@@ -99,6 +100,7 @@ Route::middleware(['auth', 'check.license'])->group(function () {
 
     // 4. Sub-recursos: Passageiros em Reservas
     Route::post('reservas/{reserva}/passageiros', [ReservaPassageiroController::class, 'store'])->name('reservas.passageiros.attach');
+    Route::put('reservas/{reserva}/passageiros/{passageiro}', [ReservaPassageiroController::class, 'update'])->name('reservas.passageiros.update');
     Route::delete('reservas/{reserva}/passageiro/{passageiro}', [ReservaPassageiroController::class, 'destroy'])->name('reservas.passageiros.detach');
 
     // 5. Sub-recursos: Manutenções em Reservas

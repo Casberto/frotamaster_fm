@@ -20,7 +20,7 @@ class ReservaAbastecimentoController extends Controller
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
         
-        if (!in_array($reserva->res_status, ['em_uso', 'em_revisao'])) {
+        if (!in_array($reserva->res_status, ['em_uso', 'em_revisao', 'pendente_ajuste'])) {
             return back()->with('error', 'Status inválido para adicionar registros.');
         }
 
@@ -35,7 +35,9 @@ class ReservaAbastecimentoController extends Controller
             return back()->with('error', 'Este abastecimento já está vinculado.');
         }
 
-        $reserva->abastecimentos()->attach($validated['abastecimento_id'], [
+        DB::table('reserva_abastecimentos')->insert([
+            'rab_res_id' => $reserva->res_id,
+            'rab_abs_id' => $validated['abastecimento_id'],
             'rab_mot_id' => $reserva->res_mot_id ?? Auth::id(),
             'rab_emp_id' => $reserva->res_emp_id,
             'rab_forma_pagto' => $validated['forma_pagamento'] ?? 'N/D',
@@ -53,7 +55,7 @@ class ReservaAbastecimentoController extends Controller
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
 
-        if (!in_array($reserva->res_status, ['em_uso', 'em_revisao'])) {
+        if (!in_array($reserva->res_status, ['em_uso', 'em_revisao', 'pendente_ajuste'])) {
             return back()->with('error', 'Status inválido para adicionar registros.');
         }
 
@@ -100,7 +102,10 @@ class ReservaAbastecimentoController extends Controller
             }
 
             // Vincula
-            $reserva->abastecimentos()->attach($abastecimento->aba_id, [
+            // Vincula
+            DB::table('reserva_abastecimentos')->insert([
+                'rab_res_id' => $reserva->res_id,
+                'rab_abs_id' => $abastecimento->aba_id,
                 'rab_mot_id' => $reserva->res_mot_id ?? Auth::id(),
                 'rab_emp_id' => $reserva->res_emp_id,
                 'rab_forma_pagto' => $validated['forma_pagamento'],

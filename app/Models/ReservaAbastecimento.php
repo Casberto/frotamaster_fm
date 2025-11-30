@@ -27,6 +27,7 @@ class ReservaAbastecimento extends Pivot
      * @var bool
      */
     public $timestamps = false; // A migration só tem created_at
+    const UPDATED_AT = null;
 
     /**
      * Os atributos que podem ser atribuídos em massa.

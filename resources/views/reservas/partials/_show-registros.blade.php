@@ -28,14 +28,17 @@
                 </div>
             </div>
             
-            @if($reserva->res_status == 'em_uso')
+            @if(in_array($reserva->res_status, ['em_uso', 'pendente_ajuste']))
                 <div class="flex items-center gap-2">
                      <button type="button" @click="mode = (mode === 'existing' ? null : 'existing')" 
-                        class="text-xs font-medium text-gray-500 hover:text-blue-600 underline px-2 transition">
-                        Vincular Existente
+                        class="p-2 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition" title="Vincular Existente">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                     </button>
-                    <x-primary-button type="button" @click="mode = (mode === 'new' ? null : 'new')" class="!py-2 !px-3 !text-xs">
-                        <span x-text="mode === 'new' ? 'Cancelar' : '+ Registrar Novo'"></span>
+                    <x-primary-button type="button" @click="mode = (mode === 'new' ? null : 'new')" class="!p-2 !bg-white !border !border-blue-600 !text-blue-600 hover:!bg-blue-50 focus:!ring-blue-500" title="Registrar Novo">
+                        <span x-show="mode !== 'new'">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                        </span>
+                        <span x-show="mode === 'new'">Cancelar</span>
                     </x-primary-button>
                 </div>
             @endif
@@ -43,8 +46,37 @@
 
         {{-- FORMULÁRIO: REGISTRAR NOVO --}}
         <div x-show="mode === 'new'" x-transition class="bg-blue-50/50 border-b border-blue-100 p-6">
-            <form action="{{ route('reservas.abastecimentos.attach', $reserva) }}" method="POST"> {{-- Nota: Ajustei a rota assumindo attach/create --}}
+            <form action="{{ route('reservas.abastecimentos.create', $reserva) }}" method="POST"> {{-- Nota: Ajustei a rota assumindo attach/create --}}
                 @csrf
+                @php
+                    $veiculo = $reserva->veiculo;
+                    $tipoCombustivel = $veiculo ? $veiculo->vei_combustivel : null;
+                    $opcoesCombustivel = [];
+                    $unidade = 'Litros';
+                    $unidadePreco = 'Litro';
+
+                    if ($tipoCombustivel) {
+                        switch($tipoCombustivel) {
+                            case 1: $opcoesCombustivel = ['Gasolina']; break;
+                            case 2: $opcoesCombustivel = ['Etanol']; break;
+                            case 3: $opcoesCombustivel = ['Diesel']; break;
+                            case 4: 
+                                $opcoesCombustivel = ['GNV']; 
+                                $unidade = 'm³'; 
+                                $unidadePreco = 'm³';
+                                break;
+                            case 5: 
+                                $opcoesCombustivel = ['Elétrico']; 
+                                $unidade = 'kWh'; 
+                                $unidadePreco = 'kWh';
+                                break;
+                            case 6: $opcoesCombustivel = ['Gasolina', 'Etanol']; break; // Flex
+                            default: $opcoesCombustivel = ['Gasolina', 'Etanol', 'Diesel', 'GNV', 'Elétrico']; break;
+                        }
+                    } else {
+                        $opcoesCombustivel = ['Gasolina', 'Etanol', 'Diesel', 'GNV', 'Elétrico'];
+                    }
+                @endphp
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {{-- Coluna 1 --}}
                     <div class="space-y-4">
@@ -55,11 +87,9 @@
                         <div>
                             <x-input-label for="aba_tipo_combustivel" value="Combustível *" />
                             <select id="aba_tipo_combustivel" name="aba_tipo_combustivel" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                <option value="Gasolina">Gasolina</option>
-                                <option value="Etanol">Etanol</option>
-                                <option value="Diesel">Diesel</option>
-                                <option value="GNV">GNV</option>
-                                <option value="Elétrico">Elétrico</option>
+                                @foreach($opcoesCombustivel as $opcao)
+                                    <option value="{{ $opcao }}">{{ $opcao }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div>
@@ -79,18 +109,32 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <x-input-label for="aba_qtd" value="Litros *" />
+                                <x-input-label for="aba_qtd" value="{{ $unidade }} *" />
                                 <x-text-input id="aba_qtd" name="aba_qtd" type="number" step="0.01" x-model="litros" @input="calcularTotal()" class="w-full text-sm" placeholder="0.00" required />
                             </div>
                             <div>
-                                <x-input-label for="aba_vlr_und" value="Preço/Litro *" />
+                                <x-input-label for="aba_vlr_und" value="Preço/{{ $unidadePreco }} *" />
                                 <x-text-input id="aba_vlr_und" name="aba_vlr_unit" type="number" step="0.01" x-model="preco" @input="calcularTotal()" class="w-full text-sm" placeholder="0.00" required />
                             </div>
                         </div>
                         
                         {{-- Campos Ocultos Necessários --}}
-                        <input type="hidden" name="forma_pagamento" value="Cartão Corporativo"> 
-                        <input type="hidden" name="reembolso" value="0">
+                        <div>
+                            <x-input-label for="forma_pagamento" value="Forma de Pagamento" />
+                            <select id="forma_pagamento" name="forma_pagamento" class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="Cartão Corporativo">Cartão Corporativo</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Reembolso">Reembolso</option>
+                                <option value="TAG">TAG</option>
+                            </select>
+                        </div>
+                        
+                        <div class="pt-6">
+                            <label for="reembolso" class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="reembolso" id="reembolso" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Solicitar Reembolso?</span>
+                            </label>
+                        </div>
                         
                         <div class="pt-2">
                             <label for="aba_tanque_cheio" class="inline-flex items-center cursor-pointer">
@@ -165,7 +209,7 @@
                                     </td>
                                     <td class="px-6 py-4 font-bold text-gray-900">R$ {{ number_format($abastecimento->aba_vlr_tot, 2, ',', '.') }}</td>
                                     <td class="px-6 py-4 text-right">
-                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao']))
+                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao', 'pendente_ajuste']))
                                             <form action="{{ route('reservas.abastecimentos.detach', [$reserva, $abastecimento]) }}" method="POST" onsubmit="return confirm('Desvincular?');" class="inline">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="text-gray-400 hover:text-red-600 transition" title="Desvincular">
@@ -198,9 +242,12 @@
                     <p class="text-xs text-gray-500">Custos de praças de pedágio</p>
                 </div>
             </div>
-            @if($reserva->res_status == 'em_uso')
-                <x-secondary-button type="button" @click="adding = !adding" class="!py-2 !px-3 !text-xs">
-                    <span x-text="adding ? 'Cancelar' : '+ Adicionar'"></span>
+            @if(in_array($reserva->res_status, ['em_uso', 'pendente_ajuste']))
+                <x-secondary-button type="button" @click="adding = !adding" class="!p-2 !bg-white !border !border-yellow-600 !text-yellow-600 hover:!bg-yellow-50 focus:!ring-yellow-500" title="Adicionar">
+                    <span x-show="!adding">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                    </span>
+                    <span x-show="adding">Cancelar</span>
                 </x-secondary-button>
             @endif
         </div>
@@ -275,7 +322,7 @@
                                     </td>
                                     <td class="px-6 py-4 font-bold text-gray-900">R$ {{ number_format($pedagio->rpe_valor, 2, ',', '.') }}</td>
                                     <td class="px-6 py-4 text-right">
-                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao']))
+                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao', 'pendente_ajuste']))
                                             <form action="{{ route('reservas.pedagios.detach', [$reserva, $pedagio]) }}" method="POST" onsubmit="return confirm('Remover?');" class="inline">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="text-gray-400 hover:text-red-600 transition">
@@ -296,7 +343,20 @@
     {{-- ======================================================================== --}}
     {{-- 3. PASSAGEIROS --}}
     {{-- ======================================================================== --}}
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" x-data="{ adding: false }">
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" 
+         x-data="{ 
+            adding: false, 
+            editing: null,
+            editForm: { action: '', nome: '', doc: '', entrou_em: '', saiu_em: '' },
+            openEdit(passenger, url) {
+                this.editing = passenger.rpa_id;
+                this.editForm.action = url;
+                this.editForm.nome = passenger.rpa_nome;
+                this.editForm.doc = passenger.rpa_doc;
+                this.editForm.entrou_em = passenger.rpa_entrou_em;
+                this.editForm.saiu_em = passenger.rpa_saiu_em;
+            }
+         }">
         <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
@@ -307,9 +367,12 @@
                     <p class="text-xs text-gray-500">Registro de ocupantes</p>
                 </div>
             </div>
-            @if($reserva->res_status == 'em_uso')
-                <x-secondary-button type="button" @click="adding = !adding" class="!py-2 !px-3 !text-xs">
-                    <span x-text="adding ? 'Cancelar' : '+ Adicionar'"></span>
+            @if(in_array($reserva->res_status, ['em_uso', 'pendente_ajuste']))
+                <x-secondary-button type="button" @click="adding = !adding" class="!p-2 !bg-white !border !border-green-600 !text-green-600 hover:!bg-green-50 focus:!ring-green-500" title="Adicionar">
+                    <span x-show="!adding">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                    </span>
+                    <span x-show="adding">Cancelar</span>
                 </x-secondary-button>
             @endif
         </div>
@@ -318,7 +381,7 @@
         <div x-show="adding" x-collapse x-cloak class="bg-green-50/50 border-b border-green-100 p-6">
             <form action="{{ route('reservas.passageiros.attach', $reserva) }}" method="POST">
                 @csrf
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                         <x-input-label for="rpa_nome" value="Nome Completo" />
                         <x-text-input id="rpa_nome" name="rpa_nome" class="w-full text-sm" required />
@@ -329,13 +392,55 @@
                     </div>
                     <div>
                         <x-input-label for="rpa_entrou_em" value="Local Embarque" />
+                        <x-text-input id="rpa_entrou_em" name="rpa_entrou_em" class="w-full text-sm" placeholder="Ex: Sede" required />
+                    </div>
+                    <div>
+                        <x-input-label for="rpa_saiu_em" value="Local Desembarque" />
                         <div class="flex gap-2">
-                            <x-text-input id="rpa_entrou_em" name="rpa_entrou_em" class="w-full text-sm" placeholder="Ex: Sede" required />
+                            <x-text-input id="rpa_saiu_em" name="rpa_saiu_em" class="w-full text-sm" placeholder="Ex: Aeroporto" />
                             <x-primary-button type="submit" class="!bg-green-600 hover:!bg-green-700 focus:!ring-green-500">Add</x-primary-button>
                         </div>
                     </div>
                 </div>
             </form>
+        </div>
+
+        {{-- MODAL DE EDIÇÃO --}}
+        <div x-show="editing" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" x-transition.opacity>
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4" @click.away="editing = null">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-lg">
+                    <h3 class="text-lg font-bold text-gray-900">Editar Passageiro</h3>
+                    <button type="button" @click="editing = null" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <form :action="editForm.action" method="POST" class="p-6">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <x-input-label value="Nome Completo" />
+                            <x-text-input name="rpa_nome" x-model="editForm.nome" class="w-full text-sm" required />
+                        </div>
+                        <div>
+                            <x-input-label value="Documento (Opcional)" />
+                            <x-text-input name="rpa_doc" x-model="editForm.doc" class="w-full text-sm" />
+                        </div>
+                        <div>
+                            <x-input-label value="Local Embarque" />
+                            <x-text-input name="rpa_entrou_em" x-model="editForm.entrou_em" class="w-full text-sm" required />
+                        </div>
+                        <div>
+                            <x-input-label value="Local Desembarque" />
+                            <x-text-input name="rpa_saiu_em" x-model="editForm.saiu_em" class="w-full text-sm" />
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <x-secondary-button type="button" @click="editing = null">Cancelar</x-secondary-button>
+                        <x-primary-button type="submit" class="!bg-green-600 hover:!bg-green-700 focus:!ring-green-500">Salvar Alterações</x-primary-button>
+                    </div>
+                </form>
+            </div>
         </div>
 
         {{-- LISTA --}}
@@ -355,6 +460,7 @@
                                 <th class="px-6 py-3 font-medium">Nome</th>
                                 <th class="px-6 py-3 font-medium">Documento</th>
                                 <th class="px-6 py-3 font-medium">Embarque</th>
+                                <th class="px-6 py-3 font-medium">Desembarque</th>
                                 <th class="px-6 py-3 font-medium text-right">Ações</th>
                             </tr>
                         </thead>
@@ -364,11 +470,17 @@
                                     <td class="px-6 py-4 font-medium text-gray-900">{{ $passageiro->rpa_nome }}</td>
                                     <td class="px-6 py-4 text-gray-600">{{ $passageiro->rpa_doc ?? '-' }}</td>
                                     <td class="px-6 py-4 text-gray-600">{{ $passageiro->rpa_entrou_em }}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao']))
+                                    <td class="px-6 py-4 text-gray-600">{{ $passageiro->rpa_saiu_em ?? '-' }}</td>
+                                    <td class="px-6 py-4 text-right flex justify-end gap-2">
+                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao', 'pendente_ajuste']))
+                                            <button type="button" 
+                                                @click="openEdit({{ json_encode($passageiro) }}, '{{ route('reservas.passageiros.update', [$reserva, $passageiro]) }}')"
+                                                class="text-blue-400 hover:text-blue-600 transition" title="Editar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                                            </button>
                                             <form action="{{ route('reservas.passageiros.detach', [$reserva, $passageiro]) }}" method="POST" onsubmit="return confirm('Remover?');" class="inline">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="text-gray-400 hover:text-red-600 transition">
+                                                <button type="submit" class="text-gray-400 hover:text-red-600 transition" title="Remover">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                                                 </button>
                                             </form>
@@ -394,19 +506,22 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" /></svg>
                 </div>
                 <div>
-                    <h4 class="text-base font-bold text-gray-900">Serviços</h4>
+                    <h4 class="text-base font-bold text-gray-900">Manutenções</h4>
                     <p class="text-xs text-gray-500">Ordens de serviço vinculadas</p>
                 </div>
             </div>
             
-            @if($reserva->res_status == 'em_uso')
+            @if(in_array($reserva->res_status, ['em_uso', 'pendente_ajuste']))
                 <div class="flex gap-2">
                      <a href="{{ route('manutencoes.create', ['veiculo_id' => $reserva->res_vei_id, 'fornecedor_id' => $reserva->res_for_id]) }}" target="_blank" 
                        class="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150">
                         Nova OS
                     </a>
-                    <x-primary-button type="button" @click="adding = !adding" class="!py-2 !px-3 !text-xs !bg-purple-600 hover:!bg-purple-700 !border-transparent focus:!ring-purple-500">
-                        <span x-text="adding ? 'Cancelar' : 'Vincular OS'"></span>
+                    <x-primary-button type="button" @click="adding = !adding" class="!p-2 !bg-white !border !border-purple-600 !text-purple-600 hover:!bg-purple-50 focus:!ring-purple-500" title="Vincular OS">
+                        <span x-show="!adding">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                        </span>
+                         <span x-show="adding">Cancelar</span>
                     </x-primary-button>
                 </div>
             @endif
@@ -476,7 +591,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao']))
+                                        @if(in_array($reserva->res_status, ['em_uso', 'em_revisao', 'pendente_ajuste']))
                                             <form action="{{ route('reservas.manutencoes.detach', [$reserva, $manutencao]) }}" method="POST" onsubmit="return confirm('Desvincular?');" class="inline">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="text-gray-400 hover:text-red-600 transition">

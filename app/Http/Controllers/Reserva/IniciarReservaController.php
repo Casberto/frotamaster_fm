@@ -32,6 +32,6 @@ class IniciarReservaController extends Controller
         // Atualiza status do veiculo se necessário (opcional)
         // $reserva->veiculo->update(['vei_status' => 3]); // Em uso
 
-        return redirect()->route('reservas.show', $reserva)->with('success', 'Viagem iniciada.');
+        return back()->with('success', 'Viagem iniciada.');
     }
 }

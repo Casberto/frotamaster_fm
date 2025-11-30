@@ -15,10 +15,22 @@
         </a>
 
         {{-- Editar: Status Compatível + Permissão Editar (Transformado em Link <a>) --}}
-        @if(in_array($reserva->res_status, ['pendente', 'rejeitada', 'pendente_ajuste']) && Auth::user()->hasPermission('Reservas', 'Editar'))
+        {{-- Concluir Correção (Pendente Ajuste) --}}
+        @if($reserva->res_status == 'pendente_ajuste' && Auth::user()->hasPermission('Reservas', 'Editar'))
+            <form action="{{ route('reservas.corrigir', $reserva) }}" method="POST" class="inline">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    Concluir Correção
+                </button>
+            </form>
+        @endif
+
+        {{-- Editar (Pendente/Rejeitada) --}}
+        @if(in_array($reserva->res_status, ['pendente', 'rejeitada']) && Auth::user()->hasPermission('Reservas', 'Editar'))
             <a href="{{ route('reservas.edit', $reserva) }}"
                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
-                {{ $reserva->res_status == 'pendente_ajuste' ? 'Corrigir' : 'Editar' }}
+                Editar
             </a>
         @endif
 
@@ -50,8 +62,8 @@
             <x-primary-button
                 @click.prevent="$dispatch('open-modal', 'modal-iniciar-reserva')"
                 class="bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.82m5.84-2.56a12.06 12.06 0 0 1 0 7.38m-5.84-7.38a12.06 12.06 0 0 0 0 7.38m5.84-7.38L18 17.11m-5.84-2.56L18 17.11m-5.84-2.56A12.06 12.06 0 0 1 4.11 5.63l-1.42 1.42m5.84 5.31A12.06 12.06 0 0 0 4.11 5.63l-1.42 1.42m5.84 5.31L4.11 5.63" /></svg>
-                {{ $reserva->res_tipo == 'viagem' ? 'Iniciar Viagem' : 'Saída' }}
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                {{ $reserva->res_tipo == 'viagem' ? 'Iniciar Viagem' : 'Registrar Saída' }}
             </x-primary-button>
         @endif
 

@@ -32,9 +32,16 @@ class StoreReservaRequest extends FormRequest
                     'res_mot_id' => $motorista->mot_id,
                 ]);
             }
-            // Se não tiver motorista vinculado, segue null ("A definir")
+        // Se não tiver motorista vinculado, segue null ("A definir")
         }
-        // Se TEM permissão 39, ele é gestor e tem liberdade total no form.
+        
+        // Se for dia todo, ajusta os horários para 00:00 e 23:59
+        if ($this->boolean('res_dia_todo')) {
+            $this->merge([
+                'res_data_inicio' => substr($this->input('res_data_inicio'), 0, 10) . ' 00:00:00',
+                'res_data_fim' => substr($this->input('res_data_fim'), 0, 10) . ' 23:59:59',
+            ]);
+        }
     }
 
     public function rules(): array
@@ -67,7 +74,11 @@ class StoreReservaRequest extends FormRequest
                 Rule::exists('fornecedores', 'for_id')->where('for_emp_id', $empresaId)
             ],
             'res_data_inicio' => 'required|date|after_or_equal:today',
-            'res_data_fim' => 'required|date|after:res_data_inicio',
+            'res_data_fim' => [
+                'required',
+                'date',
+                $this->boolean('res_dia_todo') ? 'after_or_equal:res_data_inicio' : 'after:res_data_inicio'
+            ],
             'res_dia_todo' => 'nullable|boolean',
             'res_origem' => 'nullable|string|max:255',
             'res_destino' => 'nullable|string|max:255',

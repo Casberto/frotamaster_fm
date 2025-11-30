@@ -36,6 +36,6 @@ class RevisarReservaController extends Controller
         }
 
         $reserva->save();
-        return redirect()->route('reservas.show', $reserva)->with('success', $msg);
+        return back()->with('success', $msg);
     }
 }
