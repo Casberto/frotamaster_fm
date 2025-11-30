@@ -114,6 +114,9 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     // Rotas AJAX Dashboard
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/veiculos/{id}/historico', [DashboardController::class, 'getVeiculoHistorico'])->name('veiculos.historico');
+    Route::get('/manutencoes/{id}/detalhes', [DashboardController::class, 'getMaintenanceDetails'])->name('manutencoes.detalhes');
+    Route::get('/abastecimentos/{id}/detalhes', [DashboardController::class, 'getFuelingDetails'])->name('abastecimentos.detalhes');
+    Route::get('/dashboard/reservations/{id}/details', [DashboardController::class, 'getReservationDetails'])->name('dashboard.reservations.details');
     Route::get('/abastecimentos/veiculo/{id}', [AbastecimentoController::class, 'getVeiculoData'])->name('abastecimentos.veiculo.data');
 });
 

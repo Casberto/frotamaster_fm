@@ -44,7 +44,8 @@
                 </form>
             </div>
 
-            <div class="relative overflow-x-auto">
+            {{-- Visualização em Tabela (Desktop) --}}
+            <div class="hidden md:block relative overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead>
                         <tr>
@@ -77,6 +78,49 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Visualização em Cards (Mobile) --}}
+            <div class="md:hidden space-y-4">
+                @forelse ($abastecimentos as $abastecimento)
+                    <div class="bg-white border rounded-lg shadow-sm p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">{{ $abastecimento->veiculo->placaModelo ?? 'N/A' }}</h3>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ $abastecimento->combustivelTexto }}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-1 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Data:</span>
+                                <span class="font-medium">{{ $abastecimento->aba_data->format('d/m/Y') }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">KM:</span>
+                                <span class="font-medium">{{ number_format($abastecimento->aba_km, 0, ',', '.') }} km</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Custo Total:</span>
+                                <span class="font-bold text-gray-900">R$ {{ number_format($abastecimento->aba_vlr_tot, 2, ',', '.') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-3 border-t">
+                            <a href="{{ route('abastecimentos.edit', $abastecimento) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            <form action="{{ route('abastecimentos.destroy', $abastecimento) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-600 font-medium text-sm">Deletar</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-8 text-gray-500">
+                        Nenhum abastecimento encontrado.
+                    </div>
+                @endforelse
             </div>
             
             {{-- Paginação que mantém os filtros --}}

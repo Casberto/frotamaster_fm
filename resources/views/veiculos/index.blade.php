@@ -52,7 +52,8 @@
                 </form>
             </div>
 
-            <div class="relative overflow-x-auto">
+            {{-- Visualização em Tabela (Desktop) --}}
+            <div class="hidden md:block relative overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead>
                         <tr>
@@ -89,6 +90,46 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Visualização em Cards (Mobile) --}}
+            <div class="md:hidden space-y-4">
+                @forelse ($veiculos as $veiculo)
+                    <div class="bg-white border rounded-lg shadow-sm p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">{{ $veiculo->vei_placa }}</h3>
+                                <p class="text-sm text-gray-500">{{ $veiculo->vei_fabricante }} / {{ $veiculo->vei_modelo }}</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $veiculo->vei_status == 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                {{ $veiculo->vei_status == 1 ? 'Ativo' : 'Inativo' }}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-1 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Ano:</span>
+                                <span class="font-medium">{{ $veiculo->vei_ano_fab }} / {{ $veiculo->vei_ano_mod }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">KM Atual:</span>
+                                <span class="font-medium">{{ number_format($veiculo->vei_km_atual, 0, ',', '.') }} km</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-3 border-t">
+                            <a href="{{ route('veiculos.edit', $veiculo) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            <form action="{{ route('veiculos.destroy', $veiculo) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-600 font-medium text-sm">Deletar</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-8 text-gray-500">
+                        Nenhum veículo encontrado.
+                    </div>
+                @endforelse
             </div>
             {{-- Paginação que mantém os filtros --}}
             <div class="mt-4">

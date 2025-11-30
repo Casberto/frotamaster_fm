@@ -47,7 +47,8 @@
                 </form>
             </div>
 
-            <div class="relative overflow-x-auto">
+            {{-- Visualização em Tabela (Desktop) --}}
+            <div class="hidden md:block relative overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead>
                         <tr>
@@ -130,6 +131,73 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Visualização em Cards (Mobile) --}}
+            <div class="md:hidden space-y-4">
+                @forelse ($motoristas as $motorista)
+                    <div class="bg-white border rounded-lg shadow-sm p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">{{ $motorista->mot_nome }}</h3>
+                            </div>
+                            @switch($motorista->mot_status)
+                                @case('Ativo')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Ativo</span>
+                                    @break
+                                @case('Inativo')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inativo</span>
+                                    @break
+                                @case('Bloqueado')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-200 text-red-900">Bloqueado</span>
+                                    @break
+                                @case('Em treinamento')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Em treinamento</span>
+                                    @break
+                                @case('Afastado')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Afastado</span>
+                                    @break
+                                @case('Aguardando documentação')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-200 text-yellow-900">Aguardando doc.</span>
+                                    @break
+                                @case('Suspenso')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">Suspenso</span>
+                                    @break
+                                @case('Rejeitado')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-800">Rejeitado</span>
+                                    @break
+                                @case('Em análise')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Em análise</span>
+                                    @break
+                                @default
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ $motorista->mot_status }}</span>
+                            @endswitch
+                        </div>
+                        
+                        <div class="space-y-1 mb-4">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">CPF:</span>
+                                <span class="font-medium">{{ $motorista->mot_cpf }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Telefone:</span>
+                                <span class="font-medium">{{ $motorista->mot_telefone1 }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end items-center space-x-3 pt-3 border-t">
+                            <a href="{{ route('motoristas.edit', $motorista) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            <form action="{{ route('motoristas.destroy', $motorista) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-600 font-medium text-sm">Deletar</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-8 text-gray-500">
+                        Nenhum motorista encontrado.
+                    </div>
+                @endforelse
             </div>
             <div class="mt-4">
                 {{ $motoristas->links() }}

@@ -31,7 +31,21 @@ class DashboardController extends Controller
 
         try {
             $data = $this->dashboardService->getDashboardData();
-            return view('dashboard.index', $data);
+            $executiveData = $this->dashboardService->getExecutiveDashboardData();
+            $maintenanceData = $this->dashboardService->getMaintenanceDashboardData();
+            $fuelingData = $this->dashboardService->getFuelingDashboardData();
+            $reservationsData = $this->dashboardService->getReservationsDashboardData();
+            
+            // Merge arrays
+            $finalData = array_merge(
+                $data, 
+                $executiveData, 
+                ['maintenanceData' => $maintenanceData],
+                ['fuelingData' => $fuelingData],
+                ['reservationsData' => $reservationsData]
+            );
+            
+            return view('dashboard.index', $finalData);
         } catch (Exception $e) {
             // Adiciona tratamento de erro para falhas na busca de dados
             // Redireciona de volta com uma mensagem de erro
@@ -45,20 +59,10 @@ class DashboardController extends Controller
     public function getVeiculoHistorico($id)
     {
         try {
-            $idEmpresa = Auth::user()->id_empresa;
-
-            $veiculo = Veiculo::where('vei_id', $id)->where('vei_emp_id', $idEmpresa)->firstOrFail();
-
-            $manutencoes = $veiculo->manutencoes()->with(['fornecedor', 'servicos'])->latest('man_data_inicio')->take(5)->get();
-            $abastecimentos = $veiculo->abastecimentos()->with('fornecedor')->latest('aba_data')->take(5)->get();
-            
-            return response()->json([
-                'manutencoes' => $manutencoes,
-                'abastecimentos' => $abastecimentos
-            ]);
-
+            $data = $this->dashboardService->getVehicleDetails($id);
+            return response()->json($data);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Ocorreu um erro no servidor.'], 500);
+            return response()->json(['error' => 'Ocorreu um erro ao buscar os detalhes do veículo: ' . $e->getMessage()], 500);
         }
     }
 
@@ -72,6 +76,45 @@ class DashboardController extends Controller
             return response()->json($data);
         } catch (Exception $e) {
             return response()->json(['error' => 'Não foi possível carregar os dados dos gráficos.'], 500);
+        }
+    }
+
+    /**
+     * Retorna os detalhes de uma manutenção para chamadas AJAX.
+     */
+    public function getMaintenanceDetails($id)
+    {
+        try {
+            $data = $this->dashboardService->getMaintenanceDetails($id);
+            return response()->json($data);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Erro ao buscar detalhes da manutenção: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Retorna os detalhes de um abastecimento para chamadas AJAX.
+     */
+    public function getFuelingDetails($id)
+    {
+        try {
+            $data = $this->dashboardService->getFuelingDetails($id);
+            return response()->json($data);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Erro ao buscar detalhes do abastecimento: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Retorna os detalhes de uma reserva para chamadas AJAX.
+     */
+    public function getReservationDetails($id)
+    {
+        try {
+            $data = $this->dashboardService->getReservationDetails($id);
+            return response()->json($data);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Erro ao buscar detalhes da reserva: ' . $e->getMessage()], 500);
         }
     }
 }

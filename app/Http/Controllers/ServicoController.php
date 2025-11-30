@@ -9,12 +9,16 @@ use Illuminate\Validation\Rule;
 
 class ServicoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $idEmpresa = Auth::user()->id_empresa;
-        $servicos = Servico::where('ser_emp_id', $idEmpresa)
-            ->latest()
-            ->paginate(15);
+        $query = Servico::where('ser_emp_id', $idEmpresa);
+
+        if ($request->filled('search')) {
+            $query->where('ser_nome', 'like', '%' . $request->search . '%');
+        }
+
+        $servicos = $query->latest()->paginate(15);
         
         return view('servicos.index', compact('servicos'));
     }

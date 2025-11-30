@@ -15,15 +15,26 @@ class UsuarioController extends Controller
      * Display a listing of the resource.
      * Mostra todos os usuários da mesma empresa do usuário logado.
      */
-    public function index()
+    public function index(Request $request)
     {
         $id_empresa = Auth::user()->id_empresa;
         // Garante que apenas usuários da mesma empresa sejam listados.
         // E não lista o próprio usuário logado.
-        $usuarios = User::where('id_empresa', $id_empresa)
-                        ->where('id', '!=', Auth::id())
-                        ->latest()
-                        ->paginate(10);
+        $query = User::where('id_empresa', $id_empresa)
+                        ->where('id', '!=', Auth::id());
+
+        // Filtros
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+        if ($request->filled('email')) {
+            $query->where('email', 'like', '%' . $request->email . '%');
+        }
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        $usuarios = $query->latest()->paginate(10);
 
         return view('usuarios.index', compact('usuarios'));
     }

@@ -10,6 +10,21 @@
         </a>
     </div>
 
+    <!-- Campo de Busca -->
+    <div class="px-4 mb-2">
+        <div class="relative">
+            <input type="text" 
+                   id="sidebar-search" 
+                   placeholder="Buscar..." 
+                   class="w-full bg-gray-700 text-white text-sm rounded-md pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border-none placeholder-gray-400">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
     <!-- Links de Navegação (Área com Rolagem) -->
     <nav class="flex-grow px-4 space-y-2 overflow-y-auto">
         {{-- Link principal do Dashboard --}}
@@ -112,3 +127,52 @@
         padding-bottom: 0.5rem;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('sidebar-search');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const groups = document.querySelectorAll('.menu-item-group');
+
+            groups.forEach(group => {
+                const mainText = group.querySelector('.menu-item-text')?.textContent.toLowerCase() || '';
+                const submenuItems = group.querySelectorAll('.submenu-item-text');
+                let hasSubmenuMatch = false;
+
+                submenuItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    const link = item.closest('a');
+                    if (text.includes(query)) {
+                        hasSubmenuMatch = true;
+                        if (link) link.style.display = '';
+                    } else {
+                        if (link && query !== '') link.style.display = 'none';
+                        else if (link) link.style.display = '';
+                    }
+                });
+
+                if (query === '') {
+                    group.style.display = '';
+                    // Reset submenu items display
+                    submenuItems.forEach(item => {
+                        const link = item.closest('a');
+                        if (link) link.style.display = '';
+                    });
+                } else if (mainText.includes(query) || hasSubmenuMatch) {
+                    group.style.display = '';
+                    if (hasSubmenuMatch) {
+                        // Try to access Alpine data to open the menu
+                        if (group.__x) {
+                            group.__x.$data.open = true;
+                        }
+                    }
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>

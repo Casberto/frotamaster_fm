@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row justify-between items-center w-full">
-            <h2 class="header-title text-xl mb-4 sm:mb-0">Cadastro de Fornecedores</h2>
-            <a href="{{ route('fornecedores.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition self-end sm:self-center">
+        <div class="flex justify-between items-center w-full">
+            <h2 class="header-title text-xl">Cadastro de Fornecedores</h2>
+            <a href="{{ route('fornecedores.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                 Novo Fornecedor
             </a>
         </div>
@@ -46,7 +46,8 @@
                 </div>
             </form>
 
-            <div class="relative overflow-x-auto">
+            {{-- Visualização em Tabela (Desktop) --}}
+            <div class="hidden md:block relative overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead>
                         <tr>
@@ -93,7 +94,46 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-4">{{ $fornecedores->links() }}</div>
+
+            {{-- Visualização em Cards (Mobile) --}}
+            <div class="md:hidden space-y-4">
+                @forelse ($fornecedores as $fornecedor)
+                    <div class="bg-white border rounded-lg shadow-sm p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">{{ $fornecedor->for_nome_fantasia }}</h3>
+                                <span class="text-sm text-gray-600">{{ $fornecedor->tipo_formatado }}</span>
+                            </div>
+                            @if($fornecedor->for_status == '1')
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Ativo</span>
+                            @else
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inativo</span>
+                            @endif
+                        </div>
+                        
+                        <div class="space-y-1 mb-4">
+                            <div class="flex flex-col text-sm">
+                                <span class="text-gray-500">Contato:</span>
+                                <span class="font-medium">{{ $fornecedor->for_contato_telefone ?? '-' }}</span>
+                                <span class="text-xs text-gray-500">{{ $fornecedor->for_contato_email }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end items-center space-x-3 pt-3 border-t">
+                            <a href="{{ route('fornecedores.edit', $fornecedor) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            <form action="{{ route('fornecedores.destroy', $fornecedor) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este fornecedor?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-600 font-medium text-sm">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-8 text-gray-500">
+                        Nenhum fornecedor encontrado.
+                    </div>
+                @endforelse
+            </div>
+            <div class="mt-4">{{ $fornecedores->appends(request()->query())->links() }}</div>
         </div>
     </div>
 </x-app-layout>

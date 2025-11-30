@@ -59,7 +59,8 @@
                 </form>
             </div>
 
-            <div class="relative overflow-x-auto">
+            {{-- Visualização em Tabela (Desktop) --}}
+            <div class="hidden md:block relative overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead>
                         <tr>
@@ -98,6 +99,61 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Visualização em Cards (Mobile) --}}
+            <div class="md:hidden space-y-4">
+                @forelse ($manutencoes as $manutencao)
+                    <div class="bg-white border rounded-lg shadow-sm p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">{{ $manutencao->veiculo->vei_placa ?? 'N/A' }}</h3>
+                                <p class="text-sm text-gray-500">{{ $manutencao->veiculo->vei_modelo ?? 'Veículo não encontrado' }}</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                @if($manutencao->man_status == 'concluida') bg-green-100 text-green-800
+                                @elseif($manutencao->man_status == 'cancelada') bg-red-100 text-red-800
+                                @elseif($manutencao->man_status == 'em_andamento') bg-blue-100 text-blue-800
+                                @else bg-yellow-100 text-yellow-800 @endif">
+                                {{ ucfirst(str_replace('_', ' ', $manutencao->man_status)) }}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <div>
+                                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Serviços</span>
+                                <div class="text-sm text-gray-700 mt-1">
+                                    @forelse($manutencao->servicos as $servico)
+                                        <span class="inline-block bg-gray-100 rounded px-2 py-1 text-xs mr-1 mb-1">{{ $servico->ser_nome }}</span>
+                                    @empty
+                                        <span class="text-gray-400 italic">Nenhum serviço registrado</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm border-t pt-2 mt-2">
+                                <span class="text-gray-500">Data:</span>
+                                <span class="font-medium">{{ \Carbon\Carbon::parse($manutencao->man_data_inicio)->format('d/m/Y') }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Custo Total:</span>
+                                <span class="font-bold text-gray-900">R$ {{ number_format($manutencao->man_custo_total, 2, ',', '.') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-3 border-t">
+                            <a href="{{ route('manutencoes.edit', $manutencao) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            <form action="{{ route('manutencoes.destroy', $manutencao) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-600 font-medium text-sm">Deletar</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-8 text-gray-500">
+                        Nenhuma manutenção encontrada.
+                    </div>
+                @endforelse
             </div>
             {{-- Paginação que mantém os filtros --}}
             <div class="mt-4">
