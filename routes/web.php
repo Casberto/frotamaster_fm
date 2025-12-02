@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\VeiculoController;
+use App\Http\Controllers\VeiculoFotoController;
 use App\Http\Controllers\ManutencaoController;
 use App\Http\Controllers\AbastecimentoController;
 use App\Http\Controllers\DashboardController;
@@ -67,6 +68,13 @@ Route::middleware(['auth', 'check.license'])->group(function () {
 
     // CRUDs Principais
     Route::resource('veiculos', VeiculoController::class);
+    
+    // Rotas de Fotos de Veículos
+    Route::get('veiculos/{id}/fotos', [VeiculoFotoController::class, 'index'])->name('veiculos.fotos.index');
+    Route::post('veiculos/{id}/fotos', [VeiculoFotoController::class, 'store'])->name('veiculos.fotos.store');
+    Route::delete('veiculos/fotos/{id}', [VeiculoFotoController::class, 'destroy'])->name('veiculos.fotos.destroy');
+    Route::get('veiculos/fotos/{filename}', [VeiculoFotoController::class, 'show'])->name('veiculos.fotos.show');
+
     Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao']);
     Route::resource('abastecimentos', AbastecimentoController::class);
     Route::resource('servicos', ServicoController::class);

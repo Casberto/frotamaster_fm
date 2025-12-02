@@ -10,9 +10,7 @@
 
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
         <div class="p-6">
-            @if (session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-4" role="alert"><p>{{ session('success') }}</p></div>
-            @endif
+
 
             <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
                 <form action="{{ route('motoristas.index') }}" method="GET">

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Veiculo;
 use App\Http\Requests\StoreVeiculoRequest;
+use App\Services\VeiculoFotoService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Services\LogService;
@@ -11,10 +12,12 @@ use App\Services\LogService;
 class VeiculoService
 {
     protected $logService;
+    protected $veiculoFotoService;
 
-    public function __construct(LogService $logService)
+    public function __construct(LogService $logService, VeiculoFotoService $veiculoFotoService)
     {
         $this->logService = $logService;
+        $this->veiculoFotoService = $veiculoFotoService;
     }
 
     /**
@@ -60,6 +63,9 @@ class VeiculoService
         // Registra o log antes de deletar
         $this->logService->registrar('Exclusão de Veículo', 'Veículos', $veiculo, $veiculo->toArray());
         
+        // Deleta as fotos do veículo
+        $this->veiculoFotoService->deletePhotosByVehicle($veiculo->vei_id);
+
         $veiculo->delete();
     }
 
