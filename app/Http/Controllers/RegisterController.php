@@ -43,19 +43,20 @@ class RegisterController extends Controller
             }],
             'email_contato' => 'required|email|max:255|unique:users,email',
             'telefone_contato' => 'required|string|max:20',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         DB::beginTransaction();
         try {
             // 1. Criar a Empresa (ou Pessoa Física atuando como empresa)
-            $empresa = Empresa::create($validatedData);
+            $empresaData = collect($validatedData)->except(['password', 'password_confirmation'])->toArray();
+            $empresa = Empresa::create($empresaData);
 
             // 2. Criar o Usuário Master
-            $password = Str::random(10);
             $user = User::create([
                 'name' => 'Master ' . $empresa->nome_fantasia,
                 'email' => $empresa->email_contato,
-                'password' => Hash::make($password),
+                'password' => Hash::make($request->password),
                 'id_empresa' => $empresa->id,
                 'role' => 'master',
                 'email_verified_at' => now(),
@@ -76,8 +77,8 @@ class RegisterController extends Controller
             // $token = \Illuminate\Support\Facades\Password::broker()->createToken($user);
             // $user->notify(new ResetPassword($token));
             
-            // Log para debug (Remover em produção se enviar e-mail real)
-            Log::info("Novo usuário registrado: Email {$user->email}, Senha temporária: {$password}");
+            // Log para debug
+            Log::info("Novo usuário registrado: Email {$user->email}");
 
             DB::commit();
 

@@ -166,6 +166,26 @@
                                     placeholder="(00) 00000-0000">
                             </div>
                         </div>
+
+                        <!-- Senha -->
+                        <div class="sm:col-span-1">
+                            <label for="password" class="block text-sm font-medium leading-6 text-slate-900">Senha</label>
+                            <div class="mt-2">
+                                <input type="password" name="password" id="password" required 
+                                    class="block w-full rounded-lg border-0 py-3 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 transition-all"
+                                    placeholder="Mínimo 8 caracteres">
+                            </div>
+                        </div>
+
+                        <!-- Confirmar Senha -->
+                        <div class="sm:col-span-1">
+                            <label for="password_confirmation" class="block text-sm font-medium leading-6 text-slate-900">Confirmar Senha</label>
+                            <div class="mt-2">
+                                <input type="password" name="password_confirmation" id="password_confirmation" required 
+                                    class="block w-full rounded-lg border-0 py-3 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 transition-all"
+                                    placeholder="Repita a senha">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Termos -->
