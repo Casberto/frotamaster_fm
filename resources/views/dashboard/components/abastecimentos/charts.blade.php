@@ -7,36 +7,36 @@
         Análises e Gráficos
     </h3>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         
         {{-- Gráfico 1: Evolução de consumo por mês --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Evolução de Consumo (km/L)</h4>
-            <div style="height: 250px;">
+            <div class="h-[250px] w-full max-w-full relative">
                 <canvas id="chartEvolucaoConsumo"></canvas>
             </div>
         </div>
 
         {{-- Gráfico 2: Custo por tipo de combustível --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Custo por Tipo de Combustível</h4>
-            <div style="height: 250px;">
+            <div class="h-[250px] w-full max-w-full relative">
                 <canvas id="chartCustoCombustivel"></canvas>
             </div>
         </div>
 
         {{-- Gráfico 3: Ranking de eficiência - Motoristas --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Top 10 Motoristas Mais Eficientes</h4>
-            <div style="height: 300px;">
+            <div class="h-[300px] w-full max-w-full relative">
                 <canvas id="chartRankingMotoristas"></canvas>
             </div>
         </div>
 
         {{-- Gráfico 4: Ranking de eficiência - Veículos --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Top 10 Veículos Mais Eficientes</h4>
-            <div style="height: 300px;">
+            <div class="h-[300px] w-full max-w-full relative">
                 <canvas id="chartRankingVeiculos"></canvas>
             </div>
         </div>

@@ -7,36 +7,36 @@
         Análises e Gráficos
     </h3>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         
         {{-- Gráfico 1: Evolução de reservas por mês --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Evolução de Reservas (Últimos 12 Meses)</h4>
-            <div style="height: 250px;">
+            <div class="h-[250px] w-full max-w-full relative">
                 <canvas id="chartEvolucaoReservas"></canvas>
             </div>
         </div>
 
         {{-- Gráfico 2: Reservas por tipo --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Reservas por Tipo</h4>
-            <div style="height: 250px;">
+            <div class="h-[250px] w-full max-w-full relative">
                 <canvas id="chartReservasTipo"></canvas>
             </div>
         </div>
 
         {{-- Gráfico 3: KM Previsto vs Real --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">KM Previsto vs Real (Últimos 6 Meses)</h4>
-            <div style="height: 300px;">
+            <div class="h-[300px] w-full max-w-full relative">
                 <canvas id="chartKmPrevistoVsReal"></canvas>
             </div>
         </div>
 
         {{-- Gráfico 4: Veículos mais reservados --}}
-        <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Top 10 Veículos Mais Reservados</h4>
-            <div style="height: 300px;">
+            <div class="h-[300px] w-full max-w-full relative">
                 <canvas id="chartVeiculosReservados"></canvas>
             </div>
         </div>

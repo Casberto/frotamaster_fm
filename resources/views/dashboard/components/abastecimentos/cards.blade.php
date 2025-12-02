@@ -1,5 +1,5 @@
 {{-- 4.1 - Cards de Indicadores --}}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     
     {{-- 1. Custo Total do Mês --}}
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-l-4 border-blue-500">

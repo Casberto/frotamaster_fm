@@ -133,14 +133,7 @@ class ManutencaoService
             return;
         }
 
-        $existeAgendada = Manutencao::where('man_vei_id', $manutencao->man_vei_id)
-            ->where('man_status', 'agendada')
-            ->exists();
 
-        if ($existeAgendada) {
-            Log::info("Nova manutenção preventiva para o veículo {$manutencao->veiculo->vei_placa} não foi criada pois já existe uma agendada.");
-            return;
-        }
 
         $novaManutencao = new Manutencao([
             'man_vei_id' => $manutencao->man_vei_id,

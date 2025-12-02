@@ -1,16 +1,16 @@
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
     {{-- Gráfico de Custos Mensais --}}
-    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 min-w-0">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Custos de Manutenção (Últimos 12 Meses)</h3>
-        <div class="h-64">
+        <div class="h-64 w-full max-w-full relative">
             <canvas id="maintenanceCostsChart"></canvas>
         </div>
     </div>
 
     {{-- Gráfico de Tipos Mais Comuns --}}
-    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 min-w-0">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Tipos de Manutenção Mais Comuns</h3>
-        <div class="h-64">
+        <div class="h-64 w-full max-w-full relative">
             <canvas id="maintenanceTypesChart"></canvas>
         </div>
     </div>
