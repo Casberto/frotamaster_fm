@@ -162,9 +162,17 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 })
-                .then(response => {
-                    if (!response.ok) throw new Error('Erro no upload');
-                    return response.json();
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        let errorMsg = data.error || data.message || 'Erro no upload';
+                        if (data.errors) {
+                            const firstKey = Object.keys(data.errors)[0];
+                            errorMsg = data.errors[firstKey][0];
+                        }
+                        throw new Error(errorMsg);
+                    }
+                    return data;
                 })
                 .then(() => {
                     this.selectedFile = null;
@@ -172,7 +180,7 @@
                     this.loadPhotos();
                 })
                 .catch(error => {
-                    this.uploadError = 'Erro ao enviar foto. Tente novamente.';
+                    this.uploadError = error.message;
                     console.error(error);
                 })
                 .finally(() => {

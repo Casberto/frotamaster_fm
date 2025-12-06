@@ -13,6 +13,7 @@ class VeiculoFoto extends Model
     protected $fillable = [
         'vef_vei_id',
         'arquivo',
+        'vef_tipo',
         'vef_criado_em',
     ];
 

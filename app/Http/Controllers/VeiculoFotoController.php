@@ -35,14 +35,19 @@ class VeiculoFotoController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|image|mimes:jpeg,png,jpg|max:2048', // 2MB Max
+            'file' => 'required|image|mimes:jpeg,png,jpg|max:15360', // 15MB Max allowed to reach server
         ]);
 
         try {
             $this->veiculoFotoService->uploadPhoto($request->file('file'), $veiculoId);
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            // Check if it's our custom file size exception or generic
+            $message = $e->getMessage();
+            if (str_contains($message, 'imagem é muito grande')) {
+                return response()->json(['error' => $message], 422);
+            }
+            return response()->json(['error' => 'Erro ao processar imagem: ' . $message], 500);
         }
     }
 

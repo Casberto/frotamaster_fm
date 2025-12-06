@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id('vef_id');
             $table->unsignedBigInteger('vef_vei_id');
             $table->string('arquivo');
+            $table->string('vef_tipo')->default('Geral');
             $table->timestamp('vef_criado_em')->useCurrent();
             
             $table->foreign('vef_vei_id')->references('vei_id')->on('veiculos')->onDelete('cascade');
