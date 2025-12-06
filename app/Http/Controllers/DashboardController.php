@@ -25,8 +25,8 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        if (!Auth::user()->id_empresa) {
-            return view('dashboard.index'); // Para super-admin sem empresa
+        if (Auth::user()->isSuperAdmin()) {
+            return redirect()->route('admin.dashboard');
         }
 
         try {

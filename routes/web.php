@@ -131,7 +131,8 @@ Route::middleware(['auth', 'check.license'])->group(function () {
 
 // GRUPO DE ROTAS DO SUPER ADMINISTRADOR
 Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/monitor/stats', [App\Http\Controllers\Admin\AdminDashboardController::class, 'stats'])->name('monitor.stats');
     Route::resource('empresas', EmpresaController::class);
     Route::resource('licencas', LicenseController::class);
     Route::resource('permissoes', PermissaoController::class);
