@@ -28,7 +28,7 @@
         --}}
         {{-- Desktop Dashboard --}}
         <div class="hidden lg:block">
-            <div class="space-y-8" x-data="{ tab: 'geral', openVeiculo: null }">
+            <div class="space-y-8" x-data="{ tab: new URLSearchParams(window.location.search).get('tab') || 'geral', openVeiculo: null }">
 
                 {{-- Definição das Abas --}}
                 <div class="border-b border-gray-200">

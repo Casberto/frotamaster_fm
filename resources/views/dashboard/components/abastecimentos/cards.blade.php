@@ -1,3 +1,29 @@
+{{-- Filter Section --}}
+<div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+        <span class="text-sm font-bold text-gray-700 uppercase">Filtrar Período</span>
+    </div>
+    <form action="{{ route('dashboard') }}" method="GET" class="flex items-center space-x-4">
+        <input type="hidden" name="tab" value="abastecimentos">
+        <div class="flex items-center space-x-2">
+            <label class="text-xs text-gray-500 font-bold uppercase">De</label>
+            <input type="date" name="start_date" value="{{ $filterStartDate ?? '' }}" class="text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </div>
+        <div class="flex items-center space-x-2">
+            <label class="text-xs text-gray-500 font-bold uppercase">Até</label>
+            <input type="date" name="end_date" value="{{ $filterEndDate ?? '' }}" class="text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        </div>
+        <button type="submit" class="bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Aplicar</button>
+        @if(request('start_date') || request('end_date'))
+            <a href="{{ route('dashboard', ['tab' => 'abastecimentos']) }}" class="text-gray-500 hover:text-red-600 text-sm flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Limpar
+            </a>
+        @endif
+    </form>
+</div>
+
 {{-- 4.1 - Cards de Indicadores --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     

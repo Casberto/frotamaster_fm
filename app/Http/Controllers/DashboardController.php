@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\DashboardService;
 use App\Models\Veiculo;
 use Exception;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -23,17 +24,21 @@ class DashboardController extends Controller
     /**
      * Exibe o dashboard principal.
      */
-    public function index()
+    public function index(Request $request)
     {
         if (Auth::user()->isSuperAdmin()) {
             return redirect()->route('admin.dashboard');
         }
 
         try {
+            // Captura as datas do filtro ou define o padrão (mês atual)
+            $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : Carbon::now()->startOfMonth();
+            $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : Carbon::now()->endOfMonth();
+
             $data = $this->dashboardService->getDashboardData();
-            $executiveData = $this->dashboardService->getExecutiveDashboardData();
+            $executiveData = $this->dashboardService->getExecutiveDashboardData($startDate, $endDate);
             $maintenanceData = $this->dashboardService->getMaintenanceDashboardData();
-            $fuelingData = $this->dashboardService->getFuelingDashboardData();
+            $fuelingData = $this->dashboardService->getFuelingDashboardData($startDate, $endDate);
             $reservationsData = $this->dashboardService->getReservationsDashboardData();
             
             // Merge arrays
@@ -42,7 +47,9 @@ class DashboardController extends Controller
                 $executiveData, 
                 ['maintenanceData' => $maintenanceData],
                 ['fuelingData' => $fuelingData],
-                ['reservationsData' => $reservationsData]
+                ['reservationsData' => $reservationsData],
+                // Passa as datas para a view para manter o estado do filtro
+                ['filterStartDate' => $startDate->format('Y-m-d'), 'filterEndDate' => $endDate->format('Y-m-d')]
             );
             
             return view('dashboard.index', $finalData);

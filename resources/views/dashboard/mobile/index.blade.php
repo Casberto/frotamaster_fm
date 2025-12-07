@@ -1,20 +1,60 @@
-<div class="min-h-screen bg-gray-50 pb-24 w-full max-w-full"> 
+<div class="min-h-screen bg-gray-50 pb-24 w-full overflow-x-hidden"> 
     {{-- Mudei w-full para max-w-full e removi overflow-x-hidden. O layout deve se comportar, não ser forçado. --}}
     
     {{-- Header / Welcome Section --}}
-    <div class="bg-white px-4 py-6 shadow-sm border-b border-gray-100 mb-4">
+    <div class="bg-white px-6 py-6 shadow-sm border-b border-gray-100 mb-4">
         <div class="flex items-center justify-between">
             <div class="min-w-0 flex-1 pr-4"> {{-- Adicionado min-w-0 e flex-1 para impedir que texto longo quebre o layout --}}
                 <h2 class="text-xl font-bold text-gray-800 truncate">Olá, {{ Auth::user()->name }}</h2>
-                <p class="text-sm text-gray-500 mt-1 truncate">Resumo da sua frota hoje.</p>
+                <p class="text-sm text-gray-500 mt-1 truncate">Resumo da sua frota.</p>
             </div>
             <div class="bg-blue-50 p-3 rounded-full flex-shrink-0"> {{-- flex-shrink-0 impede que o ícone seja esmagado --}}
                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
             </div>
         </div>
+        
+        {{-- Mobile Filter --}}
+        <div x-data="{ openFilter: false }" class="mt-4">
+            <button @click="openFilter = !openFilter" class="w-full flex items-center justify-between text-sm text-blue-600 font-medium focus:outline-none">
+                <span>
+                    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Filtrar Período
+                </span>
+                <svg class="w-4 h-4 transform transition-transform" :class="{'rotate-180': openFilter}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div x-show="openFilter" class="mt-3 bg-gray-50 p-4 rounded-xl border border-gray-100" style="display: none;">
+                <form action="{{ route('dashboard') }}" method="GET">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Início</label>
+                            <input type="date" name="start_date" value="{{ $filterStartDate ?? '' }}" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Fim</label>
+                            <input type="date" name="end_date" value="{{ $filterEndDate ?? '' }}" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                        <button type="submit" class="bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-blue-700 transition w-full">Aplicar Filtro</button>
+                    </div>
+                </form>
+            </div>
+            
+            {{-- Active Filter Badge --}}
+            @if(request('start_date') || request('end_date'))
+            <div class="mt-2 flex items-center">
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Filtro Ativo: {{ \Carbon\Carbon::parse($filterStartDate)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($filterEndDate)->format('d/m/Y') }}
+                    <a href="{{ route('dashboard') }}" class="ml-1.5 text-blue-600 hover:text-blue-800">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </a>
+                </span>
+            </div>
+            @endif
+        </div>
     </div>
 
-    <div class="px-4 space-y-6">
+    <div class="px-6 space-y-6">
         
         {{-- 1. Key Indicators Grid --}}
         <div class="grid grid-cols-2 gap-3">
@@ -27,31 +67,83 @@
                 </div>
             </div>
 
-            {{-- Motoristas --}}
+            {{-- Gasto Total Mês (Combined) --}}
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-w-0">
-                <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider truncate">Motoristas</div>
-                <div class="mt-2 flex items-baseline">
-                    <span class="text-2xl font-extrabold text-gray-900">{{ $indicadores['motoristas_ativos'] }}</span>
-                </div>
-            </div>
-
-            {{-- Manutenções --}}
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-w-0 {{ $indicadores['manutencoes_vencidas'] > 0 ? 'ring-2 ring-red-100 bg-red-50/30' : '' }}">
-                <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider truncate">Manutenções</div>
-                <div class="mt-2">
-                    <span class="text-2xl font-extrabold {{ $indicadores['manutencoes_vencidas'] > 0 ? 'text-red-600' : 'text-gray-900' }}">
-                        {{ $indicadores['manutencoes_vencidas'] }}
-                    </span>
-                    <span class="text-[10px] text-gray-400 block font-medium uppercase mt-1 truncate">Vencidas</span>
-                </div>
-            </div>
-
-            {{-- Custo Mês --}}
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-w-0">
-                <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider truncate">Custo Mês</div>
+                <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider truncate">Gasto Total (Mês)</div>
                 <div class="mt-2">
                     <span class="text-lg font-extrabold text-gray-900 tracking-tight truncate block">R$ {{ number_format($indicadores['custo_total_mes'], 0, ',', '.') }}</span>
                 </div>
+            </div>
+
+            {{-- Gasto Manutenção --}}
+             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-w-0 {{ $indicadores['custo_manutencao_mes'] > 0 ? 'ring-1 ring-red-50' : '' }}">
+                <div class="flex items-center space-x-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                    <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider truncate">Manutenção</div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-lg font-extrabold text-gray-900 tracking-tight truncate block">R$ {{ number_format($indicadores['custo_manutencao_mes'], 0, ',', '.') }}</span>
+                </div>
+            </div>
+
+            {{-- Gasto Abastecimento --}}
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-w-0 {{ $indicadores['custo_abastecimento_mes'] > 0 ? 'ring-1 ring-blue-50' : '' }}">
+                 <div class="flex items-center space-x-1">
+                    <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                    <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider truncate">Abastecimento</div>
+                </div>
+                <div class="mt-2">
+                    <span class="text-lg font-extrabold text-gray-900 tracking-tight truncate block">R$ {{ number_format($indicadores['custo_abastecimento_mes'], 0, ',', '.') }}</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Consumption Estimates Section (Per Vehicle) --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+             <div class="bg-blue-50 px-4 py-3 border-b border-blue-100 rounded-t-2xl flex justify-between items-center" x-data="{ showDisclaimer: false }">
+                <h4 class="text-sm font-bold text-blue-800">Estimativa de Consumo</h4>
+                <div class="relative">
+                    <button @click="showDisclaimer = !showDisclaimer" class="text-blue-600 hover:text-blue-800 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                          <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div x-show="showDisclaimer" @click.away="showDisclaimer = false" class="absolute right-0 mt-2 w-64 p-3 bg-white rounded-lg shadow-lg border border-gray-100 z-10 text-xs text-gray-600" style="display: none;">
+                        <p><strong>Atenção:</strong> Estes valores são estimativas baseadas apenas em abastecimentos onde o tanque foi completamente cheio ("Tanque Cheio"). Para maior precisão, registre sempre se encheu o tanque. Mostrado individualmente por veículo.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="divide-y divide-gray-100">
+                @forelse($indicadores['estimativa_consumo'] as $estimate)
+                    <div class="p-4">
+                        <div class="text-xs font-bold text-gray-700 mb-2 truncate">{{ $estimate['veiculo'] }}</div>
+                        <div class="grid grid-cols-3 gap-2 text-center divide-x divide-gray-100">
+                             <div>
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Gasolina</div>
+                                <div class="text-sm font-bold text-gray-800">
+                                    {{ $estimate['medias']['Gasolina'] ?? '--' }} <span class="text-[10px] text-gray-500 font-normal">km/l</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Etanol</div>
+                                <div class="text-sm font-bold text-gray-800">
+                                    {{ $estimate['medias']['Etanol'] ?? '--' }} <span class="text-[10px] text-gray-500 font-normal">km/l</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Diesel</div>
+                                <div class="text-sm font-bold text-gray-800">
+                                    {{ $estimate['medias']['Diesel'] ?? '--' }} <span class="text-[10px] text-gray-500 font-normal">km/l</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-4 text-center text-sm text-gray-500">
+                        Nenhum dado disponível. Necessário ao menos 2 abastecimentos com tanque cheio no período.
+                    </div>
+                @endforelse
             </div>
         </div>
 

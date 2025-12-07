@@ -333,13 +333,15 @@ class DashboardService
         return ['labels' => $labels, 'data' => $data];
     }
 
-    public function getExecutiveDashboardData()
+    public function getExecutiveDashboardData($startDate = null, $endDate = null)
     {
         $idEmpresa = $this->idEmpresa;
         $hoje = Carbon::now()->format('Y-m-d');
-        $inicioMes = Carbon::now()->startOfMonth();
-        $fimMes = Carbon::now()->endOfMonth();
-        $inicio30Dias = Carbon::now()->subDays(30);
+        
+        $inicioMes = $startDate ? Carbon::parse($startDate) : Carbon::now()->startOfMonth();
+        $fimMes = $endDate ? Carbon::parse($endDate) : Carbon::now()->endOfMonth();
+        
+        $inicio30Dias = $startDate ? Carbon::parse($startDate) : Carbon::now()->subDays(30);
 
         // 1.1 Indicadores Gerais
         $veiculosAtivosCount = Veiculo::where('vei_emp_id', $idEmpresa)->where('vei_status', 1)->count();
@@ -429,6 +431,9 @@ class DashboardService
                 'abastecimentos_mes' => $abastecimentosMesCount,
                 'alertas_proximos' => $alertasProximosCount,
                 'custo_total_mes' => $custoTotalMes,
+                'custo_manutencao_mes' => $custoManutencaoMes,
+                'custo_abastecimento_mes' => $custoAbastecimentoMes,
+                'estimativa_consumo' => $this->getConsumptionEstimates($inicioMes, $fimMes),
                 'custo_medio_veiculo' => $custoMedioPorVeiculo
             ],
             'graficos' => [
@@ -776,11 +781,11 @@ class DashboardService
             ->firstOrFail();
     }
 
-    public function getFuelingDashboardData()
+    public function getFuelingDashboardData($startDate = null, $endDate = null)
     {
         $idEmpresa = $this->idEmpresa;
-        $inicioMes = Carbon::now()->startOfMonth();
-        $fimMes = Carbon::now()->endOfMonth();
+        $inicioMes = $startDate ? Carbon::parse($startDate) : Carbon::now()->startOfMonth();
+        $fimMes = $endDate ? Carbon::parse($endDate) : Carbon::now()->endOfMonth();
         $start12Months = Carbon::now()->subMonths(12)->startOfMonth();
 
         // 4.1 - Indicadores
@@ -860,6 +865,7 @@ class DashboardService
 
         foreach ($veiculos as $veiculo) {
             $abastecimentos = $veiculo->abastecimentos()
+                ->where('aba_tanque_cheio', true)
                 ->whereBetween('aba_data', [$startDate, $endDate])
                 ->orderBy('aba_km', 'asc')
                 ->get();
@@ -868,9 +874,11 @@ class DashboardService
                 $primeiroKm = $abastecimentos->first()->aba_km;
                 $ultimoKm = $abastecimentos->last()->aba_km;
                 $kmRodados = $ultimoKm - $primeiroKm;
+                
+                // Exclui o primeiro abastecimento da soma de litros (marco inicial)
+                $litrosConsumidos = $abastecimentos->slice(1)->sum('aba_qtd');
 
-                if ($kmRodados > 0) {
-                    $litrosConsumidos = $abastecimentos->sum('aba_qtd');
+                if ($kmRodados > 0 && $litrosConsumidos > 0) {
                     $totalKm += $kmRodados;
                     $totalLitros += $litrosConsumidos;
                 }
@@ -993,6 +1001,58 @@ class DashboardService
         // Ordenar por média decrescente e pegar top 10
         usort($ranking, fn($a, $b) => $b['media'] <=> $a['media']);
         return array_slice($ranking, 0, 10);
+    }
+
+    private function getConsumptionEstimates(Carbon $startDate, Carbon $endDate)
+    {
+        $veiculos = Veiculo::where('vei_emp_id', $this->idEmpresa)
+            ->where('vei_status', 1)
+            ->get();
+            
+        $estimates = [];
+
+        foreach ($veiculos as $veiculo) {
+            $fuelTypes = [1 => 'Gasolina', 2 => 'Etanol', 3 => 'Diesel', 4 => 'GNV'];
+            $veiculoEstimates = [];
+            $hasData = false;
+
+            foreach ($fuelTypes as $typeId => $typeName) {
+                // Filtramos apenas abastecimentos que encheram o tanque
+                $abastecimentos = $veiculo->abastecimentos()
+                    ->where('aba_combustivel', $typeId)
+                    ->where('aba_tanque_cheio', true)
+                    ->whereBetween('aba_data', [$startDate, $endDate])
+                    ->orderBy('aba_km', 'asc')
+                    ->get();
+
+                if ($abastecimentos->count() >= 2) {
+                    $primeiroKm = $abastecimentos->first()->aba_km;
+                    $ultimoKm = $abastecimentos->last()->aba_km;
+                    $kmRodados = $ultimoKm - $primeiroKm;
+                    
+                    // Soma litros do segundo abastecimento em diante
+                    $litrosConsumidos = $abastecimentos->slice(1)->sum('aba_qtd');
+
+                    if ($kmRodados > 0 && $litrosConsumidos > 0) {
+                        $veiculoEstimates[$typeName] = round($kmRodados / $litrosConsumidos, 2);
+                        $hasData = true;
+                    } else {
+                         $veiculoEstimates[$typeName] = null;
+                    }
+                } else {
+                     $veiculoEstimates[$typeName] = null;
+                }
+            }
+            
+            if ($hasData) {
+                $estimates[] = [
+                    'veiculo' => $veiculo->vei_placa . ' - ' . $veiculo->vei_modelo,
+                    'medias' => $veiculoEstimates
+                ];
+            }
+        }
+
+        return $estimates;
     }
 
     public function getFuelingDetails($id)
