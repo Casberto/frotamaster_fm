@@ -661,11 +661,39 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <div class="md:col-span-6">
                     <label for="vei_km_inicial" class="block font-medium text-sm text-gray-700">KM Inicial *</label>
-                    <input type="number" name="vei_km_inicial" id="vei_km_inicial" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('vei_km_inicial', optional($veiculo)->vei_km_inicial ?? '0') }}" required max="9999999">
+                    <div x-data="{
+                        raw: '{{ old('vei_km_inicial', optional($veiculo)->vei_km_inicial ?? '0') }}',
+                        format(v) {
+                            if (!v) return '';
+                            return v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        update(e) {
+                            let v = e.target.value.replace(/\D/g, '');
+                            this.raw = v;
+                            e.target.value = this.format(v);
+                        }
+                    }" x-init="$refs.input.value = format(raw)">
+                        <input type="text" x-ref="input" @input="update" id="vei_km_inicial_input" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                        <input type="hidden" name="vei_km_inicial" x-model="raw">
+                    </div>
                 </div>
                 <div class="md:col-span-6">
                     <label for="vei_km_atual" class="block font-medium text-sm text-gray-700">KM Atual *</label>
-                    <input type="number" name="vei_km_atual" id="vei_km_atual" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('vei_km_atual', optional($veiculo)->vei_km_atual ?? '0') }}" required max="9999999">
+                    <div x-data="{
+                        raw: '{{ old('vei_km_atual', optional($veiculo)->vei_km_atual ?? '0') }}',
+                        format(v) {
+                            if (!v) return '';
+                            return v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        update(e) {
+                            let v = e.target.value.replace(/\D/g, '');
+                            this.raw = v;
+                            e.target.value = this.format(v);
+                        }
+                    }" x-init="$refs.input.value = format(raw)">
+                        <input type="text" x-ref="input" @input="update" id="vei_km_atual_input" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                        <input type="hidden" name="vei_km_atual" x-model="raw">
+                    </div>
                 </div>
             </div>
         </div>
@@ -735,7 +763,36 @@
                 </div>
                  <div class="md:col-span-6">
                     <label for="vei_valor_aquisicao" class="block font-medium text-sm text-gray-700">Valor de Aquisição</label>
-                    <input type="number" step="0.01" name="vei_valor_aquisicao" id="vei_valor_aquisicao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('vei_valor_aquisicao', optional($veiculo)->vei_valor_aquisicao) }}">
+                    <div x-data="{
+                        raw: '{{ old('vei_valor_aquisicao', optional($veiculo)->vei_valor_aquisicao) }}',
+                        display: '',
+                        format(value) {
+                            if (!value) return '';
+                            let number = parseFloat(value).toFixed(2);
+                            return number.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        init() {
+                            if (this.raw) {
+                                this.display = this.format(this.raw);
+                            }
+                        },
+                        input(e) {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (!value) {
+                                this.raw = '';
+                                this.display = '';
+                                return;
+                            }
+                            // Convert string of digits to float (last 2 digits are cents)
+                            let floatVal = parseFloat(value) / 100;
+                            this.raw = floatVal.toFixed(2);
+                            this.display = this.format(this.raw);
+                            e.target.value = this.display;
+                        }
+                    }" x-init="init">
+                        <input type="text" x-model="display" @input="input" id="vei_valor_aquisicao_display" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="0,00">
+                        <input type="hidden" name="vei_valor_aquisicao" x-model="raw">
+                    </div>
                 </div>
                 <div class="md:col-span-6">
                     <label for="vei_data_venda" class="block font-medium text-sm text-gray-700">Data da Venda</label>
@@ -743,7 +800,36 @@
                 </div>
                 <div class="md:col-span-6">
                     <label for="vei_valor_venda" class="block font-medium text-sm text-gray-700">Valor de Venda</label>
-                    <input type="number" step="0.01" name="vei_valor_venda" id="vei_valor_venda" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('vei_valor_venda', optional($veiculo)->vei_valor_venda) }}">
+                    <div x-data="{
+                        raw: '{{ old('vei_valor_venda', optional($veiculo)->vei_valor_venda) }}',
+                        display: '',
+                        format(value) {
+                            if (!value) return '';
+                            let number = parseFloat(value).toFixed(2);
+                            return number.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        init() {
+                            if (this.raw) {
+                                this.display = this.format(this.raw);
+                            }
+                        },
+                        input(e) {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (!value) {
+                                this.raw = '';
+                                this.display = '';
+                                return;
+                            }
+                            // Convert string of digits to float (last 2 digits are cents)
+                            let floatVal = parseFloat(value) / 100;
+                            this.raw = floatVal.toFixed(2);
+                            this.display = this.format(this.raw);
+                            e.target.value = this.display;
+                        }
+                    }" x-init="init">
+                        <input type="text" x-model="display" @input="input" id="vei_valor_venda_display" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="0,00">
+                        <input type="hidden" name="vei_valor_venda" x-model="raw">
+                    </div>
                 </div>
                 <div class="md:col-span-12">
                     <label for="vei_obs" class="block font-medium text-sm text-gray-700">Observações</label>

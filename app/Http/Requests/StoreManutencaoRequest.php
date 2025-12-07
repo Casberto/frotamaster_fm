@@ -40,6 +40,7 @@ class StoreManutencaoRequest extends FormRequest
             'man_custo_mao_de_obra' => ['nullable', 'string'],
             'man_responsavel' => ['nullable', 'string', 'max:255'],
             'man_nf' => ['nullable', 'string', 'max:255'],
+            'man_observacoes' => ['nullable', 'string'],
             'man_prox_revisao_data' => [
                 'nullable',
                 'date',

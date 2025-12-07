@@ -70,7 +70,7 @@
                                 $unidade = 'kWh'; 
                                 $unidadePreco = 'kWh';
                                 break;
-                            case 6: $opcoesCombustivel = ['Gasolina', 'Etanol']; break; // Flex
+                            case 6: $opcoesCombustivel = ['Gasolina', 'Etanol', 'GNV']; break; // Flex (Removed Diesel)
                             default: $opcoesCombustivel = ['Gasolina', 'Etanol', 'Diesel', 'GNV', 'Elétrico']; break;
                         }
                     } else {
@@ -96,6 +96,31 @@
                             <x-input-label for="aba_vlr_tot" value="Valor Total (R$) *" />
                             <x-text-input id="aba_vlr_tot" name="aba_vlr_tot" type="number" step="0.01" x-model="total" class="w-full text-sm font-bold text-blue-700" placeholder="0.00" required />
                         </div>
+                        
+                         {{-- Aditivado (Logica Alpine) --}}
+                         <div x-data="{ 
+                                checkVisibility() {
+                                    const val = document.getElementById('aba_tipo_combustivel').value;
+                                    return ['Gasolina', 'Etanol', 'Diesel'].includes(val);
+                                }
+                             }" 
+                             x-show="checkVisibility()"
+                             @change.window="checkVisibility()"
+                             class="pt-2">
+                             
+                            <label for="aba_aditivado_res" class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="aba_aditivado" id="aba_aditivado_res" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Aditivado?</span>
+                            </label>
+                            
+                            {{-- Escuta mudança no select --}}
+                            <script>
+                                document.getElementById('aba_tipo_combustivel').addEventListener('change', function() {
+                                    window.dispatchEvent(new CustomEvent('change'));
+                                });
+                            </script>
+                        </div>
+
                     </div>
 
                     {{-- Coluna 2 --}}

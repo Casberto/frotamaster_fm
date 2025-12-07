@@ -53,7 +53,21 @@
                 </div>
                  <div>
                     <label for="man_km" class="block font-medium text-sm text-gray-700">Quilometragem*</label>
-                    <input type="number" name="man_km" id="man_km" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('man_km', $manutencao->man_km ?? '') }}" required>
+                    <div x-data="{
+                        raw: '{{ old('man_km', $manutencao->man_km ?? '') }}',
+                        format(v) {
+                            if (!v) return '';
+                            return v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        update(e) {
+                            let v = e.target.value.replace(/\D/g, '');
+                            this.raw = v;
+                            e.target.value = this.format(v);
+                        }
+                    }" x-init="$refs.input.value = format(raw)">
+                        <input type="text" x-ref="input" @input="update" id="man_km_input" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                        <input type="hidden" name="man_km" id="man_km" x-model="raw">
+                    </div>
                 </div>
                 <div>
                     <label for="man_data_inicio" class="block font-medium text-sm text-gray-700">Data de Início*</label>
@@ -72,6 +86,11 @@
                         <option value="cancelada" @selected(old('man_status', $manutencao->man_status ?? '') == 'cancelada')>Cancelada</option>
                     </select>
                 </div>
+            </div>
+            
+            <div class="mt-6">
+                <label for="man_observacoes" class="block font-medium text-sm text-gray-700">Observações</label>
+                <textarea name="man_observacoes" id="man_observacoes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ old('man_observacoes', $manutencao->man_observacoes ?? '') }}</textarea>
             </div>
         </div>
     </div>
@@ -185,7 +204,10 @@
                     <label for="man_nf" class="block font-medium text-sm text-gray-700">Nota Fiscal</label>
                     <input type="text" name="man_nf" id="man_nf" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('man_nf', $manutencao->man_nf ?? '') }}">
                 </div>
+                </div>
             </div>
+            
+
         </div>
 
         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
@@ -200,7 +222,21 @@
                 </div>
                 <div>
                     <label for="man_prox_revisao_km" class="block font-medium text-sm text-gray-700">Próxima Revisão (KM)</label>
-                    <input type="number" name="man_prox_revisao_km" id="man_prox_revisao_km" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('man_prox_revisao_km', $manutencao->man_prox_revisao_km ?? '') }}">
+                    <div x-data="{
+                        raw: '{{ old('man_prox_revisao_km', $manutencao->man_prox_revisao_km ?? '') }}',
+                        format(v) {
+                            if (!v) return '';
+                            return v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        update(e) {
+                            let v = e.target.value.replace(/\D/g, '');
+                            this.raw = v;
+                            e.target.value = this.format(v);
+                        }
+                    }" x-init="$refs.input.value = format(raw)">
+                        <input type="text" x-ref="input" @input="update" id="man_prox_revisao_km_input" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <input type="hidden" name="man_prox_revisao_km" id="man_prox_revisao_km" x-model="raw">
+                    </div>
                 </div>
             </div>
         </div>

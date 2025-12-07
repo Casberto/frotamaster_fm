@@ -41,7 +41,21 @@
                     <label for="aba_km" class="block font-medium text-sm text-gray-700">
                         Quilometragem* <span id="km_atual_veiculo" class="text-xs text-gray-500 font-normal"></span>
                     </label>
-                    <input type="number" name="aba_km" id="aba_km" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('aba_km', $abastecimento->aba_km ?? '') }}" required>
+                    <div x-data="{
+                        raw: '{{ old('aba_km', $abastecimento->aba_km ?? '') }}',
+                        format(v) {
+                            if (!v) return '';
+                            return v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        update(e) {
+                            let v = e.target.value.replace(/\D/g, '');
+                            this.raw = v;
+                            e.target.value = this.format(v);
+                        }
+                    }" x-init="$refs.input.value = format(raw)">
+                        <input type="text" x-ref="input" @input="update" id="aba_km_input" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                        <input type="hidden" name="aba_km" id="aba_km" x-model="raw">
+                    </div>
                 </div>
                 {{-- Fornecedor (Posto) --}}
                 <div class="lg:col-span-2">
@@ -86,8 +100,16 @@
                             <option value="3" @selected(old('aba_combustivel', $abastecimento->aba_combustivel ?? '') == 3)>Diesel</option>
                             <option value="4" @selected(old('aba_combustivel', $abastecimento->aba_combustivel ?? '') == 4)>GNV</option>
                         </select>
+                        </select>
                     </div>
-                    {{-- Valores --}}
+
+                    {{-- Aditivado (Logic handled in JS) --}}
+                    <div id="aditivado_wrapper" class="hidden flex items-end pb-3">
+                         <label for="aba_aditivado" class="flex items-center cursor-pointer">
+                            <input type="checkbox" name="aba_aditivado" id="aba_aditivado" value="1" @checked(old('aba_aditivado', $abastecimento->aba_aditivado ?? false)) class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2 block text-sm text-gray-900">Combustível Aditivado?</span>
+                        </label>
+                    </div>
                     <div>
                         <label for="aba_vlr_tot" class="block font-medium text-sm text-gray-700">Valor Total Pago (R$)*</label>
                         <input type="text" name="aba_vlr_tot" id="aba_vlr_tot" class="mt-1 block w-full calculator-input border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('aba_vlr_tot', $abastecimento ? number_format($abastecimento->aba_vlr_tot, 2, ',', '.') : '') }}" required>
@@ -216,13 +238,30 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tipoCombustivelVeiculo == 6 || tipoCombustivelVeiculo == 7) {
             tipoCombustivelWrapper.classList.remove('hidden');
             tipoCombustivelSelect.required = true;
-            // Não auto-seleciona, usuário deve escolher
+
+            // Filtra opções para Flex (6): Remove Diesel (3)
+            // Lógica: Percorre options e oculta/desabilita Diesel
+            // OBS: O HTML já está renderizado, então vamos ocultar via JS
+            for(let i=0; i < tipoCombustivelSelect.options.length; i++) {
+                let opt = tipoCombustivelSelect.options[i];
+                if(tipoCombustivelVeiculo == 6 && opt.value == '3') { // Diesel
+                    opt.hidden = true;
+                    opt.disabled = true;
+                } else {
+                    opt.hidden = false;
+                    opt.disabled = false;
+                }
+            }
+
         } else if (tipoCombustivelVeiculo != 5 && tipoCombustivelVeiculo != 4) {
              // Veículos mono-combustível (Gasolina=1, Etanol=2, Diesel=3)
              // Auto-seleciona o tipo correspondente
              tipoCombustivelSelect.value = tipoCombustivelVeiculo;
-             tipoCombustivelSelect.required = false; // Não é obrigatório interagir pois já está setado
+             tipoCombustivelSelect.required = false; 
         }
+
+        // Logic for Aditivado checkbox
+        updateAditivadoVisibility();
 
         // Atualiza KM
         kmAtualVeiculoSpan.textContent = `(Atual: ${veiculo.km} km)`;
@@ -242,7 +281,23 @@ document.addEventListener('DOMContentLoaded', function() {
             labelUnidade.textContent = 'Litros';
             labelValorUnidade.textContent = 'Litro';
         }
+
+        updateAditivadoVisibility();
     });
+
+    const aditivadoWrapper = document.getElementById('aditivado_wrapper');
+    
+    function updateAditivadoVisibility() {
+        const val = tipoCombustivelSelect.value;
+        // Show for Gasolina(1), Etanol(2), Diesel(3). Hide for GNV(4), Elétrico(null/5)
+        if(val == '1' || val == '2' || val == '3') {
+            aditivadoWrapper.classList.remove('hidden');
+        } else {
+            aditivadoWrapper.classList.add('hidden');
+             // Uncheck if hidden
+            document.getElementById('aba_aditivado').checked = false;
+        }
+    }
 
     idVeiculoSelect.addEventListener('change', updateFormVisibility);
     updateFormVisibility(); // Executa ao carregar a página

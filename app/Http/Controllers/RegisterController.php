@@ -53,8 +53,13 @@ class RegisterController extends Controller
             $empresa = Empresa::create($empresaData);
 
             // 2. Criar o Usuário Master
+            $documentoClean = preg_replace('/[^0-9]/', '', (string) $validatedData['cnpj']);
+            $nomeUsuario = strlen($documentoClean) === 11 
+                ? $empresa->nome_fantasia 
+                : 'Master ' . $empresa->nome_fantasia;
+
             $user = User::create([
-                'name' => 'Master ' . $empresa->nome_fantasia,
+                'name' => $nomeUsuario,
                 'email' => $empresa->email_contato,
                 'password' => Hash::make($request->password),
                 'id_empresa' => $empresa->id,

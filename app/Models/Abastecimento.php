@@ -25,6 +25,7 @@ class Abastecimento extends Model
         'aba_vlr_und',
         'aba_vlr_tot',
         'aba_combustivel',
+        'aba_aditivado',
         'aba_tanque_cheio',
         'aba_tanque_inicio',
         'aba_pneus_calibrados',
@@ -42,6 +43,7 @@ class Abastecimento extends Model
         'aba_qtd' => 'decimal:3',
         'aba_vlr_und' => 'decimal:3',
         'aba_vlr_tot' => 'decimal:2',
+        'aba_aditivado' => 'boolean',
     ];
 
     /**
