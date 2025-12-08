@@ -61,7 +61,7 @@
             {{-- Veículos Ativos --}}
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-full min-w-0">
                 <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider truncate">Veículos</div>
-                <div class="mt-2 flex items-baseline wrap">
+                <div class="mt-2 flex items-baseline flex-wrap">
                     <span class="text-2xl font-extrabold text-gray-900">{{ $indicadores['veiculos_ativos'] }}</span>
                     <span class="ml-1 text-xs text-gray-400 font-medium">/ {{ $indicadores['veiculos_total'] }}</span>
                 </div>

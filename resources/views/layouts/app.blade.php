@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-f">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Frotamaster') }}</title>
@@ -41,7 +41,7 @@
             <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black opacity-50 z-30 lg:hidden"></div>
 
             <!-- Conteúdo Principal -->
-            <div class="flex-1 main-content lg:ml-64">
+            <div class="flex-1 main-content lg:ml-64 w-full max-w-full overflow-x-hidden">
                 <!-- Page Heading -->
                 @if (isset($header))
                     <header class="bg-white border-b border-gray-200">
