@@ -46,6 +46,7 @@
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900 ml-2">Excluir</button>
                             </form>
+                            <button onclick="document.getElementById('modal-editar-sinistro-{{ $sinistro->ssi_id }}').showModal()" class="text-blue-600 hover:text-blue-900 ml-2">Editar</button>
                             <button onclick="document.getElementById('modal-fotos-{{ $sinistro->ssi_id }}').showModal()" class="text-indigo-600 hover:text-indigo-900 ml-2">Fotos</button>
                         </td>
                     </tr>
@@ -198,6 +199,120 @@
                 <x-seguros.sinistro-photo-gallery :sinistroId="$sinistro->ssi_id" />
             </div>
         </div>
+    </dialog>
+
+    <dialog id="modal-editar-sinistro-{{ $sinistro->ssi_id }}" class="p-0 rounded-lg shadow-xl w-full max-w-lg backdrop:bg-gray-500/50">
+        <form action="{{ route('sinistros.update', $sinistro->ssi_id) }}" method="POST" class="p-6">
+            @csrf
+            @method('PUT')
+            
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Editar Sinistro</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Data do Ocorrido</label>
+                    <input type="date" name="ssi_data" value="{{ $sinistro->ssi_data ? $sinistro->ssi_data->format('Y-m-d') : '' }}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                    <select name="ssi_tipo" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="Colisão" {{ $sinistro->ssi_tipo == 'Colisão' ? 'selected' : '' }}>Colisão</option>
+                        <option value="Roubo/Furto" {{ $sinistro->ssi_tipo == 'Roubo/Furto' ? 'selected' : '' }}>Roubo/Furto</option>
+                        <option value="Danos a Terceiros" {{ $sinistro->ssi_tipo == 'Danos a Terceiros' ? 'selected' : '' }}>Danos a Terceiros</option>
+                        <option value="Causas Naturais" {{ $sinistro->ssi_tipo == 'Causas Naturais' ? 'selected' : '' }}>Causas Naturais</option>
+                        <option value="Outro" {{ $sinistro->ssi_tipo == 'Outro' ? 'selected' : '' }}>Outro</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Valor do Prejuízo (R$)</label>
+                    <div x-data="{
+                        raw: '{{ $sinistro->ssi_valor_prejuizo }}',
+                        display: '',
+                        format(value) {
+                            if (!value) return '';
+                            let number = parseFloat(value).toFixed(2);
+                            return number.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        init() {
+                            if (this.raw) {
+                                this.display = this.format(this.raw);
+                            }
+                        },
+                        input(e) {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (!value) {
+                                this.raw = '';
+                                this.display = '';
+                                return;
+                            }
+                            let floatVal = parseFloat(value) / 100;
+                            this.raw = floatVal.toFixed(2);
+                            this.display = this.format(this.raw);
+                            e.target.value = this.display;
+                        }
+                    }" x-init="init">
+                         <input type="text" x-model="display" @input="input" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="0,00">
+                        <input type="hidden" name="ssi_valor_prejuizo" x-model="raw">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Valor Coberto (R$)</label>
+                    <div x-data="{
+                        raw: '{{ $sinistro->ssi_valor_coberto }}',
+                        display: '',
+                        format(value) {
+                            if (!value) return '';
+                            let number = parseFloat(value).toFixed(2);
+                            return number.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        },
+                        init() {
+                            if (this.raw) {
+                                this.display = this.format(this.raw);
+                            }
+                        },
+                        input(e) {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (!value) {
+                                this.raw = '';
+                                this.display = '';
+                                return;
+                            }
+                            let floatVal = parseFloat(value) / 100;
+                            this.raw = floatVal.toFixed(2);
+                            this.display = this.format(this.raw);
+                            e.target.value = this.display;
+                        }
+                    }" x-init="init">
+                        <input type="text" x-model="display" @input="input" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="0,00">
+                        <input type="hidden" name="ssi_valor_coberto" x-model="raw">
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Status Atual</label>
+                     <select name="ssi_status" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="Em análise" {{ $sinistro->ssi_status == 'Em análise' ? 'selected' : '' }}>Em análise</option>
+                        <option value="Aguardando Documentação" {{ $sinistro->ssi_status == 'Aguardando Documentação' ? 'selected' : '' }}>Aguardando Documentação</option>
+                        <option value="Aprovado" {{ $sinistro->ssi_status == 'Aprovado' ? 'selected' : '' }}>Aprovado</option>
+                        <option value="Negado" {{ $sinistro->ssi_status == 'Negado' ? 'selected' : '' }}>Negado</option>
+                        <option value="Concluído" {{ $sinistro->ssi_status == 'Concluído' ? 'selected' : '' }}>Concluído</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Observações</label>
+                    <textarea name="ssi_obs" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">{{ $sinistro->ssi_obs }}</textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="document.getElementById('modal-editar-sinistro-{{ $sinistro->ssi_id }}').close()" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">Salvar Alterações</button>
+            </div>
+        </form>
     </dialog>
     @endforeach
 </div>
