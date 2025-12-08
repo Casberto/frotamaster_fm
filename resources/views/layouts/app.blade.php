@@ -58,7 +58,7 @@
                 @endif
 
                 <!-- Page Content -->
-                <main class="p-6 sm:p-8">
+                <main class="px-2 py-6 sm:p-8 overflow-x-hidden">
                     {{-- Flash Messages (Toast Style) --}}
                     @if (session('success'))
                         <div 

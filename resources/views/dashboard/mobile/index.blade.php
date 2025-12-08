@@ -2,7 +2,7 @@
     {{-- Mudei w-full para max-w-full e removi overflow-x-hidden. O layout deve se comportar, não ser forçado. --}}
     
     {{-- Header / Welcome Section --}}
-    <div class="bg-white px-6 py-6 shadow-sm border-b border-gray-100 mb-4">
+    <div class="bg-white px-4 py-4 shadow-sm border-b border-gray-100 mb-4">
         <div class="flex items-center justify-between">
             <div class="min-w-0 flex-1 pr-4"> {{-- Adicionado min-w-0 e flex-1 para impedir que texto longo quebre o layout --}}
                 <h2 class="text-xl font-bold text-gray-800 truncate">Olá, {{ Auth::user()->name }}</h2>
@@ -54,7 +54,7 @@
         </div>
     </div>
 
-    <div class="px-6 space-y-6">
+    <div class="px-4 space-y-6">
         
         {{-- 1. Key Indicators Grid --}}
         <div class="grid grid-cols-2 gap-3">
