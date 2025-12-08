@@ -20,6 +20,10 @@
 {{-- Módulo Documentos --}}
 @include('layouts.navigation.user.documentos')
 
+{{-- Módulo Seguros --}}
+@include('layouts.navigation.user.seguros')
+
+
 {{-- Módulo Cadastros --}}
 @include('layouts.navigation.user.cadastros')
 

@@ -19,6 +19,10 @@ use App\Http\Controllers\MotoristaController;
 use App\Http\Controllers\Admin\ConfiguracaoPadraoController;
 use App\Http\Controllers\ConfiguracaoEmpresaController;
 use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\SegurosController;
+use App\Http\Controllers\SeguroSinistroController;
+use App\Http\Controllers\SeguroSinistroFotoController;
+use App\Http\Controllers\SeguroCoberturaController;
 
 // Importação dos novos controladores de Reserva (Single Action & Sub-recursos)
 use App\Http\Controllers\Reserva\AprovarReservaController;
@@ -82,6 +86,27 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::resource('perfis', PerfilController::class);
     Route::resource('usuarios', UsuarioController::class);
     Route::resource('motoristas', MotoristaController::class);
+
+    // --- MÓDULO DE SEGUROS ---
+    // Rota para Renovação
+    Route::post('/seguros/{id}/renew', [SegurosController::class, 'renew'])->name('seguros.renew');
+
+    // Rotas para Fotos de Sinistros
+    Route::get('/seguros/sinistros/{id}/fotos', [SeguroSinistroFotoController::class, 'index']);
+    Route::post('/seguros/sinistros/{id}/fotos', [SeguroSinistroFotoController::class, 'store']);
+    Route::delete('/seguros/sinistros/fotos/{id}', [SeguroSinistroFotoController::class, 'destroy']);
+    Route::get('/seguros/sinistros/fotos/{filename}', [SeguroSinistroFotoController::class, 'show'])->name('seguros.sinistros.fotos.show');
+    Route::get('/seguros/{id}/download', [SegurosController::class, 'download'])->name('seguros.download');
+    Route::resource('seguros', SegurosController::class);
+    
+    // Coberturas
+    Route::post('coberturas', [SeguroCoberturaController::class, 'store'])->name('coberturas.store');
+    Route::delete('coberturas/{id}', [SeguroCoberturaController::class, 'destroy'])->name('coberturas.destroy');
+
+    // Sinistros
+    Route::post('sinistros', [SeguroSinistroController::class, 'store'])->name('sinistros.store');
+    Route::put('sinistros/{id}', [SeguroSinistroController::class, 'update'])->name('sinistros.update');
+    Route::delete('sinistros/{id}', [SeguroSinistroController::class, 'destroy'])->name('sinistros.destroy');
 
     // --- MÓDULO DE RESERVAS (Refatorado) ---
     
