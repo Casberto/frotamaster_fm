@@ -14,6 +14,9 @@ class ConfiguracaoEmpresaController extends Controller
 
     public function index(Request $request)
     {
+        if (!Auth::user()->temPermissao('PAR001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
 
         $query = ConfiguracaoEmpresa::where('cfe_emp_id', $idEmpresa)
@@ -44,6 +47,9 @@ class ConfiguracaoEmpresaController extends Controller
      */
     public function update(Request $request)
     {
+        if (!Auth::user()->temPermissao('PAR003')) {
+            return redirect()->route('parametros.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
 
         $request->validate([

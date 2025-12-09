@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class FinalizarReservaController extends Controller
 {
-    const PERM_FINALIZAR = 38;
-
     public function __invoke(FinalizarReservaRequest $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
 
-        if (!Auth::user()->temPermissaoId(self::PERM_FINALIZAR)) {
+        if (!Auth::user()->temPermissao('RES006')) {
             abort(403, 'Sem permissão para finalizar viagens.');
         }
 

@@ -118,6 +118,36 @@ class User extends Authenticatable
     }
 
     /**
+     * Verifica se o usuário tem uma permissão específica pelo CÓDIGO (String).
+     *
+     * @param string $codigo O Código da permissão (ex: 'VEI001')
+     * @return bool
+     */
+    public function temPermissao(string $codigo): bool
+    {
+        // Super-admin e Master têm acesso total na sua empresa
+        if ($this->isSuperAdmin() || $this->isMaster()) {
+            return true;
+        }
+
+        $key = "perm_code_{$codigo}";
+
+        if (isset($this->permissionCache[$key])) {
+            return $this->permissionCache[$key];
+        }
+
+        // Verifica nos perfis ativos se existe a permissão com o Código informado
+        $tem = $this->perfis()
+            ->where('per_status', true)
+            ->whereHas('permissoes', function ($query) use ($codigo) {
+                $query->where('prm_codigo', $codigo);
+            })
+            ->exists();
+
+        return $this->permissionCache[$key] = $tem;
+    }
+
+    /**
      * Mantido para compatibilidade com blade legados, mas recomenda-se usar o ID.
      */
     public function hasPermission(string $modulo, string $acao): bool

@@ -16,7 +16,7 @@
 
         {{-- Editar: Status Compatível + Permissão Editar (Transformado em Link <a>) --}}
         {{-- Concluir Correção (Pendente Ajuste) --}}
-        @if($reserva->res_status == 'pendente_ajuste' && Auth::user()->hasPermission('Reservas', 'Editar'))
+        @if($reserva->res_status == 'pendente_ajuste' && Auth::user()->temPermissao('RES003'))
             <form action="{{ route('reservas.corrigir', $reserva) }}" method="POST" class="inline">
                 @csrf
                 @method('PATCH')
@@ -27,7 +27,7 @@
         @endif
 
         {{-- Editar (Pendente/Rejeitada) --}}
-        @if(in_array($reserva->res_status, ['pendente', 'rejeitada']) && Auth::user()->hasPermission('Reservas', 'Editar'))
+        @if(in_array($reserva->res_status, ['pendente', 'rejeitada']) && Auth::user()->temPermissao('RES003'))
             <a href="{{ route('reservas.edit', $reserva) }}"
                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
                 Editar
@@ -35,7 +35,7 @@
         @endif
 
         {{-- Cancelar (Pendente/Aprovada) - Mantém como Button pois abre Modal --}}
-        @if(in_array($reserva->res_status, ['pendente', 'aprovada']) && Auth::user()->hasPermission('Reservas', 'Excluir'))
+        @if(in_array($reserva->res_status, ['pendente', 'aprovada']) && Auth::user()->temPermissao('RES004'))
             <x-danger-button type="button" class="bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400 text-white"
                             x-on:click.prevent="$dispatch('open-modal', 'modal-cancelar-reserva')">
                 {{ __('Cancelar') }}
@@ -43,14 +43,14 @@
         @endif
 
         {{-- Rejeitar (Pendente) - Mantém como Button pois abre Modal --}}
-        @if ($reserva->res_status == 'pendente' && Auth::user()->hasPermission('Reservas', 'Reprovar'))
+        @if ($reserva->res_status == 'pendente' && Auth::user()->temPermissao('RES008'))
             <x-danger-button type="button" x-on:click.prevent="$dispatch('open-modal', 'modal-rejeitar-reserva')">
                 {{ __('Rejeitar') }}
             </x-danger-button>
         @endif
 
         {{-- Aprovar (Pendente) - Mantém como Button pois abre Modal --}}
-        @if ($reserva->res_status == 'pendente' && Auth::user()->hasPermission('Reservas', 'Aprovar'))
+        @if ($reserva->res_status == 'pendente' && Auth::user()->temPermissao('RES007'))
             <x-primary-button type="button" class="bg-green-600 hover:bg-green-700 focus:ring-green-500 text-white"
                             x-on:click.prevent="$dispatch('open-modal', 'modal-aprovar-reserva')">
                 {{ __('Aprovar') }}
@@ -58,7 +58,7 @@
         @endif
 
         {{-- Iniciar (Aprovada) - Mantém como Button pois abre Modal --}}
-        @if ($reserva->res_status == 'aprovada' && Auth::user()->hasPermission('Reservas', 'Registrar Saída'))
+        @if ($reserva->res_status == 'aprovada' && Auth::user()->temPermissao('RES005'))
             <x-primary-button
                 @click.prevent="$dispatch('open-modal', 'modal-iniciar-reserva')"
                 class="bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 text-white">
@@ -68,7 +68,7 @@
         @endif
 
         {{-- Finalizar (Em Uso) - Mantém como Button pois abre Modal --}}
-        @if ($reserva->res_status == 'em_uso' && Auth::user()->hasPermission('Reservas', 'Finalizar'))
+        @if ($reserva->res_status == 'em_uso' && Auth::user()->temPermissao('RES006'))
             <x-primary-button
                 @click.prevent="$dispatch('open-modal', 'modal-finalizar-reserva')"
                 class="bg-purple-600 hover:bg-purple-700 focus:ring-purple-500 text-white">
@@ -78,7 +78,7 @@
         @endif
 
         {{-- Revisar (Em Revisão) - Mantém como Button pois abre Modal --}}
-        @if ($reserva->res_status == 'em_revisao' && Auth::user()->hasPermission('Reservas', 'Encerrar'))
+        @if ($reserva->res_status == 'em_revisao' && Auth::user()->temPermissao('RES009'))
             <x-primary-button
                 @click.prevent="$dispatch('open-modal', 'modal-revisar-reserva')"
                 class="bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 text-white">

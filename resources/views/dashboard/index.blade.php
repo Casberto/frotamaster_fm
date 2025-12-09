@@ -50,6 +50,7 @@
                         </button>
 
                         {{-- Aba Veículos --}}
+                        @if(Auth::user()->temPermissao('DAS002'))
                         <button
                             @click.prevent="tab = 'veiculos'"
                             :class="{
@@ -71,8 +72,10 @@
                                 <span class="{{ ($manutencoesVencidasCount ?? 0) > 0 ? 'bg-red-500' : 'bg-yellow-500' }} ml-2 w-3 h-3 rounded-full absolute top-2 right-2 lg:right-[-8px] group-hover:animate-pulse"></span>
                             @endif
                         </button>
+                        @endif
 
                         {{-- Aba Motoristas --}}
+                        @if(Auth::user()->temPermissao('DAS003'))
                         <button
                             @click.prevent="tab = 'motoristas'"
                             :class="{
@@ -91,8 +94,10 @@
                                 <span class="{{ ($motoristasCnhVencidaCount ?? 0) > 0 ? 'bg-red-500' : 'bg-yellow-500' }} ml-2 w-3 h-3 rounded-full absolute top-2 right-2 lg:right-[-8px] group-hover:animate-pulse"></span>
                             @endif
                         </button>
+                        @endif
 
                         {{-- Aba Manutenções --}}
+                        @if(Auth::user()->temPermissao('DAS004'))
                         <button
                             @click.prevent="tab = 'manutencoes'"
                             :class="{
@@ -106,8 +111,10 @@
                             </svg>
                             <span class="truncate">Manutenções</span>
                         </button>
+                        @endif
 
                         {{-- Aba Abastecimentos --}}
+                        @if(Auth::user()->temPermissao('DAS005'))
                         <button
                             @click.prevent="tab = 'abastecimentos'"
                             :class="{
@@ -121,8 +128,10 @@
                             </svg>
                             <span class="truncate">Abastecimentos</span>
                         </button>
+                        @endif
 
                         {{-- Aba Reservas --}}
+                        @if(Auth::user()->temPermissao('DAS006'))
                         <button
                             @click.prevent="tab = 'reservas'"
                             :class="{
@@ -136,6 +145,7 @@
                             </svg>
                             <span class="truncate">Reservas</span>
                         </button>
+                        @endif
                     </nav>
                 </div>
 
@@ -155,6 +165,7 @@
                 </div>
 
                 {{-- Conteúdo da Aba Veículos --}}
+                @if(Auth::user()->temPermissao('DAS002'))
                 <div x-show="tab === 'veiculos'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -172,8 +183,10 @@
                         @include('dashboard.components.veiculos.upcoming-reminders')
                     </div>
                 </div>
+                @endif
 
                 {{-- Conteúdo da Aba Motoristas --}}
+                @if(Auth::user()->temPermissao('DAS003'))
                 <div x-show="tab === 'motoristas'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -189,8 +202,10 @@
                         <p>(Área reservada para futuros gráficos e análises de motoristas)</p>
                     </div>
                 </div>
+                @endif
 
                 {{-- Conteúdo da Aba Manutenções --}}
+                @if(Auth::user()->temPermissao('DAS004'))
                 <div x-show="tab === 'manutencoes'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -209,8 +224,10 @@
 
                     @include('dashboard.components.manutencoes.list')
                 </div>
+                @endif
 
                 {{-- Conteúdo da Aba Abastecimentos --}}
+                @if(Auth::user()->temPermissao('DAS005'))
                 <div x-show="tab === 'abastecimentos'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -229,8 +246,10 @@
 
                     @include('dashboard.components.abastecimentos.list')
                 </div>
+                @endif
 
                 {{-- Conteúdo da Aba Reservas --}}
+                @if(Auth::user()->temPermissao('DAS006'))
                 <div x-show="tab === 'reservas'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -250,6 +269,7 @@
 
                     @include('dashboard.components.reservas.list')
                 </div>
+                @endif
 
 
             @push('modals')

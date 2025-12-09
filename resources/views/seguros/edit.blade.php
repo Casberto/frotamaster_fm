@@ -6,6 +6,8 @@
             </h2>
             
             {{-- Botão de Excluir --}}
+            {{-- Botão de Excluir --}}
+            @if(Auth::user()->temPermissao('SEG004'))
             <form action="{{ route('seguros.destroy', $apolice->seg_id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta apólice?');">
                 @csrf
                 @method('DELETE')
@@ -13,6 +15,7 @@
                     Excluir Apólice
                 </button>
             </form>
+            @endif
         </div>
     </x-slot>
 

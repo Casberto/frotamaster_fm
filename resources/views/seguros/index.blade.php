@@ -4,11 +4,13 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight truncate">
                 Apólices de Seguro
             </h2>
+            @if(Auth::user()->temPermissao('SEG002'))
             <a href="{{ route('seguros.create') }}" 
                class="shrink-0 inline-flex items-center justify-center px-3 py-2 md:px-4 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs md:text-sm text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
                 <span class="hidden md:inline">Nova Apólice</span>
                 <span class="md:hidden">&nbsp Novo</span>
             </a>
+            @endif
         </div>
     </x-slot>
 
@@ -141,31 +143,32 @@
                                 <p class="text-sm text-gray-500">{{ $selectedApolice->fornecedor->for_nome_fantasia ?? 'Seguradora não informada' }}</p>
                             </div>
                         
-                        @php
-                            $statusColorBig = match($selectedApolice->seg_status) {
-                                'Ativo' => 'bg-green-100 text-green-800',
-                                'Vencida' => 'bg-red-100 text-red-800',
-                                'Em renovação' => 'bg-yellow-100 text-yellow-800',
-                                default => 'bg-gray-100 text-gray-800'
-                            };
-                        @endphp
-                        <span class="px-4 py-2 rounded-lg font-bold text-sm {{ $statusColorBig }}">
-                            {{ $selectedApolice->seg_status }}
-                        </span>
+                            @php
+                                $statusColorBig = match($selectedApolice->seg_status) {
+                                    'Ativo' => 'bg-green-100 text-green-800',
+                                    'Vencida' => 'bg-red-100 text-red-800',
+                                    'Em renovação' => 'bg-yellow-100 text-yellow-800',
+                                    default => 'bg-gray-100 text-gray-800'
+                                };
+                            @endphp
+                            <span class="px-4 py-2 rounded-lg font-bold text-sm {{ $statusColorBig }}">
+                                {{ $selectedApolice->seg_status }}
+                            </span>
+                        </div>
+
                         {{-- Navegação Interna --}}
                         <div class="mt-4 px-6 border-b border-gray-200">
-
-                        <nav class="-mb-px flex space-x-8">
-                            <button @click="tab = 'geral'" :class="tab === 'geral' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-4 border-b-2 font-medium text-sm transition-colors">
-                                Dados Gerais
-                            </button>
-                            <button @click="tab = 'coberturas'" :class="tab === 'coberturas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-4 border-b-2 font-medium text-sm transition-colors">
-                                Coberturas ({{ $selectedApolice->coberturas->count() }})
-                            </button>
-                            <button @click="tab = 'sinistros'" :class="tab === 'sinistros' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-4 border-b-2 font-medium text-sm transition-colors">
-                                Sinistros ({{ $selectedApolice->sinistros->count() }})
-                            </button>
-
+                            <nav class="-mb-px flex space-x-8">
+                                <button @click="tab = 'geral'" :class="tab === 'geral' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-4 border-b-2 font-medium text-sm transition-colors">
+                                    Dados Gerais
+                                </button>
+                                <button @click="tab = 'coberturas'" :class="tab === 'coberturas' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-4 border-b-2 font-medium text-sm transition-colors">
+                                    Coberturas ({{ $selectedApolice->coberturas->count() }})
+                                </button>
+                                <button @click="tab = 'sinistros'" :class="tab === 'sinistros' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="whitespace-nowrap pb-4 px-4 border-b-2 font-medium text-sm transition-colors">
+                                    Sinistros ({{ $selectedApolice->sinistros->count() }})
+                                </button>
+                            </nav>
                         </div>
                     </div>
 

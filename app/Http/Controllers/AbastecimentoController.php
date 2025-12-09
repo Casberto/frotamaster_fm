@@ -18,6 +18,9 @@ class AbastecimentoController extends Controller
 
     public function index(Request $request)
     {
+        if (!Auth::user()->temPermissao('ABA001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
         $query = Abastecimento::where('aba_emp_id', $idEmpresa)->with('veiculo');
 
@@ -50,11 +53,17 @@ class AbastecimentoController extends Controller
 
     public function create()
     {
+        if (!Auth::user()->temPermissao('ABA002')) {
+            return redirect()->route('abastecimentos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         return view('abastecimentos.create', $this->getDadosFormulario());
     }
 
     public function store(StoreAbastecimentoRequest $request)
     {
+        if (!Auth::user()->temPermissao('ABA002')) {
+            return redirect()->route('abastecimentos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         try {
             $this->abastecimentoService->salvarAbastecimento($request, new Abastecimento());
             return redirect()->route('abastecimentos.index')->with('success', 'Abastecimento registrado com sucesso!');
@@ -65,6 +74,9 @@ class AbastecimentoController extends Controller
 
     public function edit(Abastecimento $abastecimento)
     {
+        if (!Auth::user()->temPermissao('ABA003')) {
+            return redirect()->route('abastecimentos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($abastecimento->aba_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -73,6 +85,9 @@ class AbastecimentoController extends Controller
 
     public function update(StoreAbastecimentoRequest $request, Abastecimento $abastecimento)
     {
+        if (!Auth::user()->temPermissao('ABA003')) {
+            return redirect()->route('abastecimentos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($abastecimento->aba_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -87,6 +102,9 @@ class AbastecimentoController extends Controller
 
     public function destroy(Abastecimento $abastecimento)
     {
+        if (!Auth::user()->temPermissao('ABA004')) {
+            return redirect()->route('abastecimentos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($abastecimento->aba_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }

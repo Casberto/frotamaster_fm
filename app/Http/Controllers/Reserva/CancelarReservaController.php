@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class CancelarReservaController extends Controller
 {
-    const PERM_EXCLUIR = 36;
-
     public function __invoke(Request $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
 
-        if (!Auth::user()->temPermissaoId(self::PERM_EXCLUIR)) {
+        if (!Auth::user()->temPermissao('RES004')) {
             abort(403, 'Sem permissão para cancelar reservas.');
         }
 

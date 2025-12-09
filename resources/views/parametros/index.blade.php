@@ -82,11 +82,13 @@
                             </div>
                             
                             <div class="mt-8 pt-5 border-t border-gray-200">
+                                @if(Auth::user()->temPermissao('PAR003'))
                                 <div class="flex justify-end">
                                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                         Salvar Alterações
                                     </button>
                                 </div>
+                                @endif
                             </div>
                         </form>
                     @endif

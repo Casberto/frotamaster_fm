@@ -17,6 +17,7 @@ class ReservaManutencaoController extends Controller
     public function store(Request $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
+        if (!Auth::user()->temPermissao('RES003')) abort(403);
 
         if ($reserva->res_tipo !== 'manutencao') {
             return back()->with('error', 'Manutenções só podem ser vinculadas a reservas do tipo Manutenção.');

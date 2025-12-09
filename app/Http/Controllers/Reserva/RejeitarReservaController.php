@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class RejeitarReservaController extends Controller
 {
-    const PERM_REPROVAR = 40;
-
     public function __invoke(Request $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
 
-        if (!Auth::user()->temPermissaoId(self::PERM_REPROVAR)) {
+        if (!Auth::user()->temPermissao('RES008')) {
             abort(403, 'Sem permissão para reprovar reservas.');
         }
 

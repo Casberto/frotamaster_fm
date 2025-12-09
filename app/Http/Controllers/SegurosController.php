@@ -16,6 +16,10 @@ class SegurosController extends Controller
 {
     public function index(Request $request)
     {
+        if (!Auth::user()->temPermissao('SEG001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
+
         $query = SeguroApolice::with(['veiculo', 'fornecedor']);
 
         if ($request->filled('search')) {
@@ -50,6 +54,10 @@ class SegurosController extends Controller
 
     public function create()
     {
+        if (!Auth::user()->temPermissao('SEG002')) {
+            return redirect()->route('seguros.index')->with('error', 'O usuário não possuí permissão para criar apólices');
+        }
+
         $idEmpresa = Auth::user()->id_empresa;
         $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->orderBy('vei_placa')->get(); 
         $seguradoras = Fornecedor::where('for_emp_id', $idEmpresa)
@@ -63,6 +71,10 @@ class SegurosController extends Controller
 
     public function store(Request $request)
     {
+        if (!Auth::user()->temPermissao('SEG002')) {
+            return redirect()->route('seguros.index')->with('error', 'O usuário não possuí permissão para criar apólices');
+        }
+
         $validated = $request->validate([
             'seg_vei_id' => 'nullable|exists:veiculos,vei_id',
             'seg_for_id' => 'nullable|exists:fornecedores,for_id',
@@ -76,6 +88,12 @@ class SegurosController extends Controller
             'seg_obs' => 'nullable|string',
             'seg_arquivo' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
+
+        if ($request->hasFile('seg_arquivo')) {
+            if (!Auth::user()->temPermissao('SEG007')) {
+                 return back()->withInput()->with('error', 'Você não tem permissão para incluir imagens/arquivos na apólice.');
+            }
+        }
 
         $validated['seg_emp_id'] = Auth::user()->emp_id ?? 1; 
         $validated['seg_status'] = 'Ativo'; 
@@ -94,6 +112,10 @@ class SegurosController extends Controller
 
     public function show($id)
     {
+        if (!Auth::user()->temPermissao('SEG001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
+
         $apolice = SeguroApolice::with(['coberturas', 'sinistros', 'veiculo', 'fornecedor'])->findOrFail($id);
         
         // Load data needed for sub-forms
@@ -110,6 +132,10 @@ class SegurosController extends Controller
 
     public function edit($id)
     {
+        if (!Auth::user()->temPermissao('SEG003')) {
+            return redirect()->route('seguros.index')->with('error', 'O usuário não possuí permissão para editar apólices');
+        }
+
         $apolice = SeguroApolice::findOrFail($id);
         $idEmpresa = Auth::user()->id_empresa;
         $veiculos = Veiculo::where('vei_emp_id', $idEmpresa)->orderBy('vei_placa')->get();
@@ -124,6 +150,10 @@ class SegurosController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Auth::user()->temPermissao('SEG003')) {
+            return redirect()->route('seguros.index')->with('error', 'O usuário não possuí permissão para editar apólices');
+        }
+
         $apolice = SeguroApolice::findOrFail($id);
         
         $validated = $request->validate([
@@ -140,6 +170,12 @@ class SegurosController extends Controller
             'seg_status' => 'nullable|string',
             'seg_arquivo' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
+
+        if ($request->hasFile('seg_arquivo')) {
+            if (!Auth::user()->temPermissao('SEG007')) {
+                 return back()->withInput()->with('error', 'Você não tem permissão para incluir imagens/arquivos na apólice.');
+            }
+        }
 
         if ($request->hasFile('seg_arquivo')) {
             // Delete old file if exists
@@ -160,6 +196,10 @@ class SegurosController extends Controller
 
     public function destroy($id)
     {
+        if (!Auth::user()->temPermissao('SEG004')) {
+            return redirect()->route('seguros.index')->with('error', 'O usuário não possuí permissão para excluir apólices');
+        }
+
         $apolice = SeguroApolice::findOrFail($id);
         $apolice->delete();
         
@@ -168,6 +208,10 @@ class SegurosController extends Controller
 
     public function renew($id)
     {
+        if (!Auth::user()->temPermissao('SEG003')) {
+            return redirect()->route('seguros.index')->with('error', 'O usuário não possuí permissão para renovar apólices');
+        }
+
         $oldApolice = SeguroApolice::findOrFail($id);
         
         $newApolice = $oldApolice->replicate();
@@ -186,6 +230,10 @@ class SegurosController extends Controller
 
     public function download($id)
     {
+        if (!Auth::user()->temPermissao('SEG001')) {
+            abort(403, 'Acesso negado.');
+        }
+
         $apolice = SeguroApolice::findOrFail($id);
 
         if ($apolice->seg_emp_id !== Auth::user()->id_empresa) {

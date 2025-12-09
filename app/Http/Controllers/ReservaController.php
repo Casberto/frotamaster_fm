@@ -14,18 +14,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ReservaController extends Controller
 {
-    // Constantes para IDs de Permissão
-    const PERM_VISUALIZAR = 33;
-    const PERM_CRIAR = 34;
-    const PERM_EDITAR = 35;
-    const PERM_EXCLUIR = 36;
-    const PERM_APROVAR = 39; // Usado apenas para saber se é gerencial na view
+    // Constantes de permissão removidas em favor dos códigos textuais 'RESxxx'
 
     public function __construct(protected ReservaService $reservaService) {}
 
     public function index(Request $request)
     {
-        if (!Auth::user()->temPermissaoId(self::PERM_VISUALIZAR)) {
+        if (!Auth::user()->temPermissao('RES001')) {
             abort(403, 'Sem permissão para visualizar reservas.');
         }
 
@@ -61,26 +56,36 @@ class ReservaController extends Controller
         ];
 
         // Verifica permissão gerencial para passar para a view (usado nos detalhes)
-        $isGerencial = Auth::user()->temPermissaoId(self::PERM_APROVAR);
+        $isGerencial = Auth::user()->temPermissao('RES007');
 
         return view('reservas.index', compact('reservas', 'statuse', 'selectedReserva', 'isGerencial') + $dados);
     }
 
     public function create()
     {
-        if (!Auth::user()->temPermissaoId(self::PERM_CRIAR)) {
+        // Verifica permissão de CRIAR RESERVA DE VIAGEM (RES002) ou MANUTENCAO (RES010)
+        // Se tiver qualquer um dos dois, acessa, mas a view filtra o tipo de reserva
+        if (!Auth::user()->temPermissao('RES002') && !Auth::user()->temPermissao('RES010')) {
             abort(403, 'Sem permissão para criar reservas.');
         }
 
         $dados = $this->getDadosFormulario();
-        $isGerencial = Auth::user()->temPermissaoId(self::PERM_APROVAR);
+        $isGerencial = Auth::user()->temPermissao('RES007');
         
         return view('reservas.create', compact('isGerencial') + $dados);
     }
 
     public function store(StoreReservaRequest $request)
     {
-        // Autorização já feita no Request via ID 34
+        // Validação adicional de tipo
+        if ($request->res_tipo == 'manutencao' && !Auth::user()->temPermissao('RES010')) {
+             return abort(403, 'Sem permissão para criar reserva de manutenção.');
+        }
+        if ($request->res_tipo != 'manutencao' && !Auth::user()->temPermissao('RES002')) {
+             return abort(403, 'Sem permissão para criar reserva de viagem.');
+        }
+
+        // Autorização já feita no Request via ID 34 - REMOVING THAT DEPENDENCY IS OUTSIDE SCOPE BUT WE OVERRIDE HERE
         
         $conflictErrors = $this->reservaService->verificarConflitos(
             $request->all(), 
@@ -103,14 +108,14 @@ class ReservaController extends Controller
     public function show(Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
-        if (!Auth::user()->temPermissaoId(self::PERM_VISUALIZAR)) abort(403);
+        if (!Auth::user()->temPermissao('RES001')) abort(403);
         
         $reserva->load(
             'veiculo', 'motorista', 'solicitante', 'fornecedor', 'revisor', 
             'pedagios', 'passageiros', 'abastecimentos.fornecedor', 'manutencoes.fornecedor'
         );
         
-        $isGerencial = Auth::user()->temPermissaoId(self::PERM_APROVAR);
+        $isGerencial = Auth::user()->temPermissao('RES007');
         
         return view('reservas.show', compact('reserva', 'isGerencial') + $this->getDadosFormulario());
     }
@@ -119,7 +124,7 @@ class ReservaController extends Controller
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
         
-        if (!Auth::user()->temPermissaoId(self::PERM_EDITAR)) {
+        if (!Auth::user()->temPermissao('RES003')) {
              abort(403, 'Sem permissão para editar.');
         }
 
@@ -128,14 +133,14 @@ class ReservaController extends Controller
                 ->with('error', 'Status atual não permite edição.');
         }
 
-        $isGerencial = Auth::user()->temPermissaoId(self::PERM_APROVAR);
+        $isGerencial = Auth::user()->temPermissao('RES007');
         return view('reservas.edit', compact('reserva', 'isGerencial') + $this->getDadosFormulario());
     }
 
     public function update(UpdateReservaRequest $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
-        if (!Auth::user()->temPermissaoId(self::PERM_EDITAR)) abort(403);
+        if (!Auth::user()->temPermissao('RES003')) abort(403);
 
         $conflictErrors = $this->reservaService->verificarConflitos(
             $request->all(), 
@@ -164,7 +169,7 @@ class ReservaController extends Controller
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
         
-        if (!Auth::user()->temPermissaoId(self::PERM_EXCLUIR)) {
+        if (!Auth::user()->temPermissao('RES004')) {
             abort(403, 'Sem permissão para excluir.');
         }
 

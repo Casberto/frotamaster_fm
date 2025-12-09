@@ -2,9 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center w-full">
             <h2 class="header-title text-xl">Catálogo de Serviços</h2>
+            @if(Auth::user()->temPermissao('SER002'))
             <a href="{{ route('servicos.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                 Novo Serviço
             </a>
+            @endif
         </div>
     </x-slot>
 
@@ -42,11 +44,15 @@
                             <td class="px-6 py-4 font-medium">{{ $servico->ser_nome }}</td>
                             <td class="px-6 py-4">{{ $servico->ser_descricao ?? '-' }}</td>
                             <td class="px-6 py-4 text-right">
+                                @if(Auth::user()->temPermissao('SER003'))
                                 <a href="{{ route('servicos.edit', $servico) }}" class="font-medium text-blue-600 hover:underline mr-3">Editar</a>
+                                @endif
+                                @if(Auth::user()->temPermissao('SER004'))
                                 <form action="{{ route('servicos.destroy', $servico) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="font-medium text-red-600 hover:underline">Deletar</button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -74,11 +80,15 @@
                         </div>
 
                         <div class="flex justify-end items-center space-x-3 pt-3 border-t">
+                            @if(Auth::user()->temPermissao('SER003'))
                             <a href="{{ route('servicos.edit', $servico) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            @endif
+                            @if(Auth::user()->temPermissao('SER004'))
                             <form action="{{ route('servicos.destroy', $servico) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 font-medium text-sm">Deletar</button>
                             </form>
+                            @endif
                         </div>
                     </div>
                 @empty

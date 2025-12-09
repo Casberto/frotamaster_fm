@@ -30,6 +30,10 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        if (!Auth::user()->temPermissao('DAS001')) {
+            abort(403, 'Sem permissão para visualizar o dashboard.');
+        }
+
         try {
             // Captura as datas do filtro ou define o padrão (mês atual)
             $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : Carbon::now()->startOfMonth();

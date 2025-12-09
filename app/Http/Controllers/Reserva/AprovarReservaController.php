@@ -10,14 +10,12 @@ use Illuminate\Support\Facades\Auth;
 
 class AprovarReservaController extends Controller
 {
-    const PERM_APROVAR = 39;
-
     public function __construct(protected ReservaService $reservaService) {}
 
     public function __invoke(Request $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
-        if (!Auth::user()->temPermissaoId(self::PERM_APROVAR)) abort(403);
+        if (!Auth::user()->temPermissao('RES007')) abort(403);
 
         if ($reserva->res_status !== 'pendente') {
             return back()->with('error', 'Apenas reservas pendentes podem ser aprovadas.');

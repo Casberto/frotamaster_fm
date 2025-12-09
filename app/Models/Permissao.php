@@ -13,6 +13,7 @@ class Permissao extends Model
     protected $primaryKey = 'prm_id';
 
     protected $fillable = [
+        'prm_codigo',
         'prm_modulo',
         'prm_acao',
         'prm_descricao',

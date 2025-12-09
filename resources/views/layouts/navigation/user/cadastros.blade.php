@@ -1,6 +1,6 @@
 @if(
-    Auth::user()->hasPermission('Serviços', 'visualizar') || Auth::user()->hasPermission('Serviços', 'criar') ||
-    Auth::user()->hasPermission('Fornecedores', 'visualizar') || Auth::user()->hasPermission('Fornecedores', 'criar')
+    Auth::user()->temPermissao('SER001') || Auth::user()->temPermissao('SER002') ||
+    Auth::user()->temPermissao('FOR001') || Auth::user()->temPermissao('FOR002')
 )
 <div x-data="{ open: false }" class="menu-item-group">
     <button @click="open = !open" class="sidebar-link w-full flex justify-between items-center">
@@ -17,11 +17,11 @@
     <div x-show="open" x-transition class="pl-8 space-y-1 mt-1 submenu-container">
         
         {{-- Serviços --}}
-        @if(Auth::user()->hasPermission('Serviços', 'visualizar') || Auth::user()->hasPermission('Serviços', 'criar'))
+        @if(Auth::user()->temPermissao('SER001') || Auth::user()->temPermissao('SER002'))
             <p class="px-4 pt-2 pb-1 text-xs text-gray-400 uppercase">Serviços</p>
         @endif
 
-        @if(Auth::user()->hasPermission('Serviços', 'visualizar'))
+        @if(Auth::user()->temPermissao('SER001'))
         <a href="{{ route('servicos.index') }}" class="sidebar-submenu-link @if(request()->routeIs('servicos.index')) active @endif">
             <span class="mr-3">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 2.5a1 1 0 0 1 1 1v.083a6.04 6.04 0 0 0-2 0V3.5a1 1 0 0 1 1-1Zm-2 1v.341C3.67 4.665 2 6.888 2 9.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5a6.002 6.002 0 0 0-4-5.659V3.5a2 2 0 1 0-4 0Zm2 1A5 5 0 0 1 12.975 9h-9.95A5 5 0 0 1 8 4.5Zm0 1a.5.5 0 0 0 0 1c1.019 0 1.92.508 2.463 1.286a.5.5 0 1 0 .82-.572A3.996 3.996 0 0 0 8 5.5ZM2.5 11a1.5 1.5 0 0 0 0 3h11a1.5 1.5 0 0 0 0-3h-11ZM2 12.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5Z"/></svg>     
@@ -29,7 +29,7 @@
             <span class="submenu-item-text">Listar Serviços</span>
         </a>
         @endif
-        @if(Auth::user()->hasPermission('Serviços', 'criar'))
+        @if(Auth::user()->temPermissao('SER002'))
         <a href="{{ route('servicos.create') }}" class="sidebar-submenu-link @if(request()->routeIs('servicos.create')) active @endif">
             <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg></span>
             <span class="submenu-item-text">Novo Serviço</span>
@@ -37,11 +37,11 @@
         @endif
 
         {{-- Fornecedores --}}
-        @if(Auth::user()->hasPermission('Fornecedores', 'visualizar') || Auth::user()->hasPermission('Fornecedores', 'criar'))
+        @if(Auth::user()->temPermissao('FOR001') || Auth::user()->temPermissao('FOR002'))
             <p class="px-4 pt-2 pb-1 text-xs text-gray-400 uppercase">Fornecedores</p>
         @endif
 
-        @if(Auth::user()->hasPermission('Fornecedores', 'visualizar'))
+        @if(Auth::user()->temPermissao('FOR001'))
         <a href="{{ route('fornecedores.index') }}" class="sidebar-submenu-link @if(request()->routeIs('fornecedores.index')) active @endif">
             <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
@@ -49,7 +49,7 @@
             <span class="submenu-item-text">Listar Fornecedores</span>
         </a>
         @endif
-        @if(Auth::user()->hasPermission('Fornecedores', 'criar'))
+        @if(Auth::user()->temPermissao('FOR002'))
         <a href="{{ route('fornecedores.create') }}" class="sidebar-submenu-link @if(request()->routeIs('fornecedores.create')) active @endif">
             <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg></span>
             <span class="submenu-item-text">Novo Fornecedor</span>

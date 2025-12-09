@@ -12,6 +12,10 @@ class SeguroSinistroController extends Controller
 {
     public function store(Request $request)
     {
+        if (!\Illuminate\Support\Facades\Auth::user()->temPermissao('SEG008')) {
+             return back()->with('error', 'O usuário não possuí permissão para registrar sinistros.');
+        }
+
         $validated = $request->validate([
             'ssi_seg_id' => 'required|exists:seguros_apolice,seg_id',
             'ssi_data' => 'required|date',
@@ -49,6 +53,10 @@ class SeguroSinistroController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!\Illuminate\Support\Facades\Auth::user()->temPermissao('SEG009')) {
+             return back()->with('error', 'O usuário não possuí permissão para editar sinistros.');
+        }
+
         $sinistro = SeguroSinistro::findOrFail($id);
         
         $validated = $request->validate([
@@ -67,6 +75,9 @@ class SeguroSinistroController extends Controller
 
     public function destroy($id)
     {
+        if (!\Illuminate\Support\Facades\Auth::user()->temPermissao('SEG010')) {
+             return back()->with('error', 'O usuário não possuí permissão para excluir sinistros.');
+        }
         $sinistro = SeguroSinistro::findOrFail($id);
         // Delete files
         // Delete files

@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class IniciarReservaController extends Controller
 {
-    const PERM_INICIAR = 37;
-
     public function __invoke(IniciarReservaRequest $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
 
-        if (!Auth::user()->temPermissaoId(self::PERM_INICIAR)) {
+        if (!Auth::user()->temPermissao('RES005')) {
             abort(403, 'Sem permissão para iniciar viagens.');
         }
 

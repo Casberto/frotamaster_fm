@@ -44,6 +44,9 @@ class MotoristaController extends Controller
 
     public function index(Request $request)
     {
+        if (!Auth::user()->temPermissao('MOT001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
         $query = Motorista::where('mot_emp_id', $idEmpresa);
 
@@ -62,6 +65,9 @@ class MotoristaController extends Controller
 
     public function create()
     {
+        if (!Auth::user()->temPermissao('MOT002')) {
+            return redirect()->route('motoristas.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $configuracoes = $this->getMotoristaConfig();
         $idEmpresa = Auth::user()->id_empresa;
 
@@ -80,6 +86,9 @@ class MotoristaController extends Controller
 
     public function store(Request $request)
     {
+        if (!Auth::user()->temPermissao('MOT002')) {
+            return redirect()->route('motoristas.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
         $configuracoes = $this->getMotoristaConfig();
         $rules = $this->buildValidationRules($configuracoes, $idEmpresa);
@@ -98,6 +107,9 @@ class MotoristaController extends Controller
 
     public function edit(Motorista $motorista)
     {
+        if (!Auth::user()->temPermissao('MOT003')) {
+            return redirect()->route('motoristas.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($motorista->mot_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -118,6 +130,9 @@ class MotoristaController extends Controller
 
     public function update(Request $request, Motorista $motorista)
     {
+        if (!Auth::user()->temPermissao('MOT003')) {
+            return redirect()->route('motoristas.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($motorista->mot_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -137,6 +152,9 @@ class MotoristaController extends Controller
 
     public function destroy(Motorista $motorista)
     {
+        if (!Auth::user()->temPermissao('MOT004')) {
+            return redirect()->route('motoristas.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($motorista->mot_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }

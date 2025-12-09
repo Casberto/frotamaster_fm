@@ -5,9 +5,11 @@
             <h3 class="text-lg leading-6 font-medium text-gray-900">
                 Histórico de Sinistros
             </h3>
+            @if(Auth::user()->temPermissao('SEG008'))
             <button onclick="document.getElementById('modal-sinistro').showModal()" class="text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
                 + Registrar Sinistro
             </button>
+            @endif
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -42,12 +44,16 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             {{-- Edição via modal seria ideal, mas simplificaremos --}}
+                            @if(Auth::user()->temPermissao('SEG010'))
                             <form action="{{ route('sinistros.destroy', $sinistro->ssi_id) }}" method="POST" class="inline" onsubmit="return confirm('Excluir este sinistro?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900 ml-2">Excluir</button>
                             </form>
+                            @endif
+                            @if(Auth::user()->temPermissao('SEG009'))
                             <button onclick="document.getElementById('modal-editar-sinistro-{{ $sinistro->ssi_id }}').showModal()" class="text-blue-600 hover:text-blue-900 ml-2">Editar</button>
                             <button onclick="document.getElementById('modal-fotos-{{ $sinistro->ssi_id }}').showModal()" class="text-indigo-600 hover:text-indigo-900 ml-2">Fotos</button>
+                            @endif
                         </td>
                     </tr>
                     @empty

@@ -167,6 +167,7 @@
                 {{-- Upload de Arquivo --}}
                 <div class="md:col-span-2 mb-4">
                     <label for="seg_arquivo" class="block font-medium text-sm text-gray-700">Documento da Apólice (PDF/Imagem)</label>
+                    @if(Auth::user()->temPermissao('SEG007'))
                     <input type="file" name="seg_arquivo" id="seg_arquivo" class="mt-1 block w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-md file:border-0
@@ -174,6 +175,9 @@
                         file:bg-blue-50 file:text-blue-700
                         hover:file:bg-blue-100
                     ">
+                    @else
+                        <p class="text-sm text-gray-400 italic mt-1 border p-2 rounded bg-gray-50">Você não possui permissão para incluir ou alterar arquivos.</p>
+                    @endif
                     @if(isset($apolice) && $apolice->seg_arquivo)
                         <p class="mt-1 text-xs text-gray-500">
                             Arquivo atual: <a href="{{ route('seguros.download', $apolice->seg_id) }}" target="_blank" class="text-blue-600 hover:underline">Baixar Documento</a>

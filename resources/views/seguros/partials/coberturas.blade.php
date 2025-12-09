@@ -5,9 +5,11 @@
             <h3 class="text-lg leading-6 font-medium text-gray-900">
                 Coberturas Contratadas
             </h3>
+            @if(Auth::user()->temPermissao('SEG005'))
             <button onclick="document.getElementById('modal-cobertura').showModal()" class="text-sm bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700">
                 + Adicionar Cobertura
             </button>
+            @endif
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -28,10 +30,12 @@
                             {{ $cobertura->sco_valor ? 'R$ ' . number_format($cobertura->sco_valor, 2, ',', '.') : '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            @if(Auth::user()->temPermissao('SEG006'))
                             <form action="{{ route('coberturas.destroy', $cobertura->sco_id) }}" method="POST" onsubmit="return confirm('Excluir esta cobertura?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900">Excluir</button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                     @empty

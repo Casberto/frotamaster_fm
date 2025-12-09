@@ -4,9 +4,11 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Meus Veículos
             </h2>
+            @if(Auth::user()->temPermissao('VEI002'))
             <a href="{{ route('veiculos.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                 Novo Veículo
             </a>
+            @endif
         </div>
     </x-slot>
 
@@ -76,11 +78,15 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right">
+                                @if(Auth::user()->temPermissao('VEI003'))
                                 <a href="{{ route('veiculos.edit', $veiculo) }}" class="font-medium text-blue-600 hover:underline mr-3">Editar</a>
+                                @endif
+                                @if(Auth::user()->temPermissao('VEI004'))
                                 <form action="{{ route('veiculos.destroy', $veiculo) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="font-medium text-red-600 hover:underline">Deletar</button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -116,11 +122,15 @@
                         </div>
 
                         <div class="flex justify-end space-x-3 pt-3 border-t">
+                            @if(Auth::user()->temPermissao('VEI003'))
                             <a href="{{ route('veiculos.edit', $veiculo) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            @endif
+                            @if(Auth::user()->temPermissao('VEI004'))
                             <form action="{{ route('veiculos.destroy', $veiculo) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 font-medium text-sm">Deletar</button>
                             </form>
+                            @endif
                         </div>
                     </div>
                 @empty

@@ -11,6 +11,9 @@ class ServicoController extends Controller
 {
     public function index(Request $request)
     {
+        if (!Auth::user()->temPermissao('SER001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
         $query = Servico::where('ser_emp_id', $idEmpresa);
 
@@ -25,12 +28,18 @@ class ServicoController extends Controller
 
     public function create()
     {
+        if (!Auth::user()->temPermissao('SER002')) {
+            return redirect()->route('servicos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $servico = new Servico();
         return view('servicos.create', compact('servico'));
     }
 
     public function store(Request $request)
     {
+        if (!Auth::user()->temPermissao('SER002')) {
+            return redirect()->route('servicos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
 
         $validatedData = $request->validate([
@@ -45,6 +54,9 @@ class ServicoController extends Controller
 
     public function edit(Servico $servico)
     {
+        if (!Auth::user()->temPermissao('SER003')) {
+            return redirect()->route('servicos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($servico->ser_emp_id !== Auth::user()->id_empresa) {
             abort(403, 'Acesso não autorizado.');
         }
@@ -53,6 +65,9 @@ class ServicoController extends Controller
 
     public function update(Request $request, Servico $servico)
     {
+        if (!Auth::user()->temPermissao('SER003')) {
+            return redirect()->route('servicos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($servico->ser_emp_id !== Auth::user()->id_empresa) {
             abort(403, 'Acesso não autorizado.');
         }
@@ -70,6 +85,9 @@ class ServicoController extends Controller
 
     public function destroy(Servico $servico)
     {
+        if (!Auth::user()->temPermissao('SER004')) {
+            return redirect()->route('servicos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($servico->ser_emp_id !== Auth::user()->id_empresa) {
             abort(403, 'Acesso não autorizado.');
         }

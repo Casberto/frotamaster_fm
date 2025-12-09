@@ -9,13 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class RevisarReservaController extends Controller
 {
-    const PERM_ENCERRAR = 41;
-
     public function __invoke(RevisarReservaRequest $request, Reserva $reserva)
     {
         if ($reserva->res_emp_id !== Auth::user()->id_empresa) abort(403);
 
-        if (!Auth::user()->temPermissaoId(self::PERM_ENCERRAR)) {
+        if (!Auth::user()->temPermissao('RES009')) {
             abort(403, 'Sem permissão para revisar/encerrar reservas.');
         }
 

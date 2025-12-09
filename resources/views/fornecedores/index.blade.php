@@ -2,9 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center w-full">
             <h2 class="header-title text-xl">Cadastro de Fornecedores</h2>
+            @if(Auth::user()->temPermissao('FOR002'))
             <a href="{{ route('fornecedores.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                 Novo Fornecedor
             </a>
+            @endif
         </div>
     </x-slot>
 
@@ -79,11 +81,15 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">
+                                @if(Auth::user()->temPermissao('FOR003'))
                                 <a href="{{ route('fornecedores.edit', $fornecedor) }}" class="font-medium text-blue-600 hover:underline mr-3">Editar</a>
+                                @endif
+                                @if(Auth::user()->temPermissao('FOR004'))
                                 <form action="{{ route('fornecedores.destroy', $fornecedor) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este fornecedor?');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="font-medium text-red-600 hover:underline">Excluir</button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -118,11 +124,15 @@
                         </div>
 
                         <div class="flex justify-end items-center space-x-3 pt-3 border-t">
+                            @if(Auth::user()->temPermissao('FOR003'))
                             <a href="{{ route('fornecedores.edit', $fornecedor) }}" class="text-blue-600 font-medium text-sm">Editar</a>
+                            @endif
+                            @if(Auth::user()->temPermissao('FOR004'))
                             <form action="{{ route('fornecedores.destroy', $fornecedor) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir este fornecedor?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 font-medium text-sm">Excluir</button>
                             </form>
+                            @endif
                         </div>
                     </div>
                 @empty

@@ -11,6 +11,9 @@ class FornecedorController extends Controller
 {
     public function index(Request $request)
     {
+        if (!Auth::user()->temPermissao('FOR001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
         
         $query = Fornecedor::where('for_emp_id', $idEmpresa);
@@ -40,12 +43,18 @@ class FornecedorController extends Controller
 
     public function create()
     {
+        if (!Auth::user()->temPermissao('FOR002')) {
+            return redirect()->route('fornecedores.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $fornecedor = new Fornecedor(['for_status' => 1]); 
         return view('fornecedores.create', compact('fornecedor'));
     }
 
     public function store(Request $request)
     {
+        if (!Auth::user()->temPermissao('FOR002')) {
+            return redirect()->route('fornecedores.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $idEmpresa = Auth::user()->id_empresa;
         
         $validatedData = $request->validate([
@@ -67,6 +76,9 @@ class FornecedorController extends Controller
 
     public function edit(Fornecedor $fornecedor)
     {
+        if (!Auth::user()->temPermissao('FOR003')) {
+            return redirect()->route('fornecedores.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         // Conversão explícita para inteiros para evitar erros de "1" (string) vs 1 (int)
         $empresaFornecedor = (int) $fornecedor->for_emp_id;
         $empresaUsuario = (int) Auth::user()->id_empresa;
@@ -83,6 +95,9 @@ class FornecedorController extends Controller
 
     public function update(Request $request, Fornecedor $fornecedor)
     {
+        if (!Auth::user()->temPermissao('FOR003')) {
+            return redirect()->route('fornecedores.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         $empresaFornecedor = (int) $fornecedor->for_emp_id;
         $empresaUsuario = (int) Auth::user()->id_empresa;
 
@@ -114,6 +129,9 @@ class FornecedorController extends Controller
 
     public function destroy(Fornecedor $fornecedor)
     {
+        if (!Auth::user()->temPermissao('FOR004')) {
+            return redirect()->route('fornecedores.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ((int)$fornecedor->for_emp_id !== (int)Auth::user()->id_empresa) {
             abort(403, 'Acesso não autorizado.');
         }

@@ -16,6 +16,10 @@ class VeiculoController extends Controller
 
     public function index(Request $request)
     {
+        if (!Auth::user()->temPermissao('VEI001')) {
+            return redirect()->route('dashboard')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
+
         $idEmpresa = Auth::user()->id_empresa;
 
         $query = Veiculo::where('vei_emp_id', $idEmpresa);
@@ -55,11 +59,17 @@ class VeiculoController extends Controller
 
     public function create()
     {
+        if (!Auth::user()->temPermissao('VEI002')) {
+            return redirect()->route('veiculos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         return view('veiculos.create');
     }
 
     public function store(StoreVeiculoRequest $request)
     {
+        if (!Auth::user()->temPermissao('VEI002')) {
+            return redirect()->route('veiculos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         try {
             $this->veiculoService->salvarVeiculo($request, new Veiculo());
             return redirect()->route('veiculos.index')->with('success', 'Veículo cadastrado com sucesso!');
@@ -70,6 +80,9 @@ class VeiculoController extends Controller
 
     public function edit(Veiculo $veiculo)
     {
+        if (!Auth::user()->temPermissao('VEI003')) {
+            return redirect()->route('veiculos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($veiculo->vei_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -78,6 +91,9 @@ class VeiculoController extends Controller
 
     public function update(StoreVeiculoRequest $request, Veiculo $veiculo)
     {
+        if (!Auth::user()->temPermissao('VEI003')) {
+            return redirect()->route('veiculos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         if ($veiculo->vei_emp_id !== Auth::user()->id_empresa) {
             abort(403);
         }
@@ -92,6 +108,9 @@ class VeiculoController extends Controller
 
     public function destroy(Veiculo $veiculo)
     {
+        if (!Auth::user()->temPermissao('VEI004')) {
+            return redirect()->route('veiculos.index')->with('error', 'O usuário não possuí permissão à essa tela');
+        }
         try {
             $this->veiculoService->deletarVeiculo($veiculo);
             return redirect()->route('veiculos.index')->with('success', 'Veículo removido com sucesso!');
