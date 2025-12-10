@@ -3,7 +3,10 @@
 {{-- =============================================== --}}
 
 {{-- Módulo Reservas (Agendamentos) --}}
-@include('layouts.navigation.user.agendamentos')
+{{-- Módulo Reservas (Agendamentos) --}}
+@if(optional(auth()->user()->empresa)->tipo !== 'PF')
+    @include('layouts.navigation.user.agendamentos')
+@endif
 
 {{-- Módulo Veículos (Frota) --}}
 @include('layouts.navigation.user.frota')
@@ -28,7 +31,10 @@
 @include('layouts.navigation.user.cadastros')
 
 {{-- Módulo Usuários --}}
-@include('layouts.navigation.user.usuarios')
+{{-- Módulo Usuários --}}
+@if(optional(auth()->user()->empresa)->tipo !== 'PF')
+    @include('layouts.navigation.user.usuarios')
+@endif
 
 {{-- Módulo Configurações --}}
 @include('layouts.navigation.user.parametros')

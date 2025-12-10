@@ -9,28 +9,43 @@
     </div>
 @endif
 
-<div class="form-section">
+<div class="form-section" x-data="{ tipo: '{{ old('tipo', $empresa->tipo ?? 'PJ') }}' }">
     <h3 class="form-section-title">Dados da Empresa</h3>
+
+    <div class="mb-4">
+        <label class="block font-medium text-sm text-gray-700">Tipo de Pessoa*</label>
+        <div class="mt-2 space-x-4">
+            <label class="inline-flex items-center">
+                <input type="radio" x-model="tipo" name="tipo" value="PJ" class="form-radio text-blue-600 focus:ring-blue-500">
+                <span class="ml-2">Pessoa Jurídica (PJ)</span>
+            </label>
+            <label class="inline-flex items-center">
+                <input type="radio" x-model="tipo" name="tipo" value="PF" class="form-radio text-blue-600 focus:ring-blue-500">
+                <span class="ml-2">Pessoa Física (PF)</span>
+            </label>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-            <label for="nome_fantasia" class="block font-medium text-sm text-gray-700">Nome Fantasia*</label>
-            <input type="text" name="nome_fantasia" id="nome_fantasia" class="mt-1 block w-full" value="{{ old('nome_fantasia', $empresa->nome_fantasia ?? '') }}" required>
+            <label for="nome_fantasia" class="block font-medium text-sm text-gray-700" x-text="tipo === 'PF' ? 'Apelido*' : 'Nome Fantasia*'"></label>
+            <input type="text" name="nome_fantasia" id="nome_fantasia" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{ old('nome_fantasia', $empresa->nome_fantasia ?? '') }}" required>
         </div>
         <div>
-            <label for="razao_social" class="block font-medium text-sm text-gray-700">Razão Social*</label>
-            <input type="text" name="razao_social" id="razao_social" class="mt-1 block w-full" value="{{ old('razao_social', $empresa->razao_social ?? '') }}" required>
+            <label for="razao_social" class="block font-medium text-sm text-gray-700" x-text="tipo === 'PF' ? 'Nome Completo*' : 'Razão Social*'"></label>
+            <input type="text" name="razao_social" id="razao_social" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{ old('razao_social', $empresa->razao_social ?? '') }}" required>
         </div>
         <div>
-            <label for="cnpj" class="block font-medium text-sm text-gray-700">CNPJ*</label>
-            <input type="text" name="cnpj" id="cnpj" class="mt-1 block w-full" value="{{ old('cnpj', $empresa->cnpj ?? '') }}" required>
+            <label for="cnpj" class="block font-medium text-sm text-gray-700" x-text="tipo === 'PF' ? 'CPF*' : 'CNPJ*'"></label>
+            <input type="text" name="cnpj" id="cnpj" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{ old('cnpj', $empresa->cnpj ?? '') }}" required>
         </div>
         <div>
             <label for="email_contato" class="block font-medium text-sm text-gray-700">Email de Contato*</label>
-            <input type="email" name="email_contato" id="email_contato" class="mt-1 block w-full" value="{{ old('email_contato', $empresa->email_contato ?? '') }}" required>
+            <input type="email" name="email_contato" id="email_contato" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{ old('email_contato', $empresa->email_contato ?? '') }}" required>
         </div>
         <div>
             <label for="telefone_contato" class="block font-medium text-sm text-gray-700">Telefone de Contato*</label>
-            <input type="text" name="telefone_contato" id="telefone_contato" class="mt-1 block w-full" value="{{ old('telefone_contato', $empresa->telefone_contato ?? '') }}" required>
+            <input type="text" name="telefone_contato" id="telefone_contato" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" value="{{ old('telefone_contato', $empresa->telefone_contato ?? '') }}" required>
         </div>
     </div>
 </div>

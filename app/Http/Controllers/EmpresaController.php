@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 use App\Models\Empresa;
 use App\Models\User;
 use App\Models\Licenca;
+use App\Models\ConfiguracaoEmpresa;
+use App\Models\ConfiguracaoPadrao;
 
 // Illuminate
 use Illuminate\Http\Request;
@@ -50,6 +52,7 @@ class EmpresaController extends Controller
             'cnpj' => 'required|string|unique:empresas,cnpj',
             'email_contato' => 'required|email|max:255|unique:users,email',
             'telefone_contato' => 'required|string|max:20',
+            'tipo' => 'required|in:PJ,PF',
         ]);
 
         // Usar uma transação para garantir a integridade dos dados
@@ -83,11 +86,55 @@ class EmpresaController extends Controller
 
             // 5. Sincroniza as configurações padrão para a nova empresa
             $configuracoesPadrao = ConfiguracaoPadrao::all();
+            
+            // Campos permitidos para Pessoa Física (os demais serão desabilitados)
+            $camposPermitidosPF = [
+                'usar_usuario', 
+                'usar_apelido', 
+                'usar_data_nascimento', 
+                'usar_genero', 
+                'usar_nacionalidade', 
+                'usar_estado_civil', 
+                'usar_nome_mae', 
+                'usar_nome_pai', 
+                'usar_email', 
+                'usar_telefone1', 
+                'usar_cep', 
+                'usar_endereco', 
+                'usar_numero', 
+                'usar_complemento', 
+                'usar_bairro', 
+                'usar_cidade', 
+                'usar_estado', 
+                'exige_cnh',
+                'usar_cnh_numero', 
+                'usar_cnh_categoria', 
+                'usar_cnh_data_emissao', 
+                'usar_cnh_data_validade', 
+                'usar_cnh_primeira_habilitacao', 
+                'usar_cnh_uf', 
+                'usar_cnh_observacoes'
+            ];
+
             foreach ($configuracoesPadrao as $configPadrao) {
+                $valor = $configPadrao->cfp_valor;
+
+                // Lógica para Pessoa Física
+                if ($request->tipo === 'PF') {
+                    // Verifica se é uma configuração de "usar_" ou "exige_"
+                    if (str_starts_with($configPadrao->cfp_chave, 'usar_') || str_starts_with($configPadrao->cfp_chave, 'exige_')) {
+                        if (in_array($configPadrao->cfp_chave, $camposPermitidosPF)) {
+                            $valor = 1; // Habilita
+                        } else {
+                            $valor = 0; // Desabilita
+                        }
+                    }
+                }
+
                 ConfiguracaoEmpresa::create([
                     'cfe_emp_id' => $empresa->id,
                     'cfe_cfp_id' => $configPadrao->cfp_id,
-                    'cfe_valor'  => $configPadrao->cfp_valor, // Copia o valor padrão
+                    'cfe_valor'  => $valor,
                 ]);
             }
 
@@ -113,6 +160,7 @@ class EmpresaController extends Controller
             'cnpj' => 'required|string|unique:empresas,cnpj,' . $empresa->id,
             'email_contato' => 'required|email|max:255',
             'telefone_contato' => 'required|string|max:20',
+            'tipo' => 'required|in:PJ,PF',
         ]);
 
         $dadosAntigos = $empresa->getOriginal();

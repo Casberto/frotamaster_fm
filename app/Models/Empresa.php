@@ -12,6 +12,7 @@ class Empresa extends Model
  use HasFactory;
 
     protected $fillable = [
+        'tipo',
         'nome_fantasia',
         'razao_social',
         'cnpj',
