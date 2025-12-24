@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\Licenca;
 use App\Models\ConfiguracaoEmpresa;
 use App\Models\ConfiguracaoPadrao;
+use App\Enums\CompanyProfile;
+use Illuminate\Validation\Rules\Enum;
 
 // Illuminate
 use Illuminate\Http\Request;
@@ -40,7 +42,13 @@ class EmpresaController extends Controller
 
     public function create()
     {
-        return view('admin.empresas.create');
+        $availableModules = Empresa::getAllModules();
+        $profileDefaults = [];
+        foreach (CompanyProfile::cases() as $profile) {
+            $profileDefaults[$profile->value] = Empresa::getDefaultModulesForProfile($profile->value);
+        }
+
+        return view('admin.empresas.create', compact('availableModules', 'profileDefaults'));
     }
 
     public function store(Request $request)
@@ -53,6 +61,8 @@ class EmpresaController extends Controller
             'email_contato' => 'required|email|max:255|unique:users,email',
             'telefone_contato' => 'required|string|max:20',
             'tipo' => 'required|in:PJ,PF',
+            'profile' => ['required', new Enum(CompanyProfile::class)],
+            'modules' => 'nullable|array',
         ]);
 
         // Usar uma transação para garantir a integridade dos dados
@@ -149,7 +159,13 @@ class EmpresaController extends Controller
 
     public function edit(Empresa $empresa)
     {
-        return view('admin.empresas.edit', compact('empresa'));
+        $availableModules = Empresa::getAllModules();
+        $profileDefaults = [];
+        foreach (CompanyProfile::cases() as $profile) {
+            $profileDefaults[$profile->value] = Empresa::getDefaultModulesForProfile($profile->value);
+        }
+
+        return view('admin.empresas.edit', compact('empresa', 'availableModules', 'profileDefaults'));
     }
 
     public function update(Request $request, Empresa $empresa)
@@ -161,6 +177,8 @@ class EmpresaController extends Controller
             'email_contato' => 'required|email|max:255',
             'telefone_contato' => 'required|string|max:20',
             'tipo' => 'required|in:PJ,PF',
+            'profile' => ['required', new Enum(CompanyProfile::class)],
+            'modules' => 'nullable|array',
         ]);
 
         $dadosAntigos = $empresa->getOriginal();

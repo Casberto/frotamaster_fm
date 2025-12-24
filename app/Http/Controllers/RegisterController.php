@@ -13,6 +13,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\Notifications\ResetPassword;
+use App\Enums\CompanyProfile;
+use Illuminate\Validation\Rules\Enum;
 
 class RegisterController extends Controller
 {
@@ -44,12 +46,17 @@ class RegisterController extends Controller
             'email_contato' => 'required|email|max:255|unique:users,email',
             'telefone_contato' => 'required|string|max:20',
             'password' => 'required|string|min:8|confirmed',
+            'profile' => ['required', new Enum(CompanyProfile::class)],
         ]);
 
         DB::beginTransaction();
         try {
             // 1. Criar a Empresa (ou Pessoa Física atuando como empresa)
             $empresaData = collect($validatedData)->except(['password', 'password_confirmation'])->toArray();
+            
+            // Define os módulos padrão com base no perfil selecionado
+            $empresaData['modules'] = Empresa::getDefaultModulesForProfile($validatedData['profile']);
+
             $empresa = Empresa::create($empresaData);
 
             // 2. Criar o Usuário Master

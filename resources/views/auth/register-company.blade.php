@@ -101,6 +101,48 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- Seleção de Perfil / Tipo de Empresa -->
+                    <div x-data="{ selected: 'frotista' }">
+                        <label class="text-base font-semibold text-gray-900 block mb-2">Perfil de Uso</label>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            @foreach(\App\Enums\CompanyProfile::cases() as $profile)
+                                <label class="relative flex p-4 border rounded-lg cursor-pointer transition-all hover:border-blue-500 hover:bg-blue-50"
+                                       :class="selected === '{{ $profile->value }}' ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' : 'border-gray-200'">
+                                    
+                                    {{-- Input Radio Oculto --}}
+                                    <input type="radio" name="profile" value="{{ $profile->value }}" 
+                                           class="sr-only" x-model="selected">
+                    
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between">
+                                            <span class="block text-sm font-medium text-gray-900">
+                                                {{ $profile->label() }}
+                                            </span>
+                                            
+                                            {{-- Ícone de Informação (Tooltip Trigger) --}}
+                                            <div x-data="{ tooltip: false }" class="relative ml-2" @mouseenter="tooltip = true" @mouseleave="tooltip = false">
+                                                <svg class="w-5 h-5 text-gray-400 hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                    
+                                                {{-- Tooltip Content --}}
+                                                <div x-show="tooltip" 
+                                                     x-transition.opacity
+                                                     class="absolute z-10 w-64 p-3 mt-2 -ml-32 text-xs font-medium text-white bg-slate-800 rounded-lg shadow-xl bottom-full left-1/2 mb-2 pointer-events-none"
+                                                     style="display: none;">
+                                                    {{ $profile->description() }}
+                                                    {{-- Seta do Tooltip --}}
+                                                    <div class="absolute w-2 h-2 bg-slate-800 rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
                     
                     <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                         <!-- Documento (CNPJ ou CPF) -->
