@@ -8,11 +8,7 @@
     </x-slot>
 
     {{-- Exibe mensagem de erro se houver --}}
-    @if (session('error'))
-        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg max-w-7xl mx-auto sm:px-6 lg:px-8" role="alert">
-            {{ session('error') }}
-        </div>
-    @endif
+
 
 
     @if (!Auth::user()->id_empresa)
@@ -50,7 +46,7 @@
                         </button>
 
                         {{-- Aba Veículos --}}
-                        @if(Auth::user()->temPermissao('DAS002'))
+                        @if(Auth::user()->temPermissao('DAS002') && Auth::user()->empresa->hasModule('veiculos'))
                         <button
                             @click.prevent="tab = 'veiculos'"
                             :class="{
@@ -75,7 +71,7 @@
                         @endif
 
                         {{-- Aba Motoristas --}}
-                        @if(Auth::user()->temPermissao('DAS003'))
+                        @if(Auth::user()->temPermissao('DAS003') && Auth::user()->empresa->hasModule('motoristas'))
                         <button
                             @click.prevent="tab = 'motoristas'"
                             :class="{
@@ -97,7 +93,7 @@
                         @endif
 
                         {{-- Aba Manutenções --}}
-                        @if(Auth::user()->temPermissao('DAS004'))
+                        @if(Auth::user()->temPermissao('DAS004') && Auth::user()->empresa->hasModule('manutencoes'))
                         <button
                             @click.prevent="tab = 'manutencoes'"
                             :class="{
@@ -114,7 +110,7 @@
                         @endif
 
                         {{-- Aba Abastecimentos --}}
-                        @if(Auth::user()->temPermissao('DAS005'))
+                        @if(Auth::user()->temPermissao('DAS005') && Auth::user()->empresa->hasModule('abastecimentos'))
                         <button
                             @click.prevent="tab = 'abastecimentos'"
                             :class="{
@@ -131,7 +127,7 @@
                         @endif
 
                         {{-- Aba Reservas --}}
-                        @if(Auth::user()->temPermissao('DAS006'))
+                        @if(Auth::user()->temPermissao('DAS006') && Auth::user()->empresa->hasModule('reservas'))
                         <button
                             @click.prevent="tab = 'reservas'"
                             :class="{
@@ -165,7 +161,7 @@
                 </div>
 
                 {{-- Conteúdo da Aba Veículos --}}
-                @if(Auth::user()->temPermissao('DAS002'))
+                @if(Auth::user()->temPermissao('DAS002') && Auth::user()->empresa->hasModule('veiculos'))
                 <div x-show="tab === 'veiculos'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -186,7 +182,7 @@
                 @endif
 
                 {{-- Conteúdo da Aba Motoristas --}}
-                @if(Auth::user()->temPermissao('DAS003'))
+                @if(Auth::user()->temPermissao('DAS003') && Auth::user()->empresa->hasModule('motoristas'))
                 <div x-show="tab === 'motoristas'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -205,7 +201,7 @@
                 @endif
 
                 {{-- Conteúdo da Aba Manutenções --}}
-                @if(Auth::user()->temPermissao('DAS004'))
+                @if(Auth::user()->temPermissao('DAS004') && Auth::user()->empresa->hasModule('manutencoes'))
                 <div x-show="tab === 'manutencoes'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -227,7 +223,7 @@
                 @endif
 
                 {{-- Conteúdo da Aba Abastecimentos --}}
-                @if(Auth::user()->temPermissao('DAS005'))
+                @if(Auth::user()->temPermissao('DAS005') && Auth::user()->empresa->hasModule('abastecimentos'))
                 <div x-show="tab === 'abastecimentos'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"
@@ -249,7 +245,7 @@
                 @endif
 
                 {{-- Conteúdo da Aba Reservas --}}
-                @if(Auth::user()->temPermissao('DAS006'))
+                @if(Auth::user()->temPermissao('DAS006') && Auth::user()->empresa->hasModule('reservas'))
                 <div x-show="tab === 'reservas'" class="space-y-8"
                     x-transition:enter="transition-opacity ease-out duration-300"
                     x-transition:enter-start="opacity-0"

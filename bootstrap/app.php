@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'super.admin' => \App\Http\Middleware\CheckSuperAdmin::class,
-            'check.license' => \App\Http\Middleware\CheckLicensesStatus::class, // <-- Adicionado
+            'check.license' => \App\Http\Middleware\CheckLicensesStatus::class,
+            'check.module' => \App\Http\Middleware\CheckModuleAccess::class, // <-- Adicionado
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

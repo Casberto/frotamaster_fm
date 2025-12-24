@@ -9,19 +9,75 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         
-        {{-- Gráfico 1: Evolução de consumo por mês --}}
-        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
-            <h4 class="text-sm font-semibold text-gray-700 mb-4">Evolução de Consumo (km/L)</h4>
-            <div class="h-[250px] w-full max-w-full relative">
-                <canvas id="chartEvolucaoConsumo"></canvas>
+        {{-- Lista: Estimativa de Consumo (Substituindo Gráfico 1) --}}
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0 flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                 <h4 class="text-sm font-semibold text-gray-700">Estimativa de Consumo (Tanque Cheio)</h4>
+                 <div class="relative group">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-gray-400 cursor-help">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clip-rule="evenodd" />
+                    </svg>
+                    <div class="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
+                        Médias calculadas apenas com abastecimentos de tanque cheio. Necessário ao menos 2 registros no período.
+                    </div>
+                </div>
+            </div>
+           
+            <div class="overflow-y-auto max-h-[250px] pr-2 space-y-3 custom-scrollbar">
+                @if(isset($indicadores['estimativa_consumo']) && count($indicadores['estimativa_consumo']) > 0)
+                    @foreach($indicadores['estimativa_consumo'] as $estimate)
+                        <div class="bg-white p-3 rounded border border-gray-100 shadow-sm">
+                            <div class="text-xs font-bold text-gray-700 mb-2 truncate">{{ $estimate['veiculo'] }}</div>
+                            <div class="grid grid-cols-3 gap-2 text-center divide-x divide-gray-100">
+                                 <div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Gasolina</div>
+                                    <div class="text-sm font-bold text-gray-800">
+                                        {{ $estimate['medias']['Gasolina'] ?? '--' }} <span class="text-[10px] text-gray-500 font-normal">km/l</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Etanol</div>
+                                    <div class="text-sm font-bold text-gray-800">
+                                        {{ $estimate['medias']['Etanol'] ?? '--' }} <span class="text-[10px] text-gray-500 font-normal">km/l</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Diesel</div>
+                                    <div class="text-sm font-bold text-gray-800">
+                                        {{ $estimate['medias']['Diesel'] ?? '--' }} <span class="text-[10px] text-gray-500 font-normal">km/l</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="h-full flex flex-col items-center justify-center text-gray-500 text-sm italic p-4">
+                        <svg class="w-8 h-8 mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Nenhum dado suficiente para cálculo.
+                    </div>
+                @endif
             </div>
         </div>
 
         {{-- Gráfico 2: Custo por tipo de combustível --}}
-        <div class="bg-gray-50 p-4 rounded-lg min-w-0">
+        <div class="bg-gray-50 p-4 rounded-lg min-w-0 flex flex-col">
             <h4 class="text-sm font-semibold text-gray-700 mb-4">Custo por Tipo de Combustível</h4>
-            <div class="h-[250px] w-full max-w-full relative">
-                <canvas id="chartCustoCombustivel"></canvas>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6 flex-1">
+                <div class="h-[200px] w-[200px] relative shrink-0">
+                     <canvas id="chartCustoCombustivel"></canvas>
+                      {{-- Centro do Doughnut --}}
+                     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="text-center">
+                            <span class="block text-xs text-gray-500">Total</span>
+                            <span id="totalCustoLabel" class="block text-sm font-bold text-gray-800"></span>
+                        </div>
+                     </div>
+                </div>
+                
+                {{-- Legenda Customizada --}}
+                <div id="legendCustoCombustivel" class="w-full space-y-3">
+                    {{-- Preenchido via JS --}}
+                </div>
             </div>
         </div>
 
@@ -49,78 +105,97 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Dados do PHP
-    const evolucaoConsumo = @json($fuelingData['graficos']['evolucao_consumo'] ?? ['labels' => [], 'data' => []]);
     const custoCombustivel = @json($fuelingData['graficos']['custo_combustivel'] ?? []);
     const rankingMotoristas = @json($fuelingData['graficos']['ranking_motoristas'] ?? []);
     const rankingVeiculos = @json($fuelingData['graficos']['ranking_veiculos'] ?? []);
 
-    // Gráfico 1: Evolução de Consumo
-    new Chart(document.getElementById('chartEvolucaoConsumo'), {
-        type: 'line',
-        data: {
-            labels: evolucaoConsumo.labels,
-            datasets: [{
-                label: 'Consumo Médio (km/L)',
-                data: evolucaoConsumo.data,
-                borderColor: '#8b5cf6',
-                backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 2,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'km/L'
-                    }
-                }
-            }
-        }
+    // Formatter para moeda
+    const moneyFormatter = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
     });
 
-    // Gráfico 2: Custo por Combustível
+    // Gráfico 2: Custo por Combustível (Doughnut)
     const custoCombLabels = Object.keys(custoCombustivel);
-    const custoCombData = Object.values(custoCombustivel);
+    const custoCombData = Object.values(custoCombustivel).map(Number); // Garantir numeros
+    const totalCusto = custoCombData.reduce((a, b) => a + b, 0);
+
+    // Atualizar Label Central de Total
+    const totalLabelEl = document.getElementById('totalCustoLabel');
+    if(totalLabelEl) {
+        // Formatar de forma compacta se for muito grande, ou normal
+        totalLabelEl.innerText = moneyFormatter.format(totalCusto);
+    }
     
+    // Cores para os gráficos e legenda
+    const chartColors = [
+        '#3b82f6', // Azul
+        '#10b981', // Verde
+        '#f59e0b', // Amarelo
+        '#ef4444', // Vermelho
+        '#8b5cf6', // Roxo
+        '#ec4899'  // Rosa
+    ];
+
+    // Gerar Legenda HTML
+    const legendContainer = document.getElementById('legendCustoCombustivel');
+    
+    if (custoCombLabels.length > 0) {
+        legendContainer.innerHTML = ''; // Limpar
+        custoCombLabels.forEach((label, index) => {
+            const value = custoCombData[index];
+            const percent = totalCusto > 0 ? ((value / totalCusto) * 100).toFixed(1) : 0;
+            const color = chartColors[index % chartColors.length];
+
+            const itemHtml = `
+                <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full mr-2" style="background-color: ${color}"></span>
+                        <span class="text-gray-600 font-medium">${label}</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-gray-900 font-semibold">${moneyFormatter.format(value)}</div>
+                        <div class="text-xs text-gray-500">${percent}%</div>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                   <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${percent}%; background-color: ${color}"></div>
+                </div>
+            `;
+            const div = document.createElement('div');
+            div.innerHTML = itemHtml;
+            legendContainer.appendChild(div);
+        });
+    } else {
+        legendContainer.innerHTML = '<p class="text-sm text-gray-500 text-center">Sem dados de abastecimento.</p>';
+        if(totalLabelEl) totalLabelEl.innerText = 'R$ 0,00';
+    }
+
     new Chart(document.getElementById('chartCustoCombustivel'), {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: custoCombLabels,
             datasets: [{
                 data: custoCombData,
-                backgroundColor: [
-                    '#3b82f6', // Azul
-                    '#10b981', // Verde
-                    '#f59e0b', // Amarelo
-                    '#ef4444', // Vermelho
-                    '#8b5cf6', // Roxo
-                    '#ec4899'  // Rosa
-                ]
+                backgroundColor: chartColors,
+                borderWidth: 0,
+                hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 1.5,
+            maintainAspectRatio: false,
+            cutout: '75%', // Espessura do anel
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    display: false // Usamos nossa legenda customizada
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return context.label + ': R$ ' + context.parsed.toFixed(2).replace('.', ',');
+                            const value = context.parsed;
+                            const percentage = totalCusto > 0 ? ((value / totalCusto) * 100).toFixed(1) + '%' : '0%';
+                            return context.label + ': ' + moneyFormatter.format(value) + ' (' + percentage + ')';
                         }
                     }
                 }

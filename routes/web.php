@@ -71,86 +71,89 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::post('parametros', [ConfiguracaoEmpresaController::class, 'update'])->name('parametros.update');
 
     // CRUDs Principais
-    Route::resource('veiculos', VeiculoController::class);
+    Route::resource('veiculos', VeiculoController::class)->middleware('check.module:veiculos');
     
     // Rotas de Fotos de Veículos
-    Route::get('veiculos/{id}/fotos', [VeiculoFotoController::class, 'index'])->name('veiculos.fotos.index');
-    Route::post('veiculos/{id}/fotos', [VeiculoFotoController::class, 'store'])->name('veiculos.fotos.store');
-    Route::delete('veiculos/fotos/{id}', [VeiculoFotoController::class, 'destroy'])->name('veiculos.fotos.destroy');
-    Route::get('veiculos/fotos/{filename}', [VeiculoFotoController::class, 'show'])->name('veiculos.fotos.show');
+    Route::get('veiculos/{id}/fotos', [VeiculoFotoController::class, 'index'])->name('veiculos.fotos.index')->middleware('check.module:veiculos');
+    Route::post('veiculos/{id}/fotos', [VeiculoFotoController::class, 'store'])->name('veiculos.fotos.store')->middleware('check.module:veiculos');
+    Route::delete('veiculos/fotos/{id}', [VeiculoFotoController::class, 'destroy'])->name('veiculos.fotos.destroy')->middleware('check.module:veiculos');
+    Route::get('veiculos/fotos/{filename}', [VeiculoFotoController::class, 'show'])->name('veiculos.fotos.show')->middleware('check.module:veiculos');
 
-    Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao']);
-    Route::resource('abastecimentos', AbastecimentoController::class);
-    Route::resource('servicos', ServicoController::class);
-    Route::resource('fornecedores', FornecedorController::class)->parameters(['fornecedores' => 'fornecedor']);
-    Route::resource('perfis', PerfilController::class);
-    Route::resource('usuarios', UsuarioController::class);
-    Route::resource('motoristas', MotoristaController::class);
+    Route::resource('manutencoes', ManutencaoController::class)->parameters(['manutencoes' => 'manutencao'])->middleware('check.module:manutencoes');
+    Route::resource('abastecimentos', AbastecimentoController::class)->middleware('check.module:abastecimentos');
+    Route::resource('servicos', ServicoController::class)->middleware('check.module:cadastros');
+    Route::resource('fornecedores', FornecedorController::class)->parameters(['fornecedores' => 'fornecedor'])->middleware('check.module:cadastros');
+    Route::resource('perfis', PerfilController::class)->middleware('check.module:configuracoes'); 
+    Route::resource('usuarios', UsuarioController::class)->middleware('check.module:usuarios');
+    Route::resource('motoristas', MotoristaController::class)->middleware('check.module:motoristas');
 
     // --- MÓDULO DE SEGUROS ---
-    // Rota para Renovação
-    Route::post('/seguros/{id}/renew', [SegurosController::class, 'renew'])->name('seguros.renew');
+    Route::middleware('check.module:seguros')->group(function() {
+        // Rota para Renovação
+        Route::post('/seguros/{id}/renew', [SegurosController::class, 'renew'])->name('seguros.renew');
 
-    // Rotas para Fotos de Sinistros
-    Route::get('/seguros/sinistros/{id}/fotos', [SeguroSinistroFotoController::class, 'index']);
-    Route::post('/seguros/sinistros/{id}/fotos', [SeguroSinistroFotoController::class, 'store']);
-    Route::delete('/seguros/sinistros/fotos/{id}', [SeguroSinistroFotoController::class, 'destroy']);
-    Route::get('/seguros/sinistros/fotos/{filename}', [SeguroSinistroFotoController::class, 'show'])->name('seguros.sinistros.fotos.show');
-    Route::get('/seguros/{id}/download', [SegurosController::class, 'download'])->name('seguros.download');
-    Route::resource('seguros', SegurosController::class);
-    
-    // Coberturas
-    Route::post('coberturas', [SeguroCoberturaController::class, 'store'])->name('coberturas.store');
-    Route::delete('coberturas/{id}', [SeguroCoberturaController::class, 'destroy'])->name('coberturas.destroy');
+        // Rotas para Fotos de Sinistros
+        Route::get('/seguros/sinistros/{id}/fotos', [SeguroSinistroFotoController::class, 'index']);
+        Route::post('/seguros/sinistros/{id}/fotos', [SeguroSinistroFotoController::class, 'store']);
+        Route::delete('/seguros/sinistros/fotos/{id}', [SeguroSinistroFotoController::class, 'destroy']);
+        Route::get('/seguros/sinistros/fotos/{filename}', [SeguroSinistroFotoController::class, 'show'])->name('seguros.sinistros.fotos.show');
+        Route::get('/seguros/{id}/download', [SegurosController::class, 'download'])->name('seguros.download');
+        Route::resource('seguros', SegurosController::class);
+        
+        // Coberturas
+        Route::post('coberturas', [SeguroCoberturaController::class, 'store'])->name('coberturas.store');
+        Route::delete('coberturas/{id}', [SeguroCoberturaController::class, 'destroy'])->name('coberturas.destroy');
 
-    // Sinistros
-    Route::post('sinistros', [SeguroSinistroController::class, 'store'])->name('sinistros.store');
-    Route::put('sinistros/{id}', [SeguroSinistroController::class, 'update'])->name('sinistros.update');
-    Route::delete('sinistros/{id}', [SeguroSinistroController::class, 'destroy'])->name('sinistros.destroy');
+        // Sinistros
+        Route::post('sinistros', [SeguroSinistroController::class, 'store'])->name('sinistros.store');
+        Route::put('sinistros/{id}', [SeguroSinistroController::class, 'update'])->name('sinistros.update');
+        Route::delete('sinistros/{id}', [SeguroSinistroController::class, 'destroy'])->name('sinistros.destroy');
+    });
 
     // --- MÓDULO DE RESERVAS (Refatorado) ---
-    
-    // 1. Workflow de Estados (Usando PATCH conforme os modais)
-    Route::patch('reservas/{reserva}/aprovar', AprovarReservaController::class)->name('reservas.aprovar');
-    Route::patch('reservas/{reserva}/rejeitar', RejeitarReservaController::class)->name('reservas.rejeitar');
-    Route::patch('reservas/{reserva}/cancelar', CancelarReservaController::class)->name('reservas.cancelar');
-    Route::patch('reservas/{reserva}/iniciar', IniciarReservaController::class)->name('reservas.iniciar'); 
-    Route::patch('reservas/{reserva}/finalizar', FinalizarReservaController::class)->name('reservas.finalizar');
-    Route::patch('reservas/{reserva}/corrigir', \App\Http\Controllers\Reserva\CorrigirReservaController::class)->name('reservas.corrigir');
-    
-    // Revisão usa POST pois o formulário pode ser complexo
-    Route::post('reservas/{reserva}/revisar', RevisarReservaController::class)->name('reservas.revisar');
+    Route::middleware('check.module:reservas')->group(function() {
+        
+        // 1. Workflow de Estados (Usando PATCH conforme os modais)
+        Route::patch('reservas/{reserva}/aprovar', AprovarReservaController::class)->name('reservas.aprovar');
+        Route::patch('reservas/{reserva}/rejeitar', RejeitarReservaController::class)->name('reservas.rejeitar');
+        Route::patch('reservas/{reserva}/cancelar', CancelarReservaController::class)->name('reservas.cancelar');
+        Route::patch('reservas/{reserva}/iniciar', IniciarReservaController::class)->name('reservas.iniciar'); 
+        Route::patch('reservas/{reserva}/finalizar', FinalizarReservaController::class)->name('reservas.finalizar');
+        Route::patch('reservas/{reserva}/corrigir', \App\Http\Controllers\Reserva\CorrigirReservaController::class)->name('reservas.corrigir');
+        
+        // Revisão usa POST pois o formulário pode ser complexo
+        Route::post('reservas/{reserva}/revisar', RevisarReservaController::class)->name('reservas.revisar');
 
-     // SUB-RECURSOS: Abastecimentos
-    // Abastecimentos
-    Route::post('reservas/{reserva}/abastecimentos', [ReservaAbastecimentoController::class, 'store'])->name('reservas.abastecimentos.attach');
-    Route::post('reservas/{reserva}/abastecimentos/novo', [ReservaAbastecimentoController::class, 'storeNew'])->name('reservas.abastecimentos.create'); // <--- NOVA ROTA
-    Route::delete('reservas/{reserva}/abastecimentos/{abastecimento}', [ReservaAbastecimentoController::class, 'destroy'])->name('reservas.abastecimentos.detach');
+         // SUB-RECURSOS: Abastecimentos
+        // Abastecimentos
+        Route::post('reservas/{reserva}/abastecimentos', [ReservaAbastecimentoController::class, 'store'])->name('reservas.abastecimentos.attach');
+        Route::post('reservas/{reserva}/abastecimentos/novo', [ReservaAbastecimentoController::class, 'storeNew'])->name('reservas.abastecimentos.create'); // <--- NOVA ROTA
+        Route::delete('reservas/{reserva}/abastecimentos/{abastecimento}', [ReservaAbastecimentoController::class, 'destroy'])->name('reservas.abastecimentos.detach');
 
-    // 3. Sub-recursos: Pedágios em Reservas
-    Route::post('reservas/{reserva}/pedagios', [ReservaPedagioController::class, 'store'])->name('reservas.pedagios.attach');
-    Route::delete('reservas/{reserva}/pedagio/{pedagio}', [ReservaPedagioController::class, 'destroy'])->name('reservas.pedagios.detach');
+        // 3. Sub-recursos: Pedágios em Reservas
+        Route::post('reservas/{reserva}/pedagios', [ReservaPedagioController::class, 'store'])->name('reservas.pedagios.attach');
+        Route::delete('reservas/{reserva}/pedagio/{pedagio}', [ReservaPedagioController::class, 'destroy'])->name('reservas.pedagios.detach');
 
-    // 4. Sub-recursos: Passageiros em Reservas
-    Route::post('reservas/{reserva}/passageiros', [ReservaPassageiroController::class, 'store'])->name('reservas.passageiros.attach');
-    Route::put('reservas/{reserva}/passageiros/{passageiro}', [ReservaPassageiroController::class, 'update'])->name('reservas.passageiros.update');
-    Route::delete('reservas/{reserva}/passageiro/{passageiro}', [ReservaPassageiroController::class, 'destroy'])->name('reservas.passageiros.detach');
+        // 4. Sub-recursos: Passageiros em Reservas
+        Route::post('reservas/{reserva}/passageiros', [ReservaPassageiroController::class, 'store'])->name('reservas.passageiros.attach');
+        Route::put('reservas/{reserva}/passageiros/{passageiro}', [ReservaPassageiroController::class, 'update'])->name('reservas.passageiros.update');
+        Route::delete('reservas/{reserva}/passageiro/{passageiro}', [ReservaPassageiroController::class, 'destroy'])->name('reservas.passageiros.detach');
 
-    // 5. Sub-recursos: Manutenções em Reservas
-    Route::post('reservas/{reserva}/manutencoes', [ReservaManutencaoController::class, 'store'])->name('reservas.manutencoes.attach');
-    Route::delete('reservas/{reserva}/manutencao/{manutencao}', [ReservaManutencaoController::class, 'destroy'])->name('reservas.manutencoes.detach');
+        // 5. Sub-recursos: Manutenções em Reservas
+        Route::post('reservas/{reserva}/manutencoes', [ReservaManutencaoController::class, 'store'])->name('reservas.manutencoes.attach');
+        Route::delete('reservas/{reserva}/manutencao/{manutencao}', [ReservaManutencaoController::class, 'destroy'])->name('reservas.manutencoes.detach');
 
-    // 6. CRUD Padrão de Reservas (Deve vir por último para evitar conflito de rotas como /{reserva}/algo)
-    Route::resource('reservas', ReservaController::class);
-
+        // 6. CRUD Padrão de Reservas (Deve vir por último para evitar conflito de rotas como /{reserva}/algo)
+        Route::resource('reservas', ReservaController::class);
+    });
 
     // Rotas AJAX Dashboard
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
-    Route::get('/veiculos/{id}/historico', [DashboardController::class, 'getVeiculoHistorico'])->name('veiculos.historico');
-    Route::get('/manutencoes/{id}/detalhes', [DashboardController::class, 'getMaintenanceDetails'])->name('manutencoes.detalhes');
-    Route::get('/abastecimentos/{id}/detalhes', [DashboardController::class, 'getFuelingDetails'])->name('abastecimentos.detalhes');
-    Route::get('/dashboard/reservations/{id}/details', [DashboardController::class, 'getReservationDetails'])->name('dashboard.reservations.details');
-    Route::get('/abastecimentos/veiculo/{id}', [AbastecimentoController::class, 'getVeiculoData'])->name('abastecimentos.veiculo.data');
+    Route::get('/veiculos/{id}/historico', [DashboardController::class, 'getVeiculoHistorico'])->name('veiculos.historico')->middleware('check.module:veiculos');
+    Route::get('/manutencoes/{id}/detalhes', [DashboardController::class, 'getMaintenanceDetails'])->name('manutencoes.detalhes')->middleware('check.module:manutencoes');
+    Route::get('/abastecimentos/{id}/detalhes', [DashboardController::class, 'getFuelingDetails'])->name('abastecimentos.detalhes')->middleware('check.module:abastecimentos');
+    Route::get('/dashboard/reservations/{id}/details', [DashboardController::class, 'getReservationDetails'])->name('dashboard.reservations.details')->middleware('check.module:reservas');
+    Route::get('/abastecimentos/veiculo/{id}', [AbastecimentoController::class, 'getVeiculoData'])->name('abastecimentos.veiculo.data')->middleware('check.module:abastecimentos');
 });
 
 
