@@ -1,0 +1,32 @@
+# CHANGELOG - Refatoração Financeira e UX do Prestador
+Data: 25/12/2025
+
+## 🔧 Módulo de Manutenção Interna (Frotista)
+- **Mudança de Foco**: Pivotado de "Lucro" para "Controle de Despesas".
+- **Formulário**: Removidos campos de "Valor Cobrado" e "Lucro Estimado". Adicionado foco em "Total a Pagar" e dados de pagamento (Despesa).
+- **Dashboard**: Gráfico de "Lucro" substituído por "Composição de Despesas" (Peças vs Mão de Obra).
+
+## 🛠️ Módulo de Oficina (Prestador de Serviço)
+
+### 📊 Visibilidade de Lucro na OS
+- **Cabeçalho da OS**: Novos cards estatísticos exibindo:
+    - Receita Peças vs Mão de Obra.
+    - Custo Total.
+    - **Lucro Estimado** (com indicação visual de prejuízo/lucro).
+    - **Margem de Lucro (%)**.
+- **Lista de Itens**: Adicionado detalhamento de "Custo Unitário" e "Lucro/Margem" item a item (visível apenas para a oficina).
+- **Modal de Item**: Campo "Custo" destacado visualmente para incentivar o preenchimento.
+
+### 💰 Financeiro e Pagamentos
+- **Modal de Entrega**:
+    - Adicionados campos de **Status do Pagamento** e **Forma de Pagamento** (PIX, Cartão, Boleto, Dinheiro).
+    - Cálculo automático da **Data de Compensação** (Ex: Cartão de Crédito = D+30).
+- **Dashboard Financeiro Oficina**:
+    - **Filtro Real**: Agora contabiliza apenas OSs com status `Entregue` (Encerradas).
+    - **Lucro Futuro (A Receber)**: Novo card roxo indicando valores aprovados que entrarão no caixa futuro (cartão/boleto).
+    - **Lucro Líquido (Realizado)**: Exibe apenas valores já compensados ou pagos à vista.
+
+### 🚀 Experiência do Usuário (UX)
+- **Barra Lateral (Sidebar)**:
+    - **Menu Expandido**: Para perfil "Prestador de Serviço", o menu "Oficina" agora é plano (sem dropdown), facilitando acesso rápido.
+    - **Filtro de Módulos**: Módulos irrelevantes para oficinas externas (Veículos, Reservas, Manutenções, Abastecimentos) agora são ocultados automaticamente.

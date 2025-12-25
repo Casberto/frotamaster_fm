@@ -50,6 +50,7 @@ class Empresa extends Model
             'cadastros' => 'Cadastros (Fornecedores e Serviços)',
             'usuarios' => 'Usuários',
             'configuracoes' => 'Configurações',
+            'oficina' => 'Oficina & Serviços',
         ];
     }
 

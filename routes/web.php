@@ -51,6 +51,10 @@ Route::get('/register-company', [RegisterController::class, 'create'])->middlewa
 Route::post('/register-company', [RegisterController::class, 'store'])->middleware('guest')->name('company.store');
 Route::view('/licenca-expirada', 'licenca-expirada')->middleware('auth')->name('licenca.expirada');
 
+// Rotas Públicas da Oficina (Aprovação de Orçamento)
+Route::get('/oficina/public/os/{token}', [\App\Http\Controllers\Oficina\AprovacaoClienteController::class, 'show'])->name('oficina.os.public.show');
+Route::post('/oficina/public/os/{token}/aceitar', [\App\Http\Controllers\Oficina\AprovacaoClienteController::class, 'aceitar'])->name('oficina.os.public.aceitar');
+
 
 // ROTA DE REDIRECIONAMENTO APÓS LOGIN
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -145,6 +149,40 @@ Route::middleware(['auth', 'check.license'])->group(function () {
 
         // 6. CRUD Padrão de Reservas (Deve vir por último para evitar conflito de rotas como /{reserva}/algo)
         Route::resource('reservas', ReservaController::class);
+    });
+
+    // --- MÓDULO OFICINA ---
+    Route::prefix('oficina')->name('oficina.')->group(function () {
+        Route::get('/painel', [\App\Http\Controllers\Oficina\PainelController::class, 'index'])->name('painel.index');
+        Route::get('/historico', [\App\Http\Controllers\Oficina\PainelController::class, 'historico'])->name('historico');
+        Route::post('/painel/update-status', [\App\Http\Controllers\Oficina\PainelController::class, 'updateStatus'])->name('painel.update-status');
+        
+        // Rotas de Veículos (AJAX)
+        Route::get('/veiculos/buscar-placa', [\App\Http\Controllers\Oficina\VeiculoTerceiroController::class, 'buscarPlaca'])->name('veiculos.buscar-placa');
+
+        // Rotas de OS
+        Route::get('/os/create', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'create'])->name('os.create');
+        Route::post('/os', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'store'])->name('os.store');
+        Route::get('/os/{id}', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'show'])->name('os.show');
+        Route::post('/os/{id}/whatsapp', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'gerarLinkWhatsapp'])->name('os.whatsapp');
+        Route::post('/os/{id}/diagnostico', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'salvarDiagnostico'])->name('os.diagnostico');
+        
+        // Fluxo de Execução
+        Route::post('/os/{id}/iniciar-execucao', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'iniciarExecucao'])->name('os.iniciar_execucao');
+        Route::post('/os/{id}/solicitar-pecas', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'solicitarPecas'])->name('os.solicitar_pecas');
+        Route::post('/os/{id}/finalizar', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'finalizarServico'])->name('os.finalizar');
+        Route::post('/os/{id}/whatsapp-pronto', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'gerarLinkWhatsappPronto'])->name('os.whatsapp_pronto');
+        Route::post('/os/{id}/rejeitar', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'rejeitarOrcamento'])->name('os.rejeitar');
+        Route::post('/os/{id}/entregar', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'entregarVeiculo'])->name('os.entregar');
+    Route::post('/os/{id}/garantia', [\App\Http\Controllers\Oficina\OrdemServicoController::class, 'acionarGarantia'])->name('os.garantia');
+
+        // Itens da OS
+        Route::post('/os/{id}/items', [\App\Http\Controllers\Oficina\OsItemController::class, 'store'])->name('os.items.store');
+        Route::delete('/items/{id}', [\App\Http\Controllers\Oficina\OsItemController::class, 'destroy'])->name('os.items.destroy');
+
+        // Financeiro e Compras
+        Route::get('/financeiro', [\App\Http\Controllers\Oficina\FinanceiroController::class, 'index'])->name('financeiro');
+        Route::get('/lista-compras', [\App\Http\Controllers\Oficina\FinanceiroController::class, 'listaComprasDia'])->name('compras.dia');
     });
 
     // Rotas AJAX Dashboard

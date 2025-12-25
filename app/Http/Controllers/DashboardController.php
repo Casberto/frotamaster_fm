@@ -45,6 +45,10 @@ class DashboardController extends Controller
             $fuelingData = $this->dashboardService->getFuelingDashboardData($startDate, $endDate);
             $reservationsData = $this->dashboardService->getReservationsDashboardData();
             
+            // Novos Gráficos Financeiros (Despesas)
+            $chartTopClientes = $this->dashboardService->getTopClientesChartData($startDate->format('Y-m-d'), $endDate->format('Y-m-d'));
+            $expenseSummary = $this->dashboardService->getExpenseSummary($startDate->format('Y-m-d'), $endDate->format('Y-m-d'));
+
             // Merge arrays
             $finalData = array_merge(
                 $data, 
@@ -52,6 +56,9 @@ class DashboardController extends Controller
                 ['maintenanceData' => $maintenanceData],
                 ['fuelingData' => $fuelingData],
                 ['reservationsData' => $reservationsData],
+                // Dados para os Gráficos
+                ['chartTopClientes' => $chartTopClientes],
+                $expenseSummary, // Contém totalDespesa, totalPecas, totalMO
                 // Passa as datas para a view para manter o estado do filtro
                 ['filterStartDate' => $startDate->format('Y-m-d'), 'filterEndDate' => $endDate->format('Y-m-d')]
             );

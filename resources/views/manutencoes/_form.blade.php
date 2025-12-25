@@ -12,15 +12,17 @@
 <div class="space-y-3" 
     x-data="manutencaoForm({
         servicosDisponiveis: {{ $servicos->map(fn($s) => ['id' => $s->ser_id, 'nome' => $s->ser_nome])->toJson() }},
-        {{-- TRECHO AJUSTADO: Adicionado 'garantia' aos dados iniciais para a edição --}}
         servicosIniciais: {{ $manutencao->servicos->map(fn($s) => [
             'id' => $s->ser_id, 
             'nome' => $s->ser_nome, 
             'custo' => $s->pivot->ms_custo, 
             'garantia' => $s->pivot->ms_garantia ? \Carbon\Carbon::parse($s->pivot->ms_garantia)->format('Y-m-d') : null
         ])->toJson() }},
-        custoPecasInicial: '{{ old('man_custo_pecas', $manutencao->man_custo_pecas) }}',
-        custoMaoDeObraInicial: '{{ old('man_custo_mao_de_obra', $manutencao->man_custo_mao_de_obra) }}'
+        custoPecasInicial: '{{ old('man_val_pecas', $manutencao->man_val_pecas ?? $manutencao->man_custo_pecas) }}',
+        custoMaoDeObraInicial: '{{ old('man_val_mao_obra', $manutencao->man_val_mao_obra ?? $manutencao->man_custo_mao_de_obra) }}',
+        valorCobradoInicial: '{{ old('man_val_cobrado', $manutencao->man_val_cobrado ?? 0) }}',
+        statusInicial: '{{ old('man_status_pagamento', $manutencao->man_status_pagamento ?? 'pendente') }}',
+        formaInicial: '{{ old('man_forma_pagamento', $manutencao->man_forma_pagamento ?? '') }}'
     })"
     x-init="calcularCustoTotal()">
 
@@ -97,17 +99,19 @@
 
     {{-- TAB 2: SERVIÇOS E CUSTOS --}}
     <div id="tab-servicos-content" x-show="tab === 'servicos' || mobile" class="space-y-6 animate-fade-in-up mobile-stacked-force" style="display: none;">
+        
+        {{-- SEÇÃO 1: COMPOSIÇÃO DE CUSTOS --}}
         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-3 mb-4 sm:mb-6 flex items-center gap-2">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                Serviços e Custos
+            <h3 class="text-lg font-semibold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                1. Composição de Custos (Internos)
             </h3>
             
             {{-- Interface para Adicionar Serviços --}}
-            <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                     <div class="md:col-span-5">
-                        <label for="novo_servico_id" class="block font-medium text-sm text-gray-700">Serviço</label>
+                        <label for="novo_servico_id" class="block font-medium text-sm text-gray-700">Adicionar Serviço</label>
                         <select id="novo_servico_id" x-model.number="novoServico.id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <option value="">Selecione um serviço...</option>
                             <template x-for="servico in servicosDisponiveis" :key="servico.id">
@@ -116,62 +120,124 @@
                         </select>
                     </div>
                     <div class="md:col-span-3">
-                        <label for="novo_servico_custo" class="block font-medium text-sm text-gray-700">Custo (R$)</label>
-                        <input type="number" step="0.01" id="novo_servico_custo" x-model.number="novoServico.custo" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: 150.00">
+                        <label for="novo_servico_custo" class="block font-medium text-sm text-gray-700">Custo Unitário (R$)</label>
+                        <input type="number" step="0.01" id="novo_servico_custo" x-model.number="novoServico.custo" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="0.00">
                     </div>
-                    {{-- TRECHO AJUSTADO: Adicionado campo de data para a garantia do novo serviço --}}
-                    <div class="md:col-span-2">
+                     <div class="md:col-span-2">
                         <label for="novo_servico_garantia" class="block font-medium text-sm text-gray-700">Garantia</label>
                         <input type="date" id="novo_servico_garantia" x-model="novoServico.garantia" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
                     <div class="md:col-span-2">
-                        <button type="button" @click.prevent="adicionarServico()" class="w-full bg-gray-800 text-white rounded-md py-2 px-4 hover:bg-gray-700 transition">Adicionar</button>
+                        <button type="button" @click.prevent="adicionarServico()" class="w-full bg-gray-800 text-white rounded-md py-2 px-4 hover:bg-gray-700 transition flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Adicionar
+                        </button>
                     </div>
                 </div>
             </div>
             
             {{-- Lista de Serviços Adicionados --}}
-            <div class="mt-4 space-y-2">
+            <div class="mt-4 space-y-2 mb-6">
                 <template x-if="servicosAdicionados.length === 0">
-                    <p class="text-center text-gray-500 py-4">Nenhum serviço adicionado.</p>
+                    <p class="text-center text-gray-400 py-4 italic text-sm">Nenhum serviço lançado nesta manutenção ainda.</p>
                 </template>
                 <template x-for="(servico, index) in servicosAdicionados" :key="index">
-                    <div class="bg-white p-3 rounded-md border">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <p class="font-medium" x-text="servico.nome"></p>
-                                <p class="text-sm text-gray-600">Custo: R$ <span x-text="formatCurrency(servico.custo)"></span></p>
+                    <div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded hover:bg-gray-50 transition">
+                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="font-medium text-gray-800" x-text="servico.nome"></p>
+                                <div class="mt-1">
+                                    <label :for="'garantia_' + index" class="text-xs text-gray-500 mr-2">Garantia:</label>
+                                    <input type="date" :id="'garantia_' + index" x-model="servico.garantia" class="text-xs border-gray-200 rounded-sm p-1 text-gray-600 focus:ring-0 focus:border-blue-400 w-32">
+                                </div>
                             </div>
-                            <button @click.prevent="removerServico(index)" class="text-red-500 hover:text-red-700">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-500 mr-2">Custo:</span>
+                                <span class="font-medium text-gray-800">R$ <span x-text="formatCurrency(servico.custo)"></span></span>
+                            </div>
                         </div>
-                        {{-- TRECHO AJUSTADO: Adicionado campo de data para editar a garantia de um serviço já adicionado --}}
-                        <div class="mt-2">
-                            <label :for="'garantia_' + index" class="block font-medium text-xs text-gray-500">Garantia do Serviço</label>
-                            <input type="date" :id="'garantia_' + index" x-model="servico.garantia" class="mt-1 block w-full md:w-1/3 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        {{-- Hidden inputs for form submission --}}
-                        <input type="hidden" :name="`servicos[${index}][id]`" :value="servico.id">
-                        <input type="hidden" :name="`servicos[${index}][custo]`" :value="servico.custo">
-                        <input type="hidden" :name="`servicos[${index}][garantia]`" :value="servico.garantia">
+                        <button @click.prevent="removerServico(index)" class="text-red-400 hover:text-red-600 p-2" title="Remover serviço">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </div>
                 </template>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t">
+            {{-- Custos Adicionais --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100 bg-gray-50/50 p-4 rounded-lg">
                 <div>
-                    <label for="man_custo_pecas" class="block font-medium text-sm text-gray-700">Custo Adicional Peças (R$)</label>
-                    <input type="number" step="0.01" name="man_custo_pecas" id="man_custo_pecas" x-model.number="custoPecas" @input="calcularCustoTotal()" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="0.00">
+                    <label for="man_val_pecas" class="block font-medium text-sm text-gray-600">Peças Adicionais (R$)</label>
+                    <div class="relative mt-1 rounded-md shadow-sm">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <span class="text-gray-500 sm:text-sm">R$</span>
+                        </div>
+                        <input type="number" step="0.01" name="man_val_pecas" id="man_val_pecas" x-model.number="custoPecas" @input="calcularCustoTotal()" class="block w-full rounded-md border-gray-300 pl-10 focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="0.00">
+                    </div>
                 </div>
                 <div>
-                    <label for="man_custo_mao_de_obra" class="block font-medium text-sm text-gray-700">Custo Adicional Mão de Obra (R$)</label>
-                    <input type="number" step="0.01" name="man_custo_mao_de_obra" id="man_custo_mao_de_obra" x-model.number="custoMaoDeObra" @input="calcularCustoTotal()" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="0.00">
+                    <label for="man_val_mao_obra" class="block font-medium text-sm text-gray-600">Mão de Obra Extra (R$)</label>
+                    <div class="relative mt-1 rounded-md shadow-sm">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <span class="text-gray-500 sm:text-sm">R$</span>
+                        </div>
+                        <input type="number" step="0.01" name="man_val_mao_obra" id="man_val_mao_obra" x-model.number="custoMaoDeObra" @input="calcularCustoTotal()" class="block w-full rounded-md border-gray-300 pl-10 focus:border-red-500 focus:ring-red-500 sm:text-sm" placeholder="0.00">
+                    </div>
                 </div>
-                <div>
-                    <label for="man_custo_total" class="block font-medium text-sm text-gray-700">Custo Total (R$)*</label>
-                    <input type="text" name="man_custo_total" id="man_custo_total" x-model="custoTotal" class="mt-1 block w-full bg-gray-200 border-gray-300 rounded-md shadow-sm sm:text-sm" readonly required>
+                <div class="bg-red-50 p-4 rounded-md border border-red-100 flex flex-col justify-center items-center">
+                    <span class="text-xs font-bold text-red-600 uppercase tracking-widest">Custo Total Interno</span>
+                    <span class="text-2xl font-bold text-red-700">R$ <span x-text="formatCurrency(custoTotal)"></span></span>
+                    <input type="hidden" name="man_custo_total" :value="custoTotal">
+                </div>
+            </div>
+        </div>
+
+        {{-- SEÇÃO 2: DADOS DO PAGAMENTO --}}
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-l-4 border-l-blue-500 border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                2. Dados do Pagamento (Despesa)
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mb-6">
+                 <div class="bg-red-50 p-4 rounded-md border border-red-100 flex flex-col justify-center items-center md:col-span-2">
+                    <span class="text-xs font-bold text-red-600 uppercase tracking-widest">Total a Pagar</span>
+                    <span class="text-3xl font-extrabold text-red-700">R$ <span x-text="formatCurrency(custoTotal)"></span></span>
+                    <p class="text-xs text-gray-500 mt-1">Soma de Serviços + Peças + Mão de Obra</p>
+                </div>
+            </div>
+
+            <!-- Dados de Pagamento -->
+            <div class="bg-gray-50 rounded p-4 border border-gray-200">
+                <h4 class="text-sm font-bold text-gray-700 mb-3 border-b pb-1">Condições de Pagamento</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="man_status_pagamento" class="block font-medium text-sm text-gray-700">Status Recebimento</label>
+                        <select name="man_status_pagamento" x-model="status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="pendente">⏳ Pendente</option>
+                            <option value="pago">✅ Pago</option>
+                            <option value="atrasado">⚠️ Atrasado</option>
+                            <option value="cancelado">🚫 Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div x-show="status === 'pago'" x-transition>
+                        <label for="man_forma_pagamento" class="block font-medium text-sm text-gray-700">Forma de Pagamento</label>
+                        <select name="man_forma_pagamento" x-model="forma" @change="calcularVencimento()" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Selecione...</option>
+                            <option value="pix">PIX / Transferência</option>
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="cartao_credito">Cartão de Crédito</option>
+                            <option value="boleto">Boleto Bancário</option>
+                        </select>
+                    </div>
+
+                    <div x-show="status === 'pago'" x-transition>
+                        <label for="man_dat_compensacao" class="block font-medium text-sm text-gray-700">Data do Pagamento</label>
+                        <input type="date" name="man_dat_compensacao" x-ref="dataCompensacao" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value="{{ old('man_dat_compensacao', $manutencao->man_dat_compensacao ? \Carbon\Carbon::parse($manutencao->man_dat_compensacao)->format('Y-m-d') : '') }}" />
+                        <p class="text-[10px] text-gray-500 mt-1">Quando a despesa sai da conta.</p>
+                    </div>
+                    
+                    <input type="hidden" name="man_dat_pagamento" :value="status === 'pago' ? new Date().toISOString().split('T')[0] : ''">
                 </div>
             </div>
         </div>
@@ -250,11 +316,23 @@
         Alpine.data('manutencaoForm', (initialData) => ({
             servicosDisponiveis: initialData.servicosDisponiveis || [],
             servicosAdicionados: initialData.servicosIniciais || [],
-            // TRECHO AJUSTADO: Adicionado 'garantia' ao objeto do novo serviço
             novoServico: { id: '', custo: '', garantia: '' },
+            
+            // Campos de Custo (Agora mapeados para man_val_*)
             custoPecas: initialData.custoPecasInicial || 0,
             custoMaoDeObra: initialData.custoMaoDeObraInicial || 0,
-            custoTotal: '0.00',
+            custoTotal: 0, // Será calculado
+
+            // Campos Financeiros (Novos)
+            valorCobrado: initialData.valorCobradoInicial || 0,
+            status: initialData.statusInicial || 'pendente',
+            forma: initialData.formaInicial || '',
+            // Data compensação controlada via x-ref ou model direto se possível
+            
+            init() {
+                this.calcularCustoTotal();
+                // Watchers para recalcular lucro se necessário, ou usar getters
+            },
 
             adicionarServico() {
                 if (!this.novoServico.id || !this.novoServico.custo) {
@@ -267,10 +345,8 @@
                         id: servicoSelecionado.id,
                         nome: servicoSelecionado.nome,
                         custo: parseFloat(this.novoServico.custo),
-                        // TRECHO AJUSTADO: Adicionado 'garantia' ao adicionar novo serviço
                         garantia: this.novoServico.garantia || null
                     });
-                    // TRECHO AJUSTADO: Resetar o objeto inteiro do novo serviço
                     this.novoServico = { id: '', custo: '', garantia: '' };
                     this.calcularCustoTotal();
                 }
@@ -291,13 +367,29 @@
                 this.custoTotal = total.toFixed(2);
             },
             
+
+
+            calcularVencimento() {
+                const inputDate = this.$refs.dataCompensacao;
+                if(this.forma === 'cartao_credito') {
+                    let d = new Date();
+                    d.setDate(d.getDate() + 30);
+                    inputDate.value = d.toISOString().split('T')[0];
+                } else if (this.forma === 'pix' || this.forma === 'dinheiro') {
+                    inputDate.value = new Date().toISOString().split('T')[0];
+                }
+            },
+            
             formatCurrency(value) {
                 if (typeof value !== 'number') {
                     value = parseFloat(value) || 0;
                 }
                 return value.toFixed(2).replace('.', ',');
+            },
+
+            formatMoney(val) {
+                 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
             }
         }));
     });
 </script>
-

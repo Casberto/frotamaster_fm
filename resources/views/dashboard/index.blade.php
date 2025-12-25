@@ -9,7 +9,8 @@
 
     {{-- Exibe mensagem de erro se houver --}}
 
-
+    {{-- Chart.js CDN --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @if (!Auth::user()->id_empresa)
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -212,6 +213,9 @@
                 >
                     @include('dashboard.components.manutencoes.cards')
                     
+                    {{-- Novos Gráficos Financeiros --}}
+                    @include('dashboard.components.financeiro.charts')
+
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-3">
                             @include('dashboard.components.manutencoes.charts')

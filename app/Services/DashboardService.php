@@ -1262,4 +1262,126 @@ class DashboardService
             ])
             ->firstOrFail();
     }
+
+    /**
+     * Retorna dados para o Gráfico de Top Clientes (Bar Chart Horizontal).
+     * Evita tabelas para mostrar ranking de gastos.
+     *
+     * @param string $inicio Data inicio Y-m-d
+     * @param string $fim Data fim Y-m-d
+     * @return array
+     */
+    public function getTopClientesChartData(string $inicio, string $fim): array
+    {
+        // Ajuste de nomes de colunas conforme schema real
+        // man_vei_id referenciando veiculos.vei_id
+        // man_val_cobrado é o faturamento
+        // man_dat_compensacao é a data financeira
+        
+        $ranking = Manutencao::selectRaw('veiculos.vei_placa, SUM(man_val_cobrado) as total')
+            ->join('veiculos', 'manutencoes.man_vei_id', '=', 'veiculos.vei_id')
+            ->where('manutencoes.man_emp_id', $this->idEmpresa)
+            ->whereBetween('man_dat_compensacao', [$inicio, $fim])
+            ->where('man_status_pagamento', 'pago')
+            ->groupBy('veiculos.vei_placa')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        return [
+            'labels' => $ranking->pluck('vei_placa'),
+            'data'   => $ranking->pluck('total'),
+        ];
+    }
+
+    /**
+     * Retorna dados para o Gráfico de Fluxo de Caixa (Line Chart).
+     * Compara Custos vs Receitas dia a dia.
+     *
+     * @param string $inicio Data inicio Y-m-d
+     * @param string $fim Data fim Y-m-d
+     * @return array
+     */
+    public function getFluxoCaixaChartData(string $inicio, string $fim): array
+    {
+        $idEmpresa = $this->idEmpresa; // Usar propriedade da classe
+        $periodo = \Carbon\CarbonPeriod::create($inicio, $fim);
+        
+        $labels = [];
+        $receitas = [];
+        $despesas = [];
+
+        // Agrupamento por dia (Query otimizada)
+        $receitasDb = Manutencao::selectRaw('DATE(man_dat_compensacao) as data, SUM(man_val_cobrado) as valor')
+            ->where('man_emp_id', $idEmpresa)
+            ->whereBetween('man_dat_compensacao', [$inicio, $fim])
+            ->where('man_status_pagamento', 'pago')
+            ->groupBy('data')
+            ->pluck('valor', 'data');
+
+        // Despesas: Custo de peças + Mão de obra. 
+        // Usando man_dat_pagamento para saídas efetivas.
+        
+        $despesasDb = Manutencao::selectRaw('DATE(man_dat_pagamento) as data, SUM(man_val_pecas + man_val_mao_obra) as valor')
+            ->where('man_emp_id', $idEmpresa)
+            ->whereBetween('man_dat_pagamento', [$inicio, $fim])
+            ->groupBy('data')
+            ->pluck('valor', 'data');
+
+        foreach ($periodo as $data) {
+            $dia = $data->format('Y-m-d');
+            $labels[] = $data->format('d/m');
+            
+            // Se não houver valor no dia, assume 0
+            $receitas[] = $receitasDb[$dia] ?? 0;
+            $despesas[] = $despesasDb[$dia] ?? 0;
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Receitas',
+                    'data' => $receitas,
+                    'borderColor' => '#10B981', // green-500
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Despesas',
+                    'data' => $despesas,
+                    'borderColor' => '#EF4444', // red-500
+                    'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
+                    'fill' => true,
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Retorna o resumo de DESPESAS para o gráfico de Composição de Custos.
+     */
+    public function getExpenseSummary(string $inicio, string $fim): array
+    {
+        $idEmpresa = $this->idEmpresa;
+        
+        $dados = Manutencao::selectRaw('
+                SUM(man_val_pecas) as pecas,
+                SUM(man_val_mao_obra) as mao_obra
+            ')
+            ->where('man_emp_id', $idEmpresa)
+            ->whereBetween('man_dat_compensacao', [$inicio, $fim]) // Data de pagamento
+            ->where('man_status_pagamento', 'pago')
+            ->first();
+
+        $pecas = $dados->pecas ?? 0;
+        $mo = $dados->mao_obra ?? 0;
+        $totalDespesa = $pecas + $mo;
+
+        return [
+            'totalDespesa' => $totalDespesa,
+            'totalPecas' => $pecas,
+            'totalMO' => $mo
+        ];
+    }
 }
