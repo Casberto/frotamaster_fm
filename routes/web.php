@@ -60,6 +60,9 @@ Route::post('/oficina/public/os/{token}/aceitar', [\App\Http\Controllers\Oficina
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'check.license'])->name('dashboard');
 
+Route::post('/theme-switch', [\App\Http\Controllers\ThemeController::class, 'switch'])
+    ->middleware(['auth'])->name('theme.switch');
+
 
 // ROTAS DO USUÁRIO AUTENTICADO (CLIENTE DA EMPRESA)
 Route::middleware(['auth', 'check.license'])->group(function () {
@@ -68,6 +71,7 @@ Route::middleware(['auth', 'check.license'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/user/profile-photo/{filename}', [App\Http\Controllers\UserProfilePhotoController::class, 'show'])->name('user.profile-photo');
 
     // Logs e Parâmetros
     Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index');

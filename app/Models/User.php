@@ -27,6 +27,7 @@ class User extends Authenticatable
         'password',
         'role',
         'must_change_password',
+        'profile_photo_path',
     ];
 
     protected $hidden = [
@@ -40,6 +41,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected $appends = [
+        'profile_photo_url',
+    ];
+
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->profile_photo_path
+                    ? route('user.profile-photo', ['filename' => basename($this->profile_photo_path)])
+                    : asset('img/default-avatar.svg'); // Imagem padrao SVG
     }
 
     // --- RELACIONAMENTOS ---

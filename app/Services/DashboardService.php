@@ -800,6 +800,9 @@ class DashboardService
             ->whereBetween('aba_data', [$inicioMes, $fimMes])
             ->sum('aba_qtd');
 
+
+
+
         // Média geral (km/L) da frota
         $mediaGeralConsumo = $this->calcularMediaGeralConsumo($inicioMes, $fimMes);
 
@@ -1382,6 +1385,105 @@ class DashboardService
             'totalDespesa' => $totalDespesa,
             'totalPecas' => $pecas,
             'totalMO' => $mo
+        ];
+    }
+
+    public function getNotificationsData()
+    {
+        $idEmpresa = $this->idEmpresa;
+        if (!$idEmpresa) return [];
+
+        $hoje = Carbon::now()->format('Y-m-d');
+        $proximos15Dias = Carbon::now()->addDays(15)->format('Y-m-d');
+        $proximos30Dias = Carbon::now()->addDays(30)->format('Y-m-d');
+
+        // 1. Manutenções Vencidas
+        $manutencoesVencidas = Manutencao::where('man_emp_id', $idEmpresa)
+            ->where('man_status', '!=', 'Concluída')
+            ->where('man_status', '!=', 'Cancelada')
+            ->where('man_status', '!=', 'em_andamento')
+            ->where('man_data_inicio', '<', $hoje)
+            ->with(['veiculo' => function($q) { $q->select('vei_id', 'vei_placa', 'vei_modelo'); }])
+            ->take(5)
+            ->get();
+
+        // 2. Manutenções Agendadas (Próximas ou Hoje)
+        $manutencoesProximas = Manutencao::where('man_emp_id', $idEmpresa)
+            ->where('man_status', 'Agendada')
+            ->whereBetween('man_data_inicio', [$hoje, $proximos15Dias])
+            ->with(['veiculo' => function($q) { $q->select('vei_id', 'vei_placa', 'vei_modelo'); }])
+            ->orderBy('man_data_inicio', 'asc')
+            ->take(5)
+            ->get();
+
+        // 3. CNH Vencida
+        $cnhVencida = Motorista::where('mot_emp_id', $idEmpresa)
+            ->whereNotNull('mot_cnh_data_validade')
+            ->where('mot_cnh_data_validade', '<', $hoje)
+            ->select('mot_id', 'mot_nome', 'mot_cnh_data_validade')
+            ->take(5)
+            ->get();
+
+        // 4. CNH a Vencer
+        $cnhAVencer = Motorista::where('mot_emp_id', $idEmpresa)
+            ->whereNotNull('mot_cnh_data_validade')
+            ->where('mot_cnh_data_validade', '>=', $hoje)
+            ->where('mot_cnh_data_validade', '<=', $proximos30Dias)
+            ->select('mot_id', 'mot_nome', 'mot_cnh_data_validade')
+            ->take(5)
+            ->get();
+
+        $notifications = [];
+
+        foreach ($manutencoesVencidas as $m) {
+            $notifications[] = [
+                'type' => 'danger',
+                'title' => 'Manutenção Vencida',
+                'message' => "Veículo {$m->veiculo->vei_placa} - " . Carbon::parse($m->man_data_inicio)->format('d/m/Y'),
+                'link' => route('manutencoes.show', $m->man_id),
+                'date' => $m->man_data_inicio
+            ];
+        }
+
+        foreach ($manutencoesProximas as $m) {
+            $isToday = $m->man_data_inicio == $hoje;
+            $notifications[] = [
+                'type' => $isToday ? 'warning' : 'info',
+                'title' => $isToday ? 'Manutenção Hoje' : 'Próxima Manutenção',
+                'message' => "Veículo {$m->veiculo->vei_placa} - " . Carbon::parse($m->man_data_inicio)->format('d/m/Y'),
+                'link' => route('manutencoes.show', $m->man_id),
+                'date' => $m->man_data_inicio
+            ];
+        }
+
+        foreach ($cnhVencida as $c) {
+            $notifications[] = [
+                'type' => 'danger',
+                'title' => 'CNH Vencida',
+                'message' => "Motorista {$c->mot_nome}",
+                'link' => route('motoristas.edit', $c->mot_id),
+                'date' => $c->mot_cnh_data_validade
+            ];
+        }
+
+        foreach ($cnhAVencer as $c) {
+            $notifications[] = [
+                'type' => 'warning',
+                'title' => 'CNH a Vencer',
+                'message' => "Motorista {$c->mot_nome} vence em " . Carbon::parse($c->mot_cnh_data_validade)->format('d/m/Y'),
+                'link' => route('motoristas.edit', $c->mot_id),
+                'date' => $c->mot_cnh_data_validade
+            ];
+        }
+        
+        // Ordenar por data (mais urgente primeiro, ou seja, datas menores/passadas primeiro)
+        usort($notifications, function($a, $b) {
+            return $a['date'] <=> $b['date'];
+        });
+
+        return [
+            'count' => count($notifications),
+            'list' => array_slice($notifications, 0, 10) // Limitar a 10 no dropdown
         ];
     }
 }
