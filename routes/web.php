@@ -63,6 +63,14 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 Route::post('/theme-switch', [\App\Http\Controllers\ThemeController::class, 'switch'])
     ->middleware(['auth'])->name('theme.switch');
 
+// ROTAS DE NOTIFICAÇÕES (API INTERNA)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::patch('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+});
+
 
 // ROTAS DO USUÁRIO AUTENTICADO (CLIENTE DA EMPRESA)
 Route::middleware(['auth', 'check.license'])->group(function () {

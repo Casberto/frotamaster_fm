@@ -16,6 +16,31 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Get the entity's notifications.
+     */
+    public function notifications()
+    {
+        return $this->morphMany(Notificacao::class, 'not_notifiable')
+                    ->orderBy('not_created_at', 'desc');
+    }
+
+    /**
+     * Get the entity's read notifications.
+     */
+    public function readNotifications()
+    {
+        return $this->notifications()->whereNotNull('not_read_at');
+    }
+
+    /**
+     * Get the entity's unread notifications.
+     */
+    public function unreadNotifications()
+    {
+        return $this->notifications()->whereNull('not_read_at');
+    }
+
+    /**
      * Cache local de permissões para a requisição atual.
      */
     protected array $permissionCache = [];

@@ -8,10 +8,6 @@
     $textColor = $isDark ? 'text-gray-300' : 'text-gray-600';
     $borderColor = $isDark ? 'border-gray-700' : 'border-gray-200';
     $hoverColor = $isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-100';
-    
-    // Notificações
-    $notifCount = $navbarNotifications['count'] ?? 0;
-    $notifList = $navbarNotifications['list'] ?? [];
 @endphp
 
 <div x-data="{ 
@@ -102,127 +98,7 @@ class="{{ $bgColor }} {{ $textColor }} h-full flex flex-col border-r {{ $borderC
         </div>
 
         <!-- Notificações Dropdown -->
-        <div x-data="{ notifOpen: false }" class="relative">
-            <button @click="notifOpen = !notifOpen" @click.away="notifOpen = false" class="relative p-2 rounded-lg {{ $hoverColor }} transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 {{ $isDark ? 'text-gray-400' : 'text-gray-500' }}">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                </svg>
-                @if($notifCount > 0)
-                    <span class="absolute top-1.5 right-1.5 flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
-                @endif
-            </button>
-
-            <!-- Dropdown Body -->
-            <!-- 1. Dropdown para Desktop (apenas md:block) -->
-            <div x-show="notifOpen" 
-                 x-transition:enter="transition ease-out duration-100"
-                 x-transition:enter-start="transform opacity-0 scale-95"
-                 x-transition:enter-end="transform opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-75"
-                 x-transition:leave-start="transform opacity-100 scale-100"
-                 x-transition:leave-end="transform opacity-0 scale-95"
-                 class="hidden md:block absolute left-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-md shadow-lg py-1 z-50 {{ $isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200' }}"
-                 style="display: none;">
-                
-                <div class="px-4 py-2 border-b {{ $borderColor }}">
-                    <h3 class="text-sm font-semibold {{ $isDark ? 'text-gray-200' : 'text-gray-800' }}">Notificações</h3>
-                </div>
-
-                @if(count($notifList) > 0)
-                    @foreach($notifList as $notif)
-                        <a href="{{ $notif['link'] }}" class="block px-4 py-3 hover:bg-opacity-50 {{ $isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50' }} border-b last:border-0 {{ $borderColor }}">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    @if($notif['type'] == 'danger')
-                                        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-red-100 text-red-600">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-yellow-100 text-yellow-600">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        </span>
-                                    @endif
-                                </div>
-                                <div class="ml-3 w-0 flex-1">
-                                    <p class="text-xs font-medium {{ $isDark ? 'text-gray-300' : 'text-gray-700' }}">{{ $notif['title'] }}</p>
-                                    <p class="text-xs {{ $isDark ? 'text-gray-500' : 'text-gray-500' }} truncate">{{ $notif['message'] }}</p>
-                                </div>
-                            </div>
-                        </a>
-                    @endforeach
-                @else
-                    <div class="px-4 py-6 text-center text-sm {{ $isDark ? 'text-gray-500' : 'text-gray-500' }}">
-                        Nenhuma notificação nova.
-                    </div>
-                @endif
-            </div>
-
-            <!-- 2. Modal Teleportado para Mobile (md:hidden) -->
-            <template x-teleport="body">
-                <div x-show="notifOpen" 
-                     class="md:hidden fixed inset-0 z-[9999] flex items-center justify-center"
-                     style="display: none;">
-                    
-                    <!-- Backdrop -->
-                    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" 
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0"
-                         x-transition:enter-end="opacity-100"
-                         x-transition:leave="transition ease-in duration-150"
-                         x-transition:leave-start="opacity-100"
-                         x-transition:leave-end="opacity-0"
-                         @click="notifOpen = false"></div>
-
-                    <!-- Modal Content -->
-                    <div class="relative w-[90vw] max-w-sm max-h-[80vh] overflow-y-auto rounded-xl shadow-2xl z-[10000] {{ $isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white' }}"
-                         x-transition:enter="transition ease-out duration-300"
-                         x-transition:enter-start="opacity-0 scale-90 translate-y-4"
-                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-200"
-                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 scale-90 translate-y-4">
-                        
-                        <div class="px-4 py-3 border-b flex justify-between items-center {{ $borderColor }}">
-                            <h3 class="text-lg font-bold {{ $isDark ? 'text-gray-200' : 'text-gray-800' }}">Notificações</h3>
-                            <button @click="notifOpen = false" class="{{ $isDark ? 'text-gray-400' : 'text-gray-500' }}">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                        </div>
-
-                        @if(count($notifList) > 0)
-                            @foreach($notifList as $notif)
-                                <a href="{{ $notif['link'] }}" class="block px-4 py-4 hover:bg-opacity-50 {{ $isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50' }} border-b last:border-0 {{ $borderColor }}">
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0 pt-0.5">
-                                            @if($notif['type'] == 'danger')
-                                                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-100 text-red-600">
-                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-yellow-100 text-yellow-600">
-                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                </span>
-                                            @endif
-                                        </div>
-                                        <div class="ml-4 w-0 flex-1">
-                                            <p class="text-sm font-semibold {{ $isDark ? 'text-gray-200' : 'text-gray-800' }}">{{ $notif['title'] }}</p>
-                                            <p class="text-sm {{ $isDark ? 'text-gray-400' : 'text-gray-600' }} mt-1">{{ $notif['message'] }}</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            @endforeach
-                        @else
-                            <div class="px-4 py-8 text-center text-base {{ $isDark ? 'text-gray-400' : 'text-gray-600' }}">
-                                Nenhuma notificação nova.
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </template>
-        </div>
+        <x-notifications-menu :is-dark="$isDark" />
     </div>
 
     <!-- Navegação -->

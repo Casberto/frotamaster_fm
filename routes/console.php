@@ -8,3 +8,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('licencas:update-status')->daily();
+Schedule::command('app:check-manutencoes')->dailyAt('08:00');
