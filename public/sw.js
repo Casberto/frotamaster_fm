@@ -1,4 +1,4 @@
-const CACHE_NAME = 'frotamaster-v2'; // Alterei para v2 para forçar atualização
+const CACHE_NAME = 'frotamaster-v3'; // Alterei para v3 para forçar atualização
 const OFFLINE_URL = '/offline';
 
 // Arquivos críticos para cachear imediatamente
