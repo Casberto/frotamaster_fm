@@ -11,10 +11,29 @@ use Carbon\Carbon;
 
 class LicenseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $licencas = Licenca::with('empresa')->latest()->paginate(15);
-        return view('admin.licencas.index', compact('licencas'));
+        $query = Licenca::with('empresa')->latest();
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->whereHas('empresa', function($q) use ($search) {
+                $q->where('nome_fantasia', 'like', "%{$search}%")
+                  ->orWhere('cnpj', 'like', "%{$search}%");
+            });
+        }
+
+        $licencas = $query->paginate(15);
+        
+        $selectedLicenca = null;
+        if ($request->has('selected_id')) {
+            $selectedLicenca = Licenca::with(['empresa', 'criador'])->find($request->selected_id);
+        }
+        
+        // Dados para o formulário de edição/criação, caso necessário na view index
+        $empresas = Empresa::orderBy('nome_fantasia')->get();
+
+        return view('admin.licencas.index', compact('licencas', 'selectedLicenca', 'empresas'));
     }
 
     public function create()

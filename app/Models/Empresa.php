@@ -87,6 +87,26 @@ class Empresa extends Model
         return $this->hasOne(Licenca::class, 'id_empresa')->where('status', 'ativo')->latest('data_vencimento');
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class, 'id_empresa');
+    }
+
+    public function veiculos()
+    {
+        return $this->hasMany(Veiculo::class, 'vei_emp_id');
+    }
+
+    /**
+     * Conta o total de anexos (documentos) vinculados aos veículos da frota.
+     * Como não há documentos diretos da empresa ainda, usamos essa métrica.
+     */
+    public function getTotalAnexosAttribute()
+    {
+        // Carrega a contagem de documentos para cada veículo e soma
+        return $this->veiculos()->withCount('documentos')->get()->sum('documentos_count');
+    }
+
     public function configuracoes()
     {
         return $this->hasMany(ConfiguracaoEmpresa::class, 'cfe_emp_id');

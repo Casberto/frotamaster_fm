@@ -34,10 +34,39 @@ class EmpresaController extends Controller
         $this->logService = $logService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $empresas = Empresa::latest()->paginate(10);
-        return view('admin.empresas.index', compact('empresas'));
+        $query = Empresa::query();
+
+        // Search logic if needed (future implementation or basic now)
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nome_fantasia', 'like', "%{$search}%")
+                  ->orWhere('cnpj', 'like', "%{$search}%")
+                  ->orWhere('email_contato', 'like', "%{$search}%");
+            });
+        }
+
+        $empresas = $query->latest()
+            ->withCount(['users', 'veiculos']) // Contadores básicos para a lista se necessário
+            ->paginate(10);
+
+        $selectedEmpresa = null;
+        if ($request->has('selected_id')) {
+            $selectedEmpresa = Empresa::with(['users', 'veiculos.documentos', 'licencas', 'activeLicense'])
+                ->withCount(['users', 'veiculos'])
+                ->find($request->selected_id);
+        }
+
+        // Dados necessários para o formulário de edição (que agora é carregado na index)
+        $availableModules = Empresa::getAllModules();
+        $profileDefaults = [];
+        foreach (CompanyProfile::cases() as $profile) {
+            $profileDefaults[$profile->value] = Empresa::getDefaultModulesForProfile($profile->value);
+        }
+
+        return view('admin.empresas.index', compact('empresas', 'selectedEmpresa', 'availableModules', 'profileDefaults'));
     }
 
     public function create()

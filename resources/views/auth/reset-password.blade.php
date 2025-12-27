@@ -4,7 +4,7 @@
         <!-- Cabeçalho -->
         <div class="sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0 pt-8 sm:pt-0">
             <a href="/" class="flex justify-center mb-6">
-                <img class="h-12 w-auto invert sm:invert-0 transition-all duration-300" src="{{ asset('img/logo.png') }}" alt="Frotamaster">
+                <img class="h-12 w-auto transition-all duration-300" src="{{ asset('img/logo.svg') }}" alt="Frotamaster">
             </a>
             <h2 class="text-center text-2xl font-bold leading-9 tracking-tight text-slate-900 sm:text-white">
                 Crie sua nova senha

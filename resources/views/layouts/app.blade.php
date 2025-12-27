@@ -26,6 +26,15 @@
         <!-- Nosso CSS Customizado -->
         <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
+        <meta name="theme-color" content="#1f2937">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Frotamaster">
+
+        <link rel="manifest" href="{{ asset('manifest.json') }}">
+
+        <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo.svg') }}">
+        <link rel="apple-touch-icon" href="{{ asset('img/ios/icon-180.png') }}">
     </head>
     <body class="font-sans antialiased">
         <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-gray-100">
@@ -153,6 +162,18 @@
                     $(this).val($(this).val().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, ''));
                 });
             });
+        </script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(function(registration) {
+                            console.log('Frotamaster SW registrado com escopo:', registration.scope);
+                        }, function(err) {
+                            console.log('Falha no registro do SW:', err);
+                        });
+                });
+            }
         </script>
     </body>
 </html>

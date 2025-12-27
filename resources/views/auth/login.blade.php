@@ -13,7 +13,7 @@
                     - 'invert': No mobile (fundo branco), inverte as cores da imagem (branco vira preto).
                     - 'sm:invert-0': No desktop (fundo escuro), remove a inversão para manter o logo original (branco).
                 -->
-                <img class="h-14 w-auto invert sm:invert-0 transition-all duration-300" src="{{ asset('img/logo.png') }}" alt="Frotamaster">
+                <img class="h-24 w-auto transition-all duration-300" src="{{ asset('img/logo.svg') }}" alt="Frotamaster">
             </a>
             
             <!-- Texto adaptativo: Escuro no Mobile (fundo branco), Branco no Desktop (fundo escuro) -->

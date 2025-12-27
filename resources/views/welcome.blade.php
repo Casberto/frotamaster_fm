@@ -44,7 +44,7 @@
                 <nav class="flex items-center justify-between p-4 lg:px-8" aria-label="Global">
                     <div class="flex lg:flex-1">
                         <a href="/" class="-m-1.5 p-1.5 flex items-center space-x-3">
-                            <img src="{{ asset('img/logo.png') }}" alt="Frotamaster Logo" class="h-10 w-auto transition-all duration-300" :class="{ 'filter invert': scrolled }">
+                            <img src="{{ asset('img/logo.svg') }}" alt="Frotamaster Logo" class="h-10 w-auto transition-all duration-300" :class="{ 'filter invert': scrolled }">
                             <span :class="{ 'text-gray-900': scrolled, 'text-white': !scrolled }" class="text-2xl font-bold tracking-tight transition-colors duration-300">Frotamaster</span>
                         </a>
                     </div>
@@ -88,7 +88,7 @@
                         class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-gray-900 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-white/10">
                         <div class="flex items-center justify-between">
                              <a href="/" class="-m-1.5 p-1.5 flex items-center space-x-3">
-                                <img class="h-10 w-auto" src="{{ asset('img/logo.png') }}" alt="Frotamaster Logo">
+                                <img class="h-10 w-auto" src="{{ asset('img/logo.svg') }}" alt="Frotamaster Logo">
                                 <span class="text-2xl font-bold tracking-tight text-white">Frotamaster</span>
                             </a>
                             <button type="button" @click="mobileMenuOpen = false" class="-m-2.5 rounded-md p-2.5 text-gray-400">
