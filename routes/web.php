@@ -209,4 +209,6 @@ Route::middleware(['auth', 'super.admin'])->prefix('admin')->name('admin.')->gro
     Route::resource('configuracoes-padrao', ConfiguracaoPadraoController::class)->parameters(['configuracoes-padrao' => 'configuracoes_padrao']);
 });
 
+Route::view('/offline', 'offline')->name('offline');
+
 require __DIR__.'/auth.php';
